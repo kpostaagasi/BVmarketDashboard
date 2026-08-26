@@ -26,20 +26,29 @@ function validateSeries(seriesPath: string, parsed: unknown): Series {
   if (typeof source.name !== "string" || typeof source.url !== "string") {
     fail(seriesPath, '"source.name" ve "source.url" string olmalı');
   }
+  for (const field of ["id", "title", "unit", "updated"] as const) {
+    if (typeof s[field] !== "string") fail(seriesPath, `"${field}" string olmalı`);
+  }
   if (!FREQS.includes(s.freq as Frequency)) {
     fail(seriesPath, `"freq" geçersiz: ${String(s.freq)}`);
   }
   if (!Array.isArray(s.points) || s.points.length === 0) {
     fail(seriesPath, '"points" boş olmayan bir dizi olmalı');
   }
+  const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
   for (const p of s.points as unknown[]) {
+    const point = p as Record<string, unknown>;
     if (
       typeof p !== "object" ||
       p === null ||
-      typeof (p as Record<string, unknown>).date !== "string" ||
-      typeof (p as Record<string, unknown>).value !== "number"
+      typeof point.date !== "string" ||
+      !ISO_DATE.test(point.date) ||
+      typeof point.value !== "number"
     ) {
-      fail(seriesPath, 'points öğeleri "{ date: string, value: number }" olmalı');
+      fail(
+        seriesPath,
+        'points öğeleri "{ date: "YYYY-MM-DD", value: number }" olmalı',
+      );
     }
   }
 
