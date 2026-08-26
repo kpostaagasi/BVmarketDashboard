@@ -14,7 +14,7 @@ export default function Header() {
         <Link href="/" className="text-lg font-semibold tracking-tight">
           BV <span className="text-accent">Market</span> Dashboard
         </Link>
-        <nav className="flex items-center gap-6 text-sm">
+        <nav className="hidden items-center gap-6 text-sm sm:flex">
           {navLinks.map((link) => (
             <Link
               key={link.label}
