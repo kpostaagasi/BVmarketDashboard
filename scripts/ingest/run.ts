@@ -8,10 +8,13 @@ const sources = [{ name: "yahoo", module: yahoo }];
 const DATA_DIR = path.join(process.cwd(), "data");
 
 async function writeSeries(series: Series): Promise<void> {
-  const [kategori, ad] = series.id.split("/");
+  const [kategori, ...rest] = series.id.split("/");
+  if (!kategori || rest.length === 0) {
+    throw new Error(`Geçersiz seri id: "${series.id}" (beklenen: <kategori>/<ad>)`);
+  }
   const dir = path.join(DATA_DIR, kategori);
   await mkdir(dir, { recursive: true });
-  const file = path.join(dir, `${ad}.json`);
+  const file = path.join(dir, `${rest.join("-")}.json`);
   await writeFile(file, JSON.stringify(series, null, 2) + "\n", "utf8");
 }
 

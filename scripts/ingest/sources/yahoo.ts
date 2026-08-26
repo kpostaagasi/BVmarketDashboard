@@ -9,9 +9,6 @@ const STOOQ_URL = "https://stooq.com/q/d/l/?s=usdtry&i=d";
 const USER_AGENT =
   "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
 
-function isoDate(timestampSeconds: number): string {
-  return new Date(timestampSeconds * 1000).toISOString().slice(0, 10);
-}
 
 async function fetchYahoo(): Promise<Series> {
   const res = await fetch(ENDPOINT, {
@@ -23,6 +20,7 @@ async function fetchYahoo(): Promise<Series> {
   const json = (await res.json()) as {
     chart?: {
       result?: Array<{
+        meta?: { gmtoffset?: number };
         timestamp?: number[];
         indicators?: {
           quote?: Array<{ close?: (number | null)[] }>;
@@ -36,10 +34,15 @@ async function fetchYahoo(): Promise<Series> {
   const closes = result?.indicators?.quote?.[0]?.close;
   if (!timestamps || !closes) throw new Error("Yahoo yanıtı beklenen formatta değil");
 
+  // Yahoo günlük barlarını borsa yerel gece yarısına damglıyor (USDTRY=X: Europe/London).
+  // gmtoffset ile kaydırarak doğru takvim gününü etiketliyoruz.
+  const gmtoffset = result?.meta?.gmtoffset ?? 0;
   const points = timestamps
-    // Unix timestamp (saniye) -> ISO takvim tarihi (UTC).
-    .map((ts, i) => ({ date: new Date(ts * 1000).toISOString().slice(0, 10), value: closes[i] }))
-    .filter((p): p is { date: string; value: number } => p.value !== null)
+    .map((ts, i) => ({
+      date: new Date((ts + gmtoffset) * 1000).toISOString().slice(0, 10),
+      value: closes[i],
+    }))
+    .filter((p): p is { date: string; value: number } => typeof p.value === "number")
     .filter((p, i, arr) => i === 0 || p.date !== arr[i - 1].date);
 
   if (points.length === 0) {
@@ -64,15 +67,17 @@ async function fetchStooq(): Promise<Series> {
   }
   const csv = await res.text();
   const lines = csv.trim().split("\n");
-  if (lines.length < 2 || !lines[0].startsWith("Date,Close")) {
+  const header = lines[0].split(",");
+  const closeIdx = header.indexOf("Close");
+  if (lines.length < 2 || header[0] !== "Date" || closeIdx === -1) {
     throw new Error("Stooq CSV beklenen formatta değil");
   }
 
   const points = lines
     .slice(1)
     .map((line) => {
-      const [date, close] = line.split(",");
-      return { date, value: Number(close) };
+      const cols = line.split(",");
+      return { date: cols[0], value: Number(cols[closeIdx]) };
     })
     .filter((p) => p.date && Number.isFinite(p.value));
 
