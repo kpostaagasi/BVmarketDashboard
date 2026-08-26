@@ -98,5 +98,6 @@ export async function listSeries(kategori: string): Promise<string[]> {
   }
   return entries
     .filter((f) => f.endsWith(".json"))
-    .map((f) => `${kategori}/${f.replace(/\.json$/, "")}`);
+    .map((f) => `${kategori}/${f.replace(/\.json$/, "")}`)
+    .sort();
 }

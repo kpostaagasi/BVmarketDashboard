@@ -53,7 +53,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="py-8">
+      <section id="hisseler" className="py-8">
         <h2 className="mb-4 text-xl font-semibold">Sık Takip Edilen Hisseler</h2>
         <div className="flex flex-wrap gap-3">
           {HISSELER.map((sym) => (
@@ -68,7 +68,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="py-8">
+      <section id="sektorler" className="py-8">
         <h2 className="mb-4 text-xl font-semibold">Sık Aranan</h2>
         <div className="flex flex-wrap gap-3">
           {SIK_ARANAN.map((s) => (

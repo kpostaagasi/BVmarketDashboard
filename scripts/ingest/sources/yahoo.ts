@@ -88,7 +88,7 @@ async function fetchStooq(): Promise<Series> {
   return {
     id: "yahoo/usdtry",
     title: "ABD Doları / Türk Lirası",
-    source: { name: "Yahoo Finance", url: "https://finance.yahoo.com/quote/USDTRY=X" },
+    source: { name: "Stooq", url: "https://stooq.com/q/d/?s=usdtry" },
     unit: "TL",
     freq: "daily",
     updated: points[points.length - 1].date,

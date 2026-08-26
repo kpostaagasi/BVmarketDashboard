@@ -2,8 +2,8 @@ import Link from "next/link";
 
 const navLinks = [
   { href: "/", label: "Ana Sayfa" },
-  { href: "#sektorler", label: "Sektörler" },
-  { href: "#hisseler", label: "Hisse" },
+  { href: "/#sektorler", label: "Sektörler" },
+  { href: "/#hisseler", label: "Hisse" },
   { href: "/ai-raporlari", label: "AI Raporları" },
 ];
 
