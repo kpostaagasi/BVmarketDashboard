@@ -2,8 +2,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Series } from "./types";
 import * as yahoo from "./sources/yahoo";
+import * as evds from "./sources/evds";
 
-const sources = [{ name: "yahoo", module: yahoo }];
+const sources = [
+  { name: "yahoo", module: yahoo },
+  { name: "evds", module: evds },
+];
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
