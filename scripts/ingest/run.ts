@@ -10,6 +10,7 @@ const DATA_DIR = path.join(process.cwd(), "data");
 async function writeSeries(series: Series): Promise<void> {
   const [kategori, ...rest] = series.id.split("/");
   if (!kategori || rest.length === 0 || rest.some((s) => !s)) {
+    throw new Error(`Geçersiz seri id: "${series.id}" (beklenen: <kategori>/<ad>)`);
   }
   const dir = path.join(DATA_DIR, kategori);
   await mkdir(dir, { recursive: true });
