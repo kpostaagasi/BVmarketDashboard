@@ -35,11 +35,11 @@ async function fetchYahoo(): Promise<Series> {
   if (!timestamps || !closes) throw new Error("Yahoo yanıtı beklenen formatta değil");
 
   // Yahoo günlük barlarını borsa yerel gece yarısına damglıyor (USDTRY=X: Europe/London).
-  // gmtoffset ile kaydırarak doğru takvim gününü etiketliyoruz.
-  const gmtoffset = result?.meta?.gmtoffset ?? 0;
+  // Timestamp'i en yakın UTC gece yarısına yuvarlamak her DST durumunda borsa yerel
+  // takvim gününü verir; meta.gmtoffset'e bağımlılık (mevsimsel kayma riski) kalkar.
   const points = timestamps
     .map((ts, i) => ({
-      date: new Date((ts + gmtoffset) * 1000).toISOString().slice(0, 10),
+      date: new Date(Math.round(ts / 86400) * 86400 * 1000).toISOString().slice(0, 10),
       value: closes[i],
     }))
     .filter((p): p is { date: string; value: number } => typeof p.value === "number")
@@ -66,8 +66,8 @@ async function fetchStooq(): Promise<Series> {
     throw new Error(`Stooq HTTP ${res.status}`);
   }
   const csv = await res.text();
-  const lines = csv.trim().split("\n");
-  const header = lines[0].split(",");
+  const lines = csv.replace(/^\uFEFF/, "").trim().split(/\r?\n/);
+  const header = lines[0].split(",").map((h) => h.trim());
   const closeIdx = header.indexOf("Close");
   if (lines.length < 2 || header[0] !== "Date" || closeIdx === -1) {
     throw new Error("Stooq CSV beklenen formatta değil");
