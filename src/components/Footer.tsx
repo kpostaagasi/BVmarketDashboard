@@ -4,6 +4,7 @@ const footerLinks = [
   { href: "#", label: "Hakkında" },
   { href: "#", label: "Veri Kaynakları" },
   { href: "#", label: "Metodoloji" },
+  { href: "/ai-raporlari", label: "AI Raporları" },
 ];
 
 export default function Footer() {
