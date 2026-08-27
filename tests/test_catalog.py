@@ -33,6 +33,7 @@ def test_seri_alanlari_dogru_tiplerde():
     assert seri.title == "TÜFE Genel Endeks"
     assert seri.category == "enflasyon"
     assert seri.kaynak.name == "TCMB EVDS"
+    assert seri.kaynak_tipi == "evds"
     assert seri.evds_code == "TP.TUKFIY2025.GENEL"
     assert seri.evds_frequency == "5"
     assert seri.charts == ("seasonality", "level")
@@ -82,8 +83,65 @@ def test_charts_listesinde_tekrar_reddedilir():
 def test_alan_degerleri_gecerli_kumelerde():
     for seri in serileri_yukle():
         assert seri.freq in {"daily", "weekly", "monthly"}, seri.id
-        assert seri.evds_frequency in {"1", "2", "5"}, seri.id
         assert seri.monthly_agg in {"mean", "last", "sum"}, seri.id
         assert seri.charts, seri.id
         assert set(seri.charts) <= {"seasonality", "level"}, seri.id
-        assert seri.evds_code, seri.id
+        if seri.kaynak_tipi == "evds":
+            assert seri.evds_frequency in {"1", "2", "5"}, seri.id
+            assert seri.evds_code, seri.id
+        if seri.kaynak_tipi == "yahoo":
+            assert seri.yahoo_symbol, seri.id
+
+
+def _sluglar():
+    return {k.slug for k in kategorileri_yukle()}
+
+
+def test_her_serinin_kaynak_tipi_gecerli():
+    for seri in serileri_yukle():
+        assert seri.kaynak_tipi in {"evds", "yahoo"}, seri.id
+
+
+def test_evds_serisi_sayisi_on_uc():
+    # Göç kontrolü: 13 EVDS serisinin hepsi kaynak_tipi kazanmış olmalı.
+    # Yahoo serileri Task 3'te ekleneceği için "hepsi evds" demiyoruz.
+    assert sum(1 for s in serileri_yukle() if s.kaynak_tipi == "evds") == 13
+
+
+def test_evds_serisinde_evds_code_zorunlu():
+    seri = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), evds_code=None)
+    with pytest.raises(KatalogHatasi, match="evds_code"):
+        _dogrula(seri, _sluglar(), set())
+
+
+def test_evds_serisinde_gecersiz_frekans_reddedilir():
+    seri = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), evds_frequency="9")
+    with pytest.raises(KatalogHatasi, match="evds_frequency"):
+        _dogrula(seri, _sluglar(), set())
+
+
+def test_yahoo_serisinde_yahoo_symbol_zorunlu():
+    seri = dataclasses.replace(
+        seri_getir("enflasyon/tufe-genel"),
+        kaynak_tipi="yahoo",
+        yahoo_symbol=None,
+    )
+    with pytest.raises(KatalogHatasi, match="yahoo_symbol"):
+        _dogrula(seri, _sluglar(), set())
+
+
+def test_yahoo_serisi_evds_code_gerektirmez():
+    seri = dataclasses.replace(
+        seri_getir("enflasyon/tufe-genel"),
+        kaynak_tipi="yahoo",
+        yahoo_symbol="BZ=F",
+        evds_code=None,
+        evds_frequency=None,
+    )
+    _dogrula(seri, _sluglar(), set())  # hata atmamalı
+
+
+def test_bilinmeyen_kaynak_tipi_reddedilir():
+    seri = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), kaynak_tipi="bloomberg")
+    with pytest.raises(KatalogHatasi, match="kaynak_tipi"):
+        _dogrula(seri, _sluglar(), set())

@@ -2,6 +2,7 @@
   title: TÜFE Genel Endeks
   category: enflasyon
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Endeks (2025=100)"
   freq: monthly
   evds_code: TP.TUKFIY2025.GENEL
@@ -12,6 +13,7 @@
   title: TÜFE Gıda ve Alkolsüz İçecekler
   category: enflasyon
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Endeks (2025=100)"
   freq: monthly
   evds_code: TP.TUKFIY2025.01
@@ -22,6 +24,7 @@
   title: USD/TRY (TCMB Alış)
   category: ekonomi-makro
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "TL"
   freq: daily
   evds_code: TP.DK.USD.A.YTL
@@ -33,6 +36,7 @@
   title: EUR/TRY (TCMB Alış)
   category: ekonomi-makro
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "TL"
   freq: daily
   evds_code: TP.DK.EUR.A.YTL
@@ -44,6 +48,7 @@
   title: TCMB Ağırlıklı Ortalama Fonlama Maliyeti
   category: ekonomi-makro
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "%"
   freq: daily
   evds_code: TP.APIFON4
@@ -55,6 +60,7 @@
   title: TL Mevduat Faizi (3 Aya Kadar, Stok)
   category: ekonomi-makro
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "%"
   freq: monthly
   evds_code: TP.MT210AGS.TRY.MT02
@@ -65,6 +71,7 @@
   title: Tüketici Güven Endeksi
   category: ekonomi-makro
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Endeks"
   freq: monthly
   evds_code: TP.TG2.Y01
@@ -75,6 +82,7 @@
   title: Yabancı Yatırımcı Hisse Senedi Net Alım-Satım
   category: ekonomi-makro
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Milyon USD"
   freq: weekly
   evds_code: TP.MKNETHAR.M7
@@ -86,6 +94,7 @@
   title: Yabancı Yatırımcı DİBS Net Alım-Satım
   category: ekonomi-makro
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Milyon USD"
   freq: weekly
   evds_code: TP.MKNETHAR.M8
@@ -97,6 +106,7 @@
   title: Konut Fiyat Endeksi (Türkiye)
   category: insaat
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Endeks (2010=100)"
   freq: monthly
   evds_code: TP.KFE.TR
@@ -107,6 +117,7 @@
   title: Toplam Konut Satışları
   category: insaat
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Adet"
   freq: monthly
   evds_code: TP.AKONUTSAT1.KTRTOPLAM
@@ -117,6 +128,7 @@
   title: İpotekli Konut Satışları
   category: insaat
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Adet"
   freq: monthly
   evds_code: TP.AKONUTSAT2.KTRTOPLAM
@@ -127,6 +139,7 @@
   title: Kredi Kartı Harcamaları (Toplam)
   category: kredi-karti
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
   unit: "Bin TL"
   freq: weekly
   evds_code: TP.KKHARTUT.KT1
