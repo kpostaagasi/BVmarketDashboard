@@ -18,12 +18,30 @@ from core.theme import RENKLER, TR_AYLAR
 _AGG_FONKSIYONLARI = {"mean": "mean", "last": "last", "sum": "sum"}
 
 
-def aylige_cevir(df: pd.DataFrame, agg: str = "mean") -> pd.DataFrame:
-    """Günlük/haftalık seriyi ay başlangıcına indirger."""
+def aylige_cevir(
+    df: pd.DataFrame, agg: str = "mean", freq: str = "monthly"
+) -> pd.DataFrame:
+    """Günlük/haftalık seriyi ay başlangıcına indirger.
+
+    `sum` için boş aylar 0.0 değil NaN üretir (min_count=1), yoksa
+    `.dropna()` onları temizleyemez. Ayrıca haftalık/günlük `sum`
+    serilerinde henüz tamamlanmamış son ay, sahte bir düşüş gibi
+    görünmemesi için atılır — aylık serilerde bu sorun yoktur.
+    """
     if agg not in _AGG_FONKSIYONLARI:
         raise ValueError(f"Bilinmeyen toplama: {agg}")
-    seri = df["value"].resample("MS").agg(_AGG_FONKSIYONLARI[agg])
-    return seri.dropna().to_frame("value")
+    if agg == "sum":
+        seri = df["value"].resample("MS").sum(min_count=1)
+    else:
+        seri = df["value"].resample("MS").agg(_AGG_FONKSIYONLARI[agg])
+    seri = seri.dropna().to_frame("value")
+
+    if agg == "sum" and freq != "monthly" and not seri.empty:
+        son_ay_sonu = seri.index[-1] + pd.offsets.MonthEnd(0)
+        if df.index.max() < son_ay_sonu:
+            seri = seri.iloc[:-1]
+
+    return seri
 
 
 def _temayi_uygula(fig: go.Figure, birim: str) -> go.Figure:
@@ -58,7 +76,11 @@ def _temayi_uygula(fig: go.Figure, birim: str) -> go.Figure:
 
 
 def mevsimsellik_figuru(
-    df: pd.DataFrame, birim: str, agg: str = "mean", yil_sayisi: int = 3
+    df: pd.DataFrame,
+    birim: str,
+    agg: str = "mean",
+    freq: str = "monthly",
+    yil_sayisi: int = 3,
 ) -> go.Figure:
     if yil_sayisi > len(RENKLER["seri"]):
         raise ValueError(
@@ -66,7 +88,7 @@ def mevsimsellik_figuru(
             "seri için doğrulandı. Daha fazlası için theme.py'deki paletin yeniden "
             "doğrulanması gerekir."
         )
-    aylik = aylige_cevir(df, agg)
+    aylik = aylige_cevir(df, agg, freq)
     fig = go.Figure()
 
     if aylik.empty:

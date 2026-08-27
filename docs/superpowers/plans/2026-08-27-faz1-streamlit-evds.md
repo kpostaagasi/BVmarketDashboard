@@ -6,14 +6,14 @@
 
 **Architecture:** Katalog (`catalog/*.yaml`) tek doğruluk kaynağıdır; sayfalar ondan üretilir. Veri repoda CSV olarak yaşar (`data/<kategori>/<seri>.csv`), GitHub Actions cron'u günlük çeker ve commit'ler; Streamlit uygulaması yalnızca okur ve runtime'da hiç secret kullanmaz. Tüm okuma tek bir `load_series()` kapısından geçer, böylece ileride harici veritabanına geçiş sayfaları etkilemez.
 
-**Tech Stack:** Python 3.12 · Streamlit ≥1.40 · pandas ≥2.2 · Plotly ≥5.24 · PyYAML · requests · pytest · GitHub Actions · Streamlit Community Cloud
+**Tech Stack:** Python 3.12 · Streamlit ≥1.49 · pandas ≥2.2 · Plotly ≥5.24 · PyYAML · requests · pytest · GitHub Actions · Streamlit Community Cloud
 
 **Spec:** `docs/superpowers/specs/2026-08-27-streamlit-dashboard-design.md`
 
 ## Global Constraints
 
 - **Python 3.12.** Actions ve Community Cloud aynı sürümü kullanır.
-- **Streamlit ≥ 1.40** — `st.navigation` 1.36'da, `st.segmented_control` 1.40'ta geldi. Floor bu ikincisidir.
+- **Streamlit ≥ 1.49** — `st.navigation` 1.36'da, `st.segmented_control` 1.40'ta geldi; floor, final review sırasında `use_container_width`'in kaldırılma tarihi geçtiği için 1.49'a çıkarıldı.
 - **Arayüz dili Türkçe.** Başlıklar, etiketler, hata mesajları Türkçe. Kod içi isimler ve fonksiyon adları da Türkçe (mevcut repo bu geleneği izliyor).
 - **Veri dosyaları yalnızca `date,value` içerir.** Metadata katalogda yaşar, veri dosyasında asla.
 - **CSV yazımı `float_format="%.5f"`** — EVDS `decimal: 5` döndürüyor; sabit format diff gürültüsünü engeller.
@@ -72,7 +72,7 @@ mkdir -p catalog core ingest tests .streamlit .github/workflows
 `requirements.txt` (Streamlit Cloud bunu kurar — pytest buraya girmez):
 
 ```
-streamlit>=1.40
+streamlit>=1.49
 pandas>=2.2
 plotly>=5.24
 PyYAML>=6.0

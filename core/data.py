@@ -24,10 +24,6 @@ def seri_yolu(seri_id: str) -> Path:
     return VERI_DIZINI / f"{seri_id}.csv"
 
 
-def seri_var_mi(seri_id: str) -> bool:
-    return seri_yolu(seri_id).exists()
-
-
 def seri_csv_oku(yol: Path) -> pd.DataFrame:
     if not yol.exists():
         raise VeriYokHatasi(

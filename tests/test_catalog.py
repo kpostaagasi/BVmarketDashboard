@@ -1,8 +1,11 @@
+import dataclasses
+
 import pytest
 
 from core.catalog import (
     KatalogHatasi,
     Seri,
+    _dogrula,
     kategorileri_yukle,
     seri_getir,
     seri_listele,
@@ -65,6 +68,15 @@ def test_her_seri_bilinen_bir_kategoriye_ait():
 def test_idler_tekil():
     idler = [s.id for s in serileri_yukle()]
     assert len(idler) == len(set(idler))
+
+
+def test_charts_listesinde_tekrar_reddedilir():
+    seri = dataclasses.replace(
+        seri_getir("enflasyon/tufe-genel"), charts=("level", "level")
+    )
+    sluglar = {k.slug for k in kategorileri_yukle()}
+    with pytest.raises(KatalogHatasi, match="tekrar"):
+        _dogrula(seri, sluglar, set())
 
 
 def test_alan_degerleri_gecerli_kumelerde():

@@ -124,6 +124,8 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(f"{seri.id}: en az bir grafik tanımlı olmalı")
     if not set(seri.charts) <= GECERLI_GRAFIKLER:
         raise KatalogHatasi(f"{seri.id}: bilinmeyen grafik türü {seri.charts}")
+    if len(set(seri.charts)) != len(seri.charts):
+        raise KatalogHatasi(f"{seri.id}: charts listesinde tekrar var {seri.charts}")
     if not seri.evds_code:
         raise KatalogHatasi(f"{seri.id}: evds_code boş")
 

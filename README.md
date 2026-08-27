@@ -13,7 +13,8 @@ catalog/categories.yaml   # menü ağacı
 core/                     # catalog, data, stats, charts, components, page
 ingest/                   # evds.py + run.py (orchestrator)
 data/<kategori>/<seri>.csv
-.github/workflows/ingest.yml   # günlük cron: ingest → commit → push
+.github/workflows/ingest.yml    # günlük cron: ingest → commit → push
+.github/workflows/test.yml      # her push/PR: pytest
 ```
 
 Veri repoda yaşar; uygulama yalnızca okur ve **runtime'da hiç secret

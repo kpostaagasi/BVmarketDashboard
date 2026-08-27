@@ -5,6 +5,7 @@ grafik_karti() tek fonksiyondur; sitedeki tüm kartlar onun bir örneğidir.
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from core.catalog import Seri
@@ -43,7 +44,17 @@ def yuzde_rozeti(deger: float | None) -> str:
         return ":gray[—]"
     isaret = "▲" if deger >= 0 else "▼"
     renk = RENKLER["artis"] if deger >= 0 else RENKLER["dusus"]
-    return f"<span style='color:{renk}'>{isaret} %{_tr_sayi(deger, 1)}</span>"
+    return f"<span style='color:{renk}'>{isaret} %{_tr_sayi(abs(deger), 1)}</span>"
+
+
+def grafik_agg(seri: Seri, gorunum: str) -> str:
+    """Yüzde görünümünde toplama anlamsızdır — yüzdelerin ortalaması alınır."""
+    return seri.monthly_agg if gorunum == VARSAYILAN else "mean"
+
+
+def donem_etiketi(tarih: pd.Timestamp, freq: str) -> str:
+    """Günlük ve haftalık serilerde gün gösterilir — bayatlık ancak böyle görülür."""
+    return f"{tarih:%Y-%m}" if freq == "monthly" else f"{tarih:%Y-%m-%d}"
 
 
 def kpi_satiri(seriler: list[Seri]) -> None:
@@ -62,7 +73,8 @@ def kpi_satiri(seriler: list[Seri]) -> None:
                 continue
             st.markdown(f"### {sayi_bicimle(son_deger(df), seri.unit)}")
             st.markdown(
-                f"YoY {yuzde_rozeti(yoy(df))} · {son_tarih(df):%Y-%m}",
+                f"YoY {yuzde_rozeti(yoy(df))} · "
+                f"{donem_etiketi(son_tarih(df), seri.freq)}",
                 unsafe_allow_html=True,
             )
 
@@ -107,7 +119,7 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
             return
 
         etiket = _SIKLIK_ETIKETLERI[seri.freq]
-        st.caption(f"Son Dönem: {son_tarih(df):%Y-%m} · {etiket}")
+        st.caption(f"Son Dönem: {donem_etiketi(son_tarih(df), seri.freq)} · {etiket}")
         _istatistik_satiri(df, seri)
 
         gosterilecek = gorunum_uygula(df, gorunum)
@@ -115,13 +127,15 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
 
         for grafik in seri.charts:
             if grafik == "seasonality":
-                fig = mevsimsellik_figuru(gosterilecek, birim, agg=seri.monthly_agg)
+                fig = mevsimsellik_figuru(
+                    gosterilecek, birim, agg=grafik_agg(seri, gorunum), freq=seri.freq
+                )
             else:
                 fig = seviye_figuru(gosterilecek, birim)
-            st.plotly_chart(fig, use_container_width=True, key=f"{seri.id}-{grafik}")
+            st.plotly_chart(fig, width="stretch", key=f"{seri.id}-{grafik}")
 
         with st.expander("Veri tablosu"):
             st.dataframe(
                 gosterilecek.rename(columns={"value": birim}),
-                use_container_width=True,
+                width="stretch",
             )

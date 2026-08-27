@@ -93,3 +93,34 @@ def test_mevsimsellik_paletten_fazla_yil_istenirse_hata():
     df = aylik_df("2016-01-01", 120)
     with pytest.raises(ValueError, match="yil_sayisi"):
         mevsimsellik_figuru(df, "Adet", yil_sayisi=4)
+
+
+def test_aylige_cevir_sum_bos_ayi_sifir_yapmaz():
+    # Şubat'ta hiç veri yok — 0.0 değil, boşluk olmalı
+    idx = pd.DatetimeIndex(
+        ["2026-01-05", "2026-01-19", "2026-03-02", "2026-03-16"], name="date"
+    )
+    df = pd.DataFrame({"value": [10.0, 10.0, 20.0, 20.0]}, index=idx)
+    sonuc = aylige_cevir(df, "sum")
+    assert list(sonuc.index.month) == [1, 3]
+
+
+def test_aylige_cevir_sum_tamamlanmamis_son_ayi_atar():
+    idx = pd.date_range("2026-01-05", "2026-04-10", freq="W-MON", name="date")
+    df = pd.DataFrame({"value": [100.0] * len(idx)}, index=idx)
+    sonuc = aylige_cevir(df, "sum", freq="weekly")
+    assert sonuc.index.max() == pd.Timestamp("2026-03-01")
+
+
+def test_aylige_cevir_aylik_seride_son_ay_korunur():
+    idx = pd.date_range("2026-01-01", periods=4, freq="MS", name="date")
+    df = pd.DataFrame({"value": [1.0, 2.0, 3.0, 4.0]}, index=idx)
+    sonuc = aylige_cevir(df, "sum", freq="monthly")
+    assert sonuc.index.max() == pd.Timestamp("2026-04-01")
+
+
+def test_aylige_cevir_mean_tamamlanmamis_son_ayi_korur():
+    idx = pd.date_range("2026-01-05", "2026-04-10", freq="W-MON", name="date")
+    df = pd.DataFrame({"value": [100.0] * len(idx)}, index=idx)
+    sonuc = aylige_cevir(df, "mean", freq="weekly")
+    assert sonuc.index.max() == pd.Timestamp("2026-04-01")
