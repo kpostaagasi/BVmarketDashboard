@@ -19,6 +19,7 @@ GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "level"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo"}
+SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 
 
 class KatalogHatasi(Exception):
@@ -53,6 +54,7 @@ class Seri:
     yahoo_symbol: str | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
+    yayin_notu: str | None = None
 
 
 def _yaml_oku(ad: str) -> list[dict]:
@@ -102,6 +104,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             yahoo_symbol=ham.get("yahoo_symbol"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
+            yayin_notu=ham.get("yayin_notu"),
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)

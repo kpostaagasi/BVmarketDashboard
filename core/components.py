@@ -8,7 +8,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from core.catalog import Seri
+from core.catalog import SIKLIK_ETIKETLERI, Seri
 from core.charts import mevsimsellik_figuru, seviye_figuru
 from core.data import VeriYokHatasi, load_series
 from core.stats import (
@@ -21,8 +21,6 @@ from core.stats import (
     yoy,
 )
 from core.theme import RENKLER
-
-_SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 
 
 def _tr_sayi(deger: float, basamak: int = 2) -> str:
@@ -118,7 +116,7 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
             st.warning(str(hata))
             return
 
-        etiket = _SIKLIK_ETIKETLERI[seri.freq]
+        etiket = SIKLIK_ETIKETLERI[seri.freq]
         st.caption(f"Son Dönem: {donem_etiketi(son_tarih(df), seri.freq)} · {etiket}")
         _istatistik_satiri(df, seri)
 
