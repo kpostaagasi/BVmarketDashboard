@@ -1,4 +1,4 @@
-# Faz 1 — devredilen işler
+# Devredilen işler (Faz 1 → Faz 3)
 
 Tarih: 2026-08-27
 Kaynak: Faz 1 uygulama oturumu (plan `2026-08-27-faz1-streamlit-evds.md`, 14 commit, 66 test)
@@ -60,13 +60,34 @@ Whole-branch review'da bulundu, ertelendi.
 | 11 | `son_tarih`/`son_deger` boş DataFrame guard'ı | `mom`/`yoy`/`aralik_12a`'da var, bu ikisinde yok. Ingest üzerinden ulaşılamaz (`seri_cek` boş seride hata veriyor). |
 | 12 | `_temayi_uygula` dönüş değeri tutarlılığı | Bir dalda kullanılıyor, diğerinde atılıyor. Ayrıca boş DataFrame yolu x ekseni etiketlerinden önce dönüyor — bir yıldan kısa geçmişi olan seri YoY görünümünde Oca→Ara yerine 1–12 sayısal eksen alıyor. |
 | 13 | `serileri_yukle()` ham `KeyError` | Eksik YAML anahtarı `KatalogHatasi` yerine ham `KeyError` veriyor. Yalnızca elle YAML düzenleyen geliştirici görür. |
+| 16 | `Kategori.note` yanlış varlığa asılı | "Sürekli ön vade" bir *serinin* özelliği, kategorinin değil. Bugün doğru çünkü her 10 seri vadeli. Ama spec bu kategorilere ileride Dünya Bankası spot fiyatları planlıyor — o anda kategori notu onlar hakkında yanlış beyan olur. Faz 3'te emtia kategorisine vadeli olmayan bir seri eklenmeden önce çözülmeli. |
+| 17 | `emtia-metaller` sayfası ~1,4 MB JSON gönderiyor | 7 seri × (3.770 noktalı seviye grafiği + mevsimsellik + 3.770 satırlık veri tablosu). `ekonomi-makro` ~0,6 MB. Plotly kaldırıyor ama README'nin uyardığı ~30 sn soğuk başlangıcın üstüne biniyor. Faz 3 aynı sayfaya daha fazla günlük seri koyarsa izlenmeli. |
 | 15 | `run.py`'nin secret hata mesajı boş değeri ayırt etmiyor | "EVDS_API_KEY tanımlı değil" diyor ama secret var ve boş olduğunda da aynı mesaj çıkıyor. İlk Actions koşusunda bu bir hata ayıklama turuna mal oldu (`gh secret set` etkileşimsiz kabukta boş stdin okuyup boş secret yazmıştı). "tanımlı değil veya boş" demek yeterli. |
 | 14 | `ingest` tarafı Streamlit'i import ediyor | `ingest/run.py` → `core.data.seri_yolu` → `import streamlit`. İlk gerçek çekimde görüldü: `python -m ingest.run` çıktısına "No runtime found, using MemoryCacheStorageManager" uyarısı düşüyor. Zararsız ama ingest'in Streamlit'e bağımlı olmaması gerekir — `seri_yolu`'nu Streamlit import etmeyen bir modüle taşımak (2 numaralı işle birlikte) çözer. |
 
-## Faz 2'de ele alınacak kapsam (spec'ten)
+## Faz 2 tamamlandı (2026-08-27)
 
-Faz 1 dışında bırakılanlar: ilgili veri çipleri (`related:` alanı), arama kutusu,
+10 emtia serisi (Brent, WTI, doğalgaz, altın, gümüş, bakır, HRC çelik, platin,
+paladyum, alüminyum), iki yeni kategori, `ingest/yahoo.py`. Katalog şeması
+`kaynak_tipi` ile çok-kaynaklı hale geldi. 94 test. Actions koşusu 23/23.
+
+Faz 2'de Faz 1 spec'inin iki kararı ölçüme dayanarak tersine çevrildi:
+**parquet geçişi iptal** (git'te %32 daha büyük) ve **Stooq fallback kaldırıldı**
+(artık bot doğrulaması istiyor). Detay: `docs/superpowers/specs/2026-08-27-faz2-emtia-design.md`.
+
+Faz 1'in ertelenen 3 numaralı işi (KPI seçiminin konumsal olması) hâlâ açık ama
+artık bir testle korunuyor (`test_metaller_kpi_sirasi`).
+
+## Faz 3'te ele alınacak kapsam (spec'ten)
+
+Hâlâ yapılmayanlar: ilgili veri çipleri (`related:` alanı), arama kutusu,
 favoriler, Veri Takvimi bileşeni, sektör sayfaları, AI raporları.
+
+Emtia kategorisinin kalan 7 sayfası da Faz 2 kapsamı dışındaydı: EPDK Marjları,
+EPDK Satış Verileri, BOTAŞ Doğal Gaz Tarifesi, EPDK Doğal Gaz Verileri
+(doküman kazıma) ve Tavukçuluk, Balıkçılık, Hayvancılık (TÜİK). Tarım
+(buğday/mısır) da dışarıda — sembolleri çalışıyor ama `USX` (sent) cinsinden
+kote, birim tuzağı var.
 
 `scripts/ingest/sources/yahoo.ts` Task 1'de silindi ama Faz 2 (emtia) için
 değerli bir referans — `git show bcd8033:scripts/ingest/sources/yahoo.ts` ile

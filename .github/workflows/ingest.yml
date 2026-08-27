@@ -23,12 +23,13 @@ jobs:
       - name: Bağımlılıkları kur
         run: pip install -r requirements.txt
 
-      - name: EVDS verilerini çek
+      - name: Verileri çek
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python -m ingest.run
 
       - name: Değişiklikleri commit'le
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -36,6 +37,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "Veride değişiklik yok."
           else
-            git commit -m "data: EVDS güncelleme $(date -u +%Y-%m-%d)"
+            git commit -m "data: güncelleme $(date -u +%Y-%m-%d)"
             git push
           fi

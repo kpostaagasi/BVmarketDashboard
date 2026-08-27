@@ -1,5 +1,17 @@
 - slug: ekonomi-makro
   title: Ekonomi & Makro
+- slug: emtia-enerji
+  title: Emtia · Enerji
+  note: >-
+    Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade
+    değişimlerinde grafikte görülen sıçrama piyasa hareketi değil
+    kontrat roll'üdür.
+- slug: emtia-metaller
+  title: Emtia · Metaller
+  note: >-
+    Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade
+    değişimlerinde grafikte görülen sıçrama piyasa hareketi değil
+    kontrat roll'üdür.
 - slug: enflasyon
   title: Enflasyon Verileri
 - slug: insaat

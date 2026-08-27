@@ -49,6 +49,18 @@ def test_sifir_taban_none_dondurur():
     assert mom(df) is None
 
 
+def test_negatif_taban_none_dondurur():
+    df = aylik_df([-10.0, 50.0])
+    assert mom(df) is None
+
+
+def test_seri_degisim_negatif_tabanda_nan_verir():
+    # -20 -> 40 arasında yüzde değişim tanımsız; sayı uydurmak yerine boşluk
+    df = aylik_df([-20.0] + [0.0] * 11 + [40.0])
+    sonuc = seri_yoy(df)
+    assert pd.isna(sonuc.loc[pd.Timestamp("2025-01-01"), "value"])
+
+
 def test_aralik_12a_son_on_iki_ayin_min_maksi():
     # 24 ay: ilk 12 ay 1..12, sonraki 12 ay 100..111
     df = aylik_df([float(v) for v in range(1, 13)] + [float(v) for v in range(100, 112)])

@@ -11,7 +11,7 @@ app.py                    # st.navigation — sol menü katalogdan üretilir
 catalog/series.yaml       # tek doğruluk kaynağı: seri tanımları
 catalog/categories.yaml   # menü ağacı
 core/                     # catalog, data, stats, charts, components, page
-ingest/                   # evds.py + run.py (orchestrator)
+ingest/                   # evds.py + yahoo.py + run.py (orchestrator)
 data/<kategori>/<seri>.csv
 .github/workflows/ingest.yml    # günlük cron: ingest → commit → push
 .github/workflows/test.yml      # her push/PR: pytest
@@ -40,6 +40,7 @@ Tek bir seriyi hata ayıklamak için: `python -m ingest.run --only enflasyon/tuf
   title: Görünen Ad
   category: <kategori>          # categories.yaml'da tanımlı olmalı
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds              # evds | yahoo (zorunlu alan)
   unit: "Birim"
   freq: monthly                 # daily | weekly | monthly
   evds_code: TP.XXX.YYY
@@ -47,6 +48,9 @@ Tek bir seriyi hata ayıklamak için: `python -m ingest.run --only enflasyon/tuf
   monthly_agg: mean             # mean | last | sum (günlük/haftalık için)
   charts: [seasonality, level]
 ```
+
+Yahoo Finance serisi için `kaynak_tipi: yahoo` ve `evds_code`/`evds_frequency`
+yerine `yahoo_symbol: "BZ=F"` kullanın.
 
 Sonra `python -m ingest.run --only <yeni-id>` ile veriyi üretin.
 
@@ -67,8 +71,8 @@ repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 
 | Faz | İçerik | Durum |
 |---|---|---|
-| 1 | Streamlit iskeleti + EVDS dilimi (13 seri, 4 kategori) | ✅ kod hazır · ilk veri çekimi bekliyor |
-| 2 | Emtia (~11 sayfa) + günlük seriler için parquet geçişi | Sırada |
+| 1 | Streamlit iskeleti + EVDS dilimi (13 seri, 4 kategori) | ✅ |
+| 2 | Emtia (10 seri, 2 kategori): Brent, WTI, doğalgaz, altın, gümüş, bakır, HRC çelik, platin, paladyum, alüminyum | ✅ |
 | 3 | Sektör sayfaları + Veri Takvimi | Planlandı |
 | 4 | Hisse sayfaları | Planlandı |
 | 5 | Arama, favoriler, AI raporları | Planlandı |

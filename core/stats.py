@@ -39,7 +39,7 @@ def _degisim(df: pd.DataFrame, offset: pd.DateOffset) -> float | None:
     simdi = son_tarih(df)
     hedef = simdi - offset
     onceki = _asof(df, hedef)
-    if onceki is None or onceki == 0:
+    if onceki is None or onceki <= 0:
         return None
     # _asof, hedeften önce hiç nokta yoksa None döner; ama hedef ilk
     # noktadan sonraysa ve seri kısaysa aynı noktayı döndürebilir.
@@ -78,7 +78,7 @@ def _onceki_degerler(df: pd.DataFrame, offset: pd.DateOffset) -> np.ndarray:
 def _seri_degisim(df: pd.DataFrame, offset: pd.DateOffset) -> pd.DataFrame:
     onceki = _onceki_degerler(df, offset)
     with np.errstate(divide="ignore", invalid="ignore"):
-        yuzde = (df["value"].to_numpy() / np.where(onceki == 0, np.nan, onceki) - 1) * 100
+        yuzde = (df["value"].to_numpy() / np.where(onceki <= 0, np.nan, onceki) - 1) * 100
     return pd.DataFrame({"value": yuzde}, index=df.index)
 
 
