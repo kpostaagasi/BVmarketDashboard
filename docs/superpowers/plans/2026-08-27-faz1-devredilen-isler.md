@@ -8,19 +8,10 @@ mevcut davranışı bozmuyor; her biri bir review'da bulunup ertelendi.
 
 ## Kullanıcı aksiyonu bekleyenler
 
-Bu ikisi olmadan Faz 1 "canlı" sayılmaz.
-
-1. **EVDS API key.** [evds2.tcmb.gov.tr](https://evds2.tcmb.gov.tr)'ten ücretsiz
-   alınır. Sonra ilk veri çekimi:
-
-   ```bash
-   EVDS_API_KEY=<key> .venv/bin/python -m ingest.run
-   git add data && git commit -m "data: ilk EVDS çekimi"
-   ```
-
-   Bu koşuncaya kadar `data/` boş ve uygulama her kartta "veri yok" gösterir.
-   Canlı istek/yanıt yolu hiç çalıştırılmadı — parse fonksiyonlarının tamamı
-   çevrimdışı test edildi ama endpoint'in kendisi doğrulanmadı.
+1. ~~**EVDS API key.**~~ ✅ **Tamamlandı 2026-08-27** — 13/13 seri çekildi,
+   EVDS3 endpoint'i canlı doğrulandı, veri commit'lendi (`7e5a1c4`).
+   Uygulama gerçek veriyle tarayıcıda gezildi; mevsimsellik, YoY/MoM
+   toggle'ı ve kısmi-ay atma davranışı yerinde teyit edildi.
 
 2. **GitHub remote + secret.** Repoda remote tanımlı değil. Bağlandıktan sonra:
    - `EVDS_API_KEY`'i repo secret olarak ekleyin (Settings → Secrets → Actions)
@@ -50,6 +41,7 @@ Whole-branch review'da bulundu, ertelendi.
 | 11 | `son_tarih`/`son_deger` boş DataFrame guard'ı | `mom`/`yoy`/`aralik_12a`'da var, bu ikisinde yok. Ingest üzerinden ulaşılamaz (`seri_cek` boş seride hata veriyor). |
 | 12 | `_temayi_uygula` dönüş değeri tutarlılığı | Bir dalda kullanılıyor, diğerinde atılıyor. Ayrıca boş DataFrame yolu x ekseni etiketlerinden önce dönüyor — bir yıldan kısa geçmişi olan seri YoY görünümünde Oca→Ara yerine 1–12 sayısal eksen alıyor. |
 | 13 | `serileri_yukle()` ham `KeyError` | Eksik YAML anahtarı `KatalogHatasi` yerine ham `KeyError` veriyor. Yalnızca elle YAML düzenleyen geliştirici görür. |
+| 14 | `ingest` tarafı Streamlit'i import ediyor | `ingest/run.py` → `core.data.seri_yolu` → `import streamlit`. İlk gerçek çekimde görüldü: `python -m ingest.run` çıktısına "No runtime found, using MemoryCacheStorageManager" uyarısı düşüyor. Zararsız ama ingest'in Streamlit'e bağımlı olmaması gerekir — `seri_yolu`'nu Streamlit import etmeyen bir modüle taşımak (2 numaralı işle birlikte) çözer. |
 
 ## Faz 2'de ele alınacak kapsam (spec'ten)
 
