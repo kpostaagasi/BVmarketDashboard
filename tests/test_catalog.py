@@ -151,6 +151,8 @@ def test_bilinmeyen_kaynak_tipi_reddedilir():
 
 def test_kategori_notu_okunur():
     kategoriler = {k.slug: k for k in kategorileri_yukle()}
-    assert kategoriler["emtia-enerji"].note is not None
-    assert "front-month" in kategoriler["emtia-enerji"].note
+    # Her iki emtia kategorisi de sürekli ön vade uyarısını taşımalı
+    for slug in ("emtia-enerji", "emtia-metaller"):
+        assert kategoriler[slug].note, slug
+        assert "front-month" in kategoriler[slug].note, slug
     assert kategoriler["enflasyon"].note is None
