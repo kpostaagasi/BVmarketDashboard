@@ -147,3 +147,10 @@ def test_bilinmeyen_kaynak_tipi_reddedilir():
     seri = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), kaynak_tipi="bloomberg")
     with pytest.raises(KatalogHatasi, match="kaynak_tipi"):
         _dogrula(seri, _sluglar(), set())
+
+
+def test_kategori_notu_okunur():
+    kategoriler = {k.slug: k for k in kategorileri_yukle()}
+    assert kategoriler["emtia-enerji"].note is not None
+    assert "front-month" in kategoriler["emtia-enerji"].note
+    assert kategoriler["enflasyon"].note is None

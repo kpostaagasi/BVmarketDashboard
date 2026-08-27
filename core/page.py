@@ -21,6 +21,8 @@ def _kategoriyi_ciz(kategori: Kategori) -> None:
     st.title(kategori.title)
     kaynaklar = sorted({s.kaynak.name for s in seriler})
     st.caption(f"{len(seriler)} seri · Kaynak: {', '.join(kaynaklar)}")
+    if kategori.note:
+        st.caption(kategori.note)
 
     gorunum = st.segmented_control(
         "Görünüm",

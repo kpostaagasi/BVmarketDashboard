@@ -35,6 +35,7 @@ class Kaynak:
 class Kategori:
     slug: str
     title: str
+    note: str | None = None
 
 
 @dataclass(frozen=True)
@@ -73,7 +74,9 @@ def kategorileri_yukle() -> tuple[Kategori, ...]:
         if slug in gorulen:
             raise KatalogHatasi(f"Kategori slug'ı tekrar ediyor: {slug}")
         gorulen.add(slug)
-        kategoriler.append(Kategori(slug=slug, title=ham["title"]))
+        kategoriler.append(
+            Kategori(slug=slug, title=ham["title"], note=ham.get("note"))
+        )
     return tuple(kategoriler)
 
 
