@@ -77,3 +77,19 @@ def test_seviye_y_ekseni_birimi_gosterir():
     df = aylik_df("2024-01-01", 24)
     fig = seviye_figuru(df, "TL")
     assert fig.layout.yaxis.title.text == "TL"
+
+
+def test_mevsimsellik_tek_yilda_legend_kapali():
+    df = aylik_df("2026-01-01", 6)
+    assert mevsimsellik_figuru(df, "Adet").layout.showlegend is False
+
+
+def test_mevsimsellik_cok_yilda_legend_acik():
+    df = aylik_df("2022-01-01", 60)
+    assert mevsimsellik_figuru(df, "Adet").layout.showlegend is True
+
+
+def test_mevsimsellik_paletten_fazla_yil_istenirse_hata():
+    df = aylik_df("2016-01-01", 120)
+    with pytest.raises(ValueError, match="yil_sayisi"):
+        mevsimsellik_figuru(df, "Adet", yil_sayisi=4)

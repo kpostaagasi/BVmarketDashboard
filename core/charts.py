@@ -60,6 +60,12 @@ def _temayi_uygula(fig: go.Figure, birim: str) -> go.Figure:
 def mevsimsellik_figuru(
     df: pd.DataFrame, birim: str, agg: str = "mean", yil_sayisi: int = 3
 ) -> go.Figure:
+    if yil_sayisi > len(RENKLER["seri"]):
+        raise ValueError(
+            f"yil_sayisi en fazla {len(RENKLER['seri'])} olabilir — palet o kadar "
+            "seri için doğrulandı. Daha fazlası için theme.py'deki paletin yeniden "
+            "doğrulanması gerekir."
+        )
     aylik = aylige_cevir(df, agg)
     fig = go.Figure()
 
