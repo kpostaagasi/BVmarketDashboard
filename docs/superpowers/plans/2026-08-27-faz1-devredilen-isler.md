@@ -13,14 +13,25 @@ mevcut davranışı bozmuyor; her biri bir review'da bulunup ertelendi.
    Uygulama gerçek veriyle tarayıcıda gezildi; mevsimsellik, YoY/MoM
    toggle'ı ve kısmi-ay atma davranışı yerinde teyit edildi.
 
-2. **GitHub remote + secret.** Repoda remote tanımlı değil. Bağlandıktan sonra:
-   - `EVDS_API_KEY`'i repo secret olarak ekleyin (Settings → Secrets → Actions)
-   - `gh workflow run "Veri güncelle"` ile workflow'u bir kez elle tetikleyip
-     yeşil olduğunu görün — YAML hiç gerçek bir koşuda doğrulanmadı
-   - Streamlit Community Cloud'a deploy edin; **Python 3.12 seçin** (Actions
-     pinliyor, Cloud bir UI ayarı) ve erişimi viewer allowlist'i ile kısıtlayın.
-     Allowlist'in ücretsiz katmandaki güncel davranışı yerinde doğrulanacak —
-     yetersiz çıkarsa çare bulut VM + reverse proxy auth (spec'teki risk 2).
+2. ~~**GitHub remote + secret.**~~ ✅ **Tamamlandı 2026-08-27**
+   - Repo: https://github.com/kpostaagasi/BVmarketDashboard (**private**, kişisel hesap)
+   - `EVDS_API_KEY` secret'ı kuruldu ve doğrulandı
+   - `test.yml` push'ta koştu ve geçti (66 test)
+   - `ingest.yml` elle tetiklendi: Actions ortamından 13/13 seri başarılı,
+     "değişiklik yok" dalı da doğru çalıştı. Günlük cron 06:00 UTC'de aktif.
+
+   **Not — sahiplik borcu:** repo kişisel hesapta duruyor. BV Portföy org'u
+   kurulduğunda transfer edilmeli; Streamlit Cloud deploy'unun yeniden
+   bağlanması gerekecek.
+
+3. **Streamlit Community Cloud deploy.** Kalan tek adım.
+   [share.streamlit.io](https://share.streamlit.io) → GitHub ile giriş →
+   New app → repo `kpostaagasi/BVmarketDashboard`, branch `main`,
+   main file `app.py` → Advanced settings'te **Python 3.12 seçin**
+   (Actions pinliyor, Cloud bir UI ayarı). Deploy sonrası erişimi viewer
+   allowlist'i ile BV Portföy e-postalarına kısıtlayın. Allowlist'in
+   ücretsiz katmandaki güncel davranışı yerinde doğrulanacak — yetersiz
+   çıkarsa çare bulut VM + reverse proxy auth (spec'teki risk 2).
 
 ## Faz 2'ye devredilen teknik işler
 
@@ -41,6 +52,7 @@ Whole-branch review'da bulundu, ertelendi.
 | 11 | `son_tarih`/`son_deger` boş DataFrame guard'ı | `mom`/`yoy`/`aralik_12a`'da var, bu ikisinde yok. Ingest üzerinden ulaşılamaz (`seri_cek` boş seride hata veriyor). |
 | 12 | `_temayi_uygula` dönüş değeri tutarlılığı | Bir dalda kullanılıyor, diğerinde atılıyor. Ayrıca boş DataFrame yolu x ekseni etiketlerinden önce dönüyor — bir yıldan kısa geçmişi olan seri YoY görünümünde Oca→Ara yerine 1–12 sayısal eksen alıyor. |
 | 13 | `serileri_yukle()` ham `KeyError` | Eksik YAML anahtarı `KatalogHatasi` yerine ham `KeyError` veriyor. Yalnızca elle YAML düzenleyen geliştirici görür. |
+| 15 | `run.py`'nin secret hata mesajı boş değeri ayırt etmiyor | "EVDS_API_KEY tanımlı değil" diyor ama secret var ve boş olduğunda da aynı mesaj çıkıyor. İlk Actions koşusunda bu bir hata ayıklama turuna mal oldu (`gh secret set` etkileşimsiz kabukta boş stdin okuyup boş secret yazmıştı). "tanımlı değil veya boş" demek yeterli. |
 | 14 | `ingest` tarafı Streamlit'i import ediyor | `ingest/run.py` → `core.data.seri_yolu` → `import streamlit`. İlk gerçek çekimde görüldü: `python -m ingest.run` çıktısına "No runtime found, using MemoryCacheStorageManager" uyarısı düşüyor. Zararsız ama ingest'in Streamlit'e bağımlı olmaması gerekir — `seri_yolu`'nu Streamlit import etmeyen bir modüle taşımak (2 numaralı işle birlikte) çözer. |
 
 ## Faz 2'de ele alınacak kapsam (spec'ten)
