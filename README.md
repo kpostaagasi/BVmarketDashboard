@@ -1,46 +1,75 @@
 # BV Market Dashboard
 
-Türkiye ekonomisi ve BIST için veri ve grafikler: resmi/açık kaynaklardan otomatik veri çekme, normalize etme ve statik grafik sayfaları olarak sunma.
+Türkiye ekonomisi için veri ve grafikler — BV Portföy iç kullanımı.
+Resmi kaynaklardan otomatik veri çekme, normalize etme, hazır
+istatistikli grafik sayfaları olarak sunma.
 
 ## Mimari
 
 ```
-scripts/ingest/            # kaynak başına bir TS modülü
-  sources/yahoo.ts         #   Yahoo Finance (emtia + döviz)
-  run.ts                   #   orchestrator: modülleri koşturur, hataları izole eder
-data/
-  <kategori>/<seri>.json   # normalize edilmiş seriler (repoda tutulur)
-src/app/                   # Next.js App Router (build'de data/*.json'dan render)
-.github/workflows/update.yml  # günlük cron: ingest → commit → push
+app.py                    # st.navigation — sol menü katalogdan üretilir
+catalog/series.yaml       # tek doğruluk kaynağı: seri tanımları
+catalog/categories.yaml   # menü ağacı
+core/                     # catalog, data, stats, charts, components, page
+ingest/                   # evds.py + run.py (orchestrator)
+data/<kategori>/<seri>.csv
+.github/workflows/ingest.yml   # günlük cron: ingest → commit → push
 ```
 
-Site tamamen statiktir; veri tazeliği GitHub Actions'ın günlük commit'iyle gelir. Her grafiğin altında kaynağı ve son güncelleme tarihi gösterilir.
-
-Tasarım detayları: `docs/superpowers/specs/2026-08-26-bvmarketdashboard-design.md`
+Veri repoda yaşar; uygulama yalnızca okur ve **runtime'da hiç secret
+kullanmaz**. `EVDS_API_KEY` sadece GitHub Actions ortamında geçer.
 
 ## Komutlar
 
 ```bash
-npm run dev      # geliştirme sunucusu
-npm run build    # prod build (statik)
-npm run ingest   # veri çekme: data/ altına yazar
+pip install -r requirements-dev.txt
+streamlit run app.py                       # geliştirme sunucusu
+EVDS_API_KEY=<key> python -m ingest.run    # veriyi tazele
+pytest                                     # test paketi
 ```
 
-## Veri sözleşmesi
+Tek bir seriyi hata ayıklamak için: `python -m ingest.run --only enflasyon/tufe-genel`
 
-Her ingest modülü `ingest(): Promise<Series[]>` döner; seriler `data/<kategori>/<ad>.json` olarak yazılır (kategori = id'nin ilk segmenti). Şema `src/lib/types.ts`'te tanımlı.
+## Yeni seri ekleme
+
+`catalog/series.yaml`'a bir kayıt ekleyin; kod değişikliği gerekmez:
+
+```yaml
+- id: <kategori>/<ad>
+  title: Görünen Ad
+  category: <kategori>          # categories.yaml'da tanımlı olmalı
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  unit: "Birim"
+  freq: monthly                 # daily | weekly | monthly
+  evds_code: TP.XXX.YYY
+  evds_frequency: "5"           # 1=günlük, 2=haftalık, 5=aylık
+  monthly_agg: mean             # mean | last | sum (günlük/haftalık için)
+  charts: [seasonality, level]
+```
+
+Sonra `python -m ingest.run --only <yeni-id>` ile veriyi üretin.
+
+## Deploy
+
+Streamlit Community Cloud, private repo. Erişim viewer allowlist'i ile
+BV Portföy e-postalarına kısıtlıdır.
+
+Uygulama hareketsizlik sonrası uykuya dalar; günün ilk kullanıcısı
+~30 saniye soğuk başlangıç bekler.
+
+## Ön koşul
+
+[TCMB EVDS](https://evds2.tcmb.gov.tr)'ten ücretsiz API key alıp GitHub
+repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 
 ## Yol haritası
 
 | Faz | İçerik | Durum |
 |---|---|---|
-| 0 | İskelet + ilk gerçek seri (USD/TRY) | ✅ |
-| 1 | Makro paketi (~15 seri): TÜFE, kur, faiz, konut, tüketici güveni… (TCMB EVDS) | Sırada |
-| 2 | Emtia (~12 seri): Brent, altın, bakır… | Planlandı |
-| 3 | 9 sektör sayfası (BDDK, OSD, TSB, TEİAŞ…) | Planlandı |
-| 4 | Hisse sayfaları (~23) | Planlandı |
-| 5 | AI Raporları + arama/indeks | Planlandı |
+| 1 | Streamlit iskeleti + EVDS dilimi (13 seri, 4 kategori) | ✅ kod hazır · ilk veri çekimi bekliyor |
+| 2 | Emtia (~11 sayfa) + günlük seriler için parquet geçişi | Sırada |
+| 3 | Sektör sayfaları + Veri Takvimi | Planlandı |
+| 4 | Hisse sayfaları | Planlandı |
+| 5 | Arama, favoriler, AI raporları | Planlandı |
 
-## Ön koşullar
-
-**Faz 1 için:** [TCMB EVDS](https://evds2.tcmb.gov.tr)'ten ücretsiz API key alıp GitHub repo secret'ına `EVDS_API_KEY` olarak ekleyin.
+Tasarım detayları: `docs/superpowers/specs/2026-08-27-streamlit-dashboard-design.md`
