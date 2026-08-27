@@ -12,6 +12,7 @@ from core.takvim import (
     SUTUNLAR,
     VERI_YOK,
     TakvimSatiri,
+    donem_sonu,
     durum_hesapla,
     satir_uret,
     sirala,
@@ -49,11 +50,43 @@ def test_aylik_esikleri():
     assert durum_hesapla("monthly", 101) == GECIKMIS
 
 
-def test_satir_uret_bekleme_gununu_hesaplar():
+def test_satir_uret_beklemeyi_donem_sonundan_olcer():
+    """Aylık etiket ayın 1'i; bekleme dönemin bittiği günden sayılmalı.
+
+    Temmuz verisi 3 Ağustos'ta yayınlanır ve 3 Eylül'e kadar en güncel veridir.
+    Etiketten ölçmek bu normal aralığı sahte gecikme gibi gösteriyordu.
+    """
     satir = satir_uret(seri("monthly"), date(2026, 7, 1), date(2026, 8, 27))
-    assert satir.bekleme_gunu == 57
-    assert satir.durum == BEKLENIYOR
+    assert satir.bekleme_gunu == 27
+    assert satir.durum == GUNCEL
     assert satir.son_donem == date(2026, 7, 1)
+
+
+def test_satir_uret_bitmemis_donemde_beklemeyi_sifira_kirpar():
+    """Ağustos verisi geldiyse ve ağustos bitmediyse bekleme negatif çıkar."""
+    satir = satir_uret(seri("monthly"), date(2026, 8, 1), date(2026, 8, 27))
+    assert satir.bekleme_gunu == 0
+    assert satir.durum == GUNCEL
+
+
+def test_satir_uret_gercekten_gecikeni_isaretlemeye_devam_eder():
+    """Haziran verisi 27 Ağustos'ta iki dönem geride — bu gerçek gecikme."""
+    satir = satir_uret(seri("monthly"), date(2026, 6, 1), date(2026, 8, 27))
+    assert satir.bekleme_gunu == 58
+    assert satir.durum == BEKLENIYOR
+
+
+def test_donem_sonu_aylik_etiketi_ay_sonuna_tasir():
+    assert donem_sonu(date(2026, 7, 1), "monthly") == date(2026, 7, 31)
+    assert donem_sonu(date(2026, 2, 1), "monthly") == date(2026, 2, 28)
+
+
+def test_donem_sonu_haftalik_etikete_alti_gun_ekler():
+    assert donem_sonu(date(2026, 8, 21), "weekly") == date(2026, 8, 27)
+
+
+def test_donem_sonu_gunluk_etiketi_degistirmez():
+    assert donem_sonu(date(2026, 8, 27), "daily") == date(2026, 8, 27)
 
 
 def test_satir_uret_verisi_olmayan_seriyi_isaretler():

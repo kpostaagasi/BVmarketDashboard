@@ -3,6 +3,8 @@
 Saf hesaplama — bu modül doğrudan Streamlit import etmez. Sayfa render'ı
 core/page.py'dedir.
 
+Tazelik, dönem etiketinden değil DÖNEM SONUNDAN ölçülür (bkz. `donem_sonu`).
+
 Eşikler SEZGİSELDİR: bir periyot artı tipik yayın gecikmesi. Tek yerde
 tutulurlar ki gürültü görüldüğünde ayarlanabilsinler. Seri bazında geçersiz
 kılma bilinçli olarak eklenmedi — hangi serinin gürültü çıkaracağı henüz
@@ -15,8 +17,9 @@ bizim ingest'imiz sessizce kırılmıştır. İkincisi başka hiçbir yerde gör
 
 from __future__ import annotations
 
+from calendar import monthrange
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 
 import pandas as pd
 
@@ -43,6 +46,20 @@ class TakvimSatiri:
     durum: str
 
 
+def donem_sonu(etiket: date, freq: str) -> date:
+    """Dönem etiketini, o dönemin bittiği güne çevirir.
+
+    Etiket bir aralığın adıdır, anı değil: aylık seride `2026-07-01` "temmuz
+    ayı" demektir, "1 temmuz" değil. Tazeliği etiketten ölçmek aylık serilere
+    bir aylık sahte gecikme ekliyordu.
+    """
+    if freq == "monthly":
+        return etiket.replace(day=monthrange(etiket.year, etiket.month)[1])
+    if freq == "weekly":
+        return etiket + timedelta(days=6)
+    return etiket
+
+
 def durum_hesapla(freq: str, bekleme_gunu: int) -> str:
     esik = ESIKLER[freq]
     if bekleme_gunu <= esik:
@@ -58,7 +75,8 @@ def satir_uret(seri: Seri, son_donem: date | None, bugun: date) -> TakvimSatiri:
         return TakvimSatiri(
             seri=seri, son_donem=None, bekleme_gunu=None, durum=VERI_YOK
         )
-    bekleme = (bugun - son_donem).days
+    # Dönem henüz bitmediyse fark negatif olur; bitmemiş dönem tanımı gereği güncel.
+    bekleme = max((bugun - donem_sonu(son_donem, seri.freq)).days, 0)
     return TakvimSatiri(
         seri=seri,
         son_donem=son_donem,
