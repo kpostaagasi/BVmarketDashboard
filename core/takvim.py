@@ -29,9 +29,10 @@ GUNCEL = "güncel"
 BEKLENIYOR = "bekleniyor"
 GECIKMIS = "gecikmiş"
 VERI_YOK = "veri yok"
+OKUNAMADI = "okunamadı"
 
-# Sıralama ciddiyeti: verisi hiç olmayan en gürültülü sorundur.
-_CIDDIYET = {VERI_YOK: 0, GECIKMIS: 1, BEKLENIYOR: 2, GUNCEL: 3}
+# Sıralama ciddiyeti: okunamayan dosya, hiç olmayan dosyadan da gürültülüdür.
+_CIDDIYET = {OKUNAMADI: 0, VERI_YOK: 1, GECIKMIS: 2, BEKLENIYOR: 3, GUNCEL: 4}
 
 
 @dataclass(frozen=True)
@@ -82,21 +83,31 @@ def _durum_metni(satir: TakvimSatiri) -> str:
     return f"{satir.durum} ({satir.bekleme_gunu} gün)"
 
 
+SUTUNLAR = [
+    "Veri",
+    "Kategori",
+    "Son Dönem",
+    "Durum",
+    "Sıklık",
+    "Kaynak",
+    "Yayın notu",
+]
+
+
 def tablo_df(satirlar: list[TakvimSatiri]) -> pd.DataFrame:
-    return pd.DataFrame(
-        [
-            {
-                "Veri": s.seri.title,
-                "Kategori": s.seri.category,
-                "Son Dönem": "—" if s.son_donem is None else s.son_donem.isoformat(),
-                "Durum": _durum_metni(s),
-                "Sıklık": SIKLIK_ETIKETLERI[s.seri.freq],
-                "Kaynak": s.seri.kaynak.name,
-                "Yayın notu": s.seri.yayin_notu or "",
-            }
-            for s in satirlar
-        ]
-    )
+    kayitlar = [
+        {
+            "Veri": s.seri.title,
+            "Kategori": s.seri.category,
+            "Son Dönem": "—" if s.son_donem is None else s.son_donem.isoformat(),
+            "Durum": _durum_metni(s),
+            "Sıklık": SIKLIK_ETIKETLERI[s.seri.freq],
+            "Kaynak": s.seri.kaynak.name,
+            "Yayın notu": s.seri.yayin_notu or "",
+        }
+        for s in satirlar
+    ]
+    return pd.DataFrame(kayitlar, columns=SUTUNLAR)
 
 
 def takvim(bugun: date | None = None) -> list[TakvimSatiri]:
@@ -108,6 +119,14 @@ def takvim(bugun: date | None = None) -> list[TakvimSatiri]:
             df = seri_csv_oku(seri_yolu(seri.id))
             son = df.index.max().date()
         except VeriYokHatasi:
-            son = None
+            satirlar.append(satir_uret(seri, None, bugun))
+            continue
+        except Exception:  # noqa: BLE001 — bozuk CSV bir satırı düşürür, sayfayı değil
+            satirlar.append(
+                TakvimSatiri(
+                    seri=seri, son_donem=None, bekleme_gunu=None, durum=OKUNAMADI
+                )
+            )
+            continue
         satirlar.append(satir_uret(seri, son, bugun))
     return sirala(satirlar)

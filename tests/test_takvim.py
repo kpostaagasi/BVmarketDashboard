@@ -8,6 +8,8 @@ from core.takvim import (
     BEKLENIYOR,
     GECIKMIS,
     GUNCEL,
+    OKUNAMADI,
+    SUTUNLAR,
     VERI_YOK,
     TakvimSatiri,
     durum_hesapla,
@@ -118,3 +120,26 @@ def test_tablo_df_guncel_satirda_gun_sayisi_gostermez():
     s = seri("daily")
     df = tablo_df([TakvimSatiri(s, date(2026, 8, 26), 1, GUNCEL)])
     assert df.iloc[0]["Durum"] == "güncel"
+
+
+def test_sirala_okunamadi_en_uste_gelir():
+    s = seri("daily")
+    satirlar = [
+        TakvimSatiri(s, None, None, VERI_YOK),
+        TakvimSatiri(s, date(2026, 8, 1), 26, GECIKMIS),
+        TakvimSatiri(s, None, None, OKUNAMADI),
+    ]
+    assert [x.durum for x in sirala(satirlar)] == [OKUNAMADI, VERI_YOK, GECIKMIS]
+
+
+def test_tablo_df_okunamayan_satiri_gosterir():
+    s = seri("daily")
+    df = tablo_df([TakvimSatiri(s, None, None, OKUNAMADI)])
+    assert df.iloc[0]["Durum"] == "okunamadı"
+    assert df.iloc[0]["Son Dönem"] == "—"
+
+
+def test_tablo_df_bos_listede_sutunlari_korur():
+    df = tablo_df([])
+    assert list(df.columns) == SUTUNLAR
+    assert len(df) == 0
