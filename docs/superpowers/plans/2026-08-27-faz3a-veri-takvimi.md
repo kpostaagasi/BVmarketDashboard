@@ -48,7 +48,7 @@
   - `core.takvim.tablo_df(satirlar: list[TakvimSatiri]) -> pd.DataFrame`
   - `core.takvim.takvim(bugun: date | None = None) -> list[TakvimSatiri]` — I/O kabuğu
 
-- [ ] **Step 1: Testleri yaz (başarısız olmalı)**
+- [x] **Step 1: Testleri yaz (başarısız olmalı)**
 
 `tests/test_takvim.py`:
 
@@ -182,12 +182,12 @@ def test_siklik_etiketleri_tum_frekanslari_kapsar():
     assert set(SIKLIK_ETIKETLERI) == GECERLI_FREKANSLAR
 ```
 
-- [ ] **Step 2: Testleri koştur, başarısız olduklarını gör**
+- [x] **Step 2: Testleri koştur, başarısız olduklarını gör**
 
 Run: `.venv/bin/python -m pytest tests/test_takvim.py tests/test_catalog.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'core.takvim'` ve `test_catalog.py`'de `ImportError: cannot import name 'SIKLIK_ETIKETLERI'`
 
-- [ ] **Step 3: Katalogu güncelle**
+- [x] **Step 3: Katalogu güncelle**
 
 `core/catalog.py`'de `GECERLI_KAYNAK_TIPLERI` satırının altına ekleyin:
 
@@ -207,7 +207,7 @@ SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLI
             yayin_notu=ham.get("yayin_notu"),
 ```
 
-- [ ] **Step 4: `core/components.py`'yi ortak sabite geçir**
+- [x] **Step 4: `core/components.py`'yi ortak sabite geçir**
 
 Dosyanın başındaki şu satırı **silin**:
 
@@ -227,7 +227,7 @@ Ve `grafik_karti` içindeki kullanımı güncelleyin:
         etiket = SIKLIK_ETIKETLERI[seri.freq]
 ```
 
-- [ ] **Step 5: `core/takvim.py`'yi yaz**
+- [x] **Step 5: `core/takvim.py`'yi yaz**
 
 ```python
 """Veri Takvimi: serilerin tazelik durumu.
@@ -347,12 +347,12 @@ def takvim(bugun: date | None = None) -> list[TakvimSatiri]:
 
 Not: `core.data` import'u dolaylı olarak Streamlit'i çekiyor (devredilen işler listesinde 14 numara). Bu modül doğrudan Streamlit import etmiyor ve mantığın tamamı `satir_uret`/`durum_hesapla`/`sirala`/`tablo_df` içinde saf — testler dosyaya da Streamlit'e de dokunmuyor.
 
-- [ ] **Step 6: Testleri koştur, geçtiklerini gör**
+- [x] **Step 6: Testleri koştur, geçtiklerini gör**
 
 Run: `.venv/bin/python -m pytest -q`
 Expected: PASS — 94 mevcut + 13 yeni = 107 test. Sayı farklı çıkarsa testleri sayıya uydurmayın, bildirin.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add core/takvim.py core/catalog.py core/components.py tests/test_takvim.py tests/test_catalog.py
@@ -377,7 +377,7 @@ Veri Takvimi sayfası "Genel" grubuna eklenir. Sorun varsa üstte uyarı bloğu,
 - Consumes: `core.takvim.takvim`, `core.takvim.tablo_df`, `core.takvim.GUNCEL`, `core.takvim.TakvimSatiri`, `core.catalog.SIKLIK_ETIKETLERI`
 - Produces: `core.page.veri_takvimi_sayfasi() -> None`
 
-- [ ] **Step 1: `core/page.py`'ye sayfayı ekle**
+- [x] **Step 1: `core/page.py`'ye sayfayı ekle**
 
 Import satırlarına ekleyin:
 
@@ -422,7 +422,7 @@ def veri_takvimi_sayfasi() -> None:
     st.dataframe(tablo_df(satirlar), width="stretch", hide_index=True)
 ```
 
-- [ ] **Step 2: `app.py`'ye bağla**
+- [x] **Step 2: `app.py`'ye bağla**
 
 Import satırını şu hâle getirin:
 
@@ -448,12 +448,12 @@ st.navigation(
 ).run()
 ```
 
-- [ ] **Step 3: Testleri koştur**
+- [x] **Step 3: Testleri koştur**
 
 Run: `.venv/bin/python -m pytest -q`
 Expected: PASS — 107, değişmemiş (bu görev test eklemiyor).
 
-- [ ] **Step 4: Tarayıcıda doğrula**
+- [x] **Step 4: Tarayıcıda doğrula**
 
 ```bash
 .venv/bin/streamlit run app.py --server.headless true --server.port 8560 > /tmp/bv-takvim.log 2>&1 &
@@ -470,7 +470,7 @@ Expected: PASS — 107, değişmemiş (bu görev test eklemiyor).
 
 Ekran görüntüsü alın. Sunucuyu kapatın.
 
-- [ ] **Step 5: Uyarı bloğunu sentetik bir bayat seriyle doğrula**
+- [~] **Step 5: Uyarı bloğunu sentetik bir bayat seriyle doğrula** — ATLANDI: gerçek veride 6 seri zaten `bekleniyor` durumunda olduğu için uyarı bloğu canlı veriyle render oldu (Step 4 ekran görüntüsü). Adımın gerekçesi ("gerçek veri tazeyse blok görünmez") geçerli değil. `OKUNAMADI`/`VERI_YOK` dalları `tests/test_takvim.py` içinde kapsanıyor.
 
 Uyarı bloğu ancak sorun varsa render olur. Gerçek veri tazeyse blok hiç görünmez ve o yolu doğrulamamış olursunuz. Geçici olarak bir CSV'nin son satırlarını silip bloğun göründüğünü teyit edin:
 
@@ -490,7 +490,7 @@ git diff --stat data/   # boş olmalı
 
 `git status --short` commit öncesi temiz olmalı — bu görev `data/` altında hiçbir şey değiştirmez.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add core/page.py app.py
