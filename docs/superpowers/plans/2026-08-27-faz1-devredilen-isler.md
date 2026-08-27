@@ -24,14 +24,22 @@ mevcut davranışı bozmuyor; her biri bir review'da bulunup ertelendi.
    kurulduğunda transfer edilmeli; Streamlit Cloud deploy'unun yeniden
    bağlanması gerekecek.
 
-3. **Streamlit Community Cloud deploy.** Kalan tek adım.
-   [share.streamlit.io](https://share.streamlit.io) → GitHub ile giriş →
-   New app → repo `kpostaagasi/BVmarketDashboard`, branch `main`,
-   main file `app.py` → Advanced settings'te **Python 3.12 seçin**
-   (Actions pinliyor, Cloud bir UI ayarı). Deploy sonrası erişimi viewer
-   allowlist'i ile BV Portföy e-postalarına kısıtlayın. Allowlist'in
-   ücretsiz katmandaki güncel davranışı yerinde doğrulanacak — yetersiz
-   çıkarsa çare bulut VM + reverse proxy auth (spec'teki risk 2).
+3. ~~**Streamlit Community Cloud deploy.**~~ ✅ **Tamamlandı 2026-08-27**
+   - URL: https://bvmarketdashboard.streamlit.app/
+   - Canlıda doğrulandı: dört kategori sayfası, `/enflasyon` derin bağlantısı,
+     Türkçe sayı biçimi, mevsimsellik grafikleri, doğrulanmış palet.
+   - **Erişim: private.** "Make this app public" kapalı, davetli listesi boş.
+     Şu an yalnızca hesap sahibi erişebiliyor.
+
+   **Spec'teki risk 2 kapandı:** Community Cloud ücretsiz katmanı private
+   uygulamayı ve e-posta bazlı davet listesini destekliyor. Bulut VM +
+   reverse proxy B planına gerek yok.
+
+## Kalan tek iş
+
+**Ekip davetleri.** Uygulamada sağ üstteki **Share** → **Invite** alanına
+BV Portföy çalışanlarının e-postalarını virgülle ayırarak girin. O ana
+kadar panoya yalnızca hesap sahibi erişebilir.
 
 ## Faz 2'ye devredilen teknik işler
 
