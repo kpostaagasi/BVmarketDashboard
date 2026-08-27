@@ -190,3 +190,13 @@ def test_kategori_notu_okunur():
         assert kategoriler[slug].note, slug
         assert "front-month" in kategoriler[slug].note, slug
     assert kategoriler["enflasyon"].note is None
+
+
+def test_yayin_notu_varsayilan_none():
+    assert seri_getir("enflasyon/tufe-genel").yayin_notu is None
+
+
+def test_siklik_etiketleri_tum_frekanslari_kapsar():
+    from core.catalog import GECERLI_FREKANSLAR, SIKLIK_ETIKETLERI
+
+    assert set(SIKLIK_ETIKETLERI) == GECERLI_FREKANSLAR
