@@ -59,7 +59,7 @@ def test_istek_govdesi_seri_kodunu_tire_ile_gonderir():
 def test_noktalari_ayikla_siralar_ve_gecersizleri_atar():
     yanit = {
         "items": [
-            {"Tarih": "2026-03", "TP_TUKFIY2025_GENEL": "102,50000"},
+            {"Tarih": "2026-03", "TP_TUKFIY2025_GENEL": "102.50000"},
             {"Tarih": "2026-01", "TP_TUKFIY2025_GENEL": "100.00000"},
             {"Tarih": "2026-02", "TP_TUKFIY2025_GENEL": None},
             {"Tarih": "bozuk", "TP_TUKFIY2025_GENEL": "999"},
