@@ -15,7 +15,16 @@ import requests
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest.evds import seri_cek
+from ingest import evds, yahoo
+
+
+def _cek(seri: Seri, api_key: str | None, oturum):
+    """Seriyi kaynak tipine göre doğru istemciye yönlendirir."""
+    if seri.kaynak_tipi == "evds":
+        return evds.seri_cek(seri, api_key, session=oturum)
+    if seri.kaynak_tipi == "yahoo":
+        return yahoo.seri_cek(seri, session=oturum)
+    raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
 
 
 def seriyi_yaz(seri: Seri, df) -> int:
@@ -26,16 +35,13 @@ def seriyi_yaz(seri: Seri, df) -> int:
 
 
 def main() -> int:
-    ayristirici = argparse.ArgumentParser(description="EVDS verilerini çeker")
+    ayristirici = argparse.ArgumentParser(
+        description="Katalogdaki serileri kaynaklarından çeker"
+    )
     ayristirici.add_argument(
         "--only", help="Yalnızca bu seri id'sini çek (hata ayıklama için)"
     )
     args = ayristirici.parse_args()
-
-    api_key = os.environ.get("EVDS_API_KEY")
-    if not api_key:
-        print("HATA: EVDS_API_KEY tanımlı değil", file=sys.stderr)
-        return 2
 
     seriler = seri_listele()
     if args.only:
@@ -44,13 +50,18 @@ def main() -> int:
             print(f"HATA: katalogda yok: {args.only}", file=sys.stderr)
             return 2
 
+    api_key = os.environ.get("EVDS_API_KEY")
+    if any(s.kaynak_tipi == "evds" for s in seriler) and not api_key:
+        print("HATA: EVDS_API_KEY tanımlı değil veya boş", file=sys.stderr)
+        return 2
+
     basarili: list[str] = []
     hatalar: list[tuple[str, str]] = []
 
     with requests.Session() as oturum:
         for seri in seriler:
             try:
-                df = seri_cek(seri, api_key, session=oturum)
+                df = _cek(seri, api_key, oturum)
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")
                 print(f"  ✓ {seri.id} — {adet} nokta")

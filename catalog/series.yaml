@@ -146,3 +146,113 @@
   evds_frequency: "2"
   monthly_agg: sum
   charts: [level, seasonality]
+
+- id: emtia-enerji/brent
+  title: Brent Petrol
+  category: emtia-enerji
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/BZ=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "BZ=F"
+  unit: "USD/varil"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-enerji/wti
+  title: WTI Ham Petrol
+  category: emtia-enerji
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/CL=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "CL=F"
+  unit: "USD/varil"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-enerji/dogalgaz
+  title: Doğal Gaz (Henry Hub)
+  category: emtia-enerji
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/NG=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "NG=F"
+  unit: "USD/MMBtu"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-metaller/altin
+  title: Altın
+  category: emtia-metaller
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/GC=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "GC=F"
+  unit: "USD/ons"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-metaller/gumus
+  title: Gümüş
+  category: emtia-metaller
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/SI=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "SI=F"
+  unit: "USD/ons"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-metaller/bakir
+  title: Bakır
+  category: emtia-metaller
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/HG=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "HG=F"
+  unit: "USD/libre"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-metaller/hrc-celik
+  title: HRC Çelik
+  category: emtia-metaller
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/HRC=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "HRC=F"
+  unit: "USD/ton"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-metaller/platin
+  title: Platin
+  category: emtia-metaller
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/PL=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "PL=F"
+  unit: "USD/ons"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-metaller/paladyum
+  title: Paladyum
+  category: emtia-metaller
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/PA=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "PA=F"
+  unit: "USD/ons"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-metaller/aluminyum
+  title: Alüminyum
+  category: emtia-metaller
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/ALI=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "ALI=F"
+  unit: "USD/ton"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
