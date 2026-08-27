@@ -13,18 +13,20 @@ from core.catalog import (
 )
 
 
-def test_dort_kategori_yuklenir():
+def test_kategori_sirasi():
     kategoriler = kategorileri_yukle()
     assert [k.slug for k in kategoriler] == [
         "ekonomi-makro",
+        "emtia-enerji",
+        "emtia-metaller",
         "enflasyon",
         "insaat",
         "kredi-karti",
     ]
 
 
-def test_onuc_seri_yuklenir():
-    assert len(serileri_yukle()) == 13
+def test_seri_sayisi():
+    assert len(serileri_yukle()) == 23
 
 
 def test_seri_alanlari_dogru_tiplerde():
