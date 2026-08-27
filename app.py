@@ -7,7 +7,7 @@ catalog/categories.yaml'a bir satır eklemek yeterlidir.
 import streamlit as st
 
 from core.catalog import kategorileri_yukle
-from core.page import kategori_sayfasi_yap
+from core.page import genel_bakis_yap, kategori_sayfasi_yap
 
 st.set_page_config(
     page_title="BV Market Dashboard",
@@ -16,14 +16,24 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-sayfalar = [
+kategoriler = list(kategorileri_yukle())
+
+kategori_sayfalari = [
     st.Page(
         kategori_sayfasi_yap(kategori),
         title=kategori.title,
         url_path=kategori.slug,
-        default=(sira == 0),
     )
-    for sira, kategori in enumerate(kategorileri_yukle())
+    for kategori in kategoriler
 ]
 
-st.navigation({"Veri Sayfaları": sayfalar}).run()
+ana_sayfa = st.Page(
+    genel_bakis_yap(list(zip(kategoriler, kategori_sayfalari))),
+    title="Genel Bakış",
+    url_path="genel-bakis",
+    default=True,
+)
+
+st.navigation(
+    {"Genel": [ana_sayfa], "Veri Sayfaları": kategori_sayfalari}
+).run()

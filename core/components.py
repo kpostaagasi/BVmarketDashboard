@@ -24,10 +24,16 @@ from core.theme import RENKLER
 _SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 
 
+def _tr_sayi(deger: float, basamak: int = 2) -> str:
+    """1234.56 -> '1.234,56' (Türkçe: binlik nokta, ondalık virgül)."""
+    tam, _, ondalik = f"{deger:,.{basamak}f}".partition(".")
+    return f"{tam.replace(',', '.')},{ondalik}"
+
+
 def sayi_bicimle(deger: float | None, birim: str = "") -> str:
     if deger is None:
         return "—"
-    metin = f"{deger:,.2f}".replace(",", " ")
+    metin = _tr_sayi(deger)
     return f"{metin} {birim}".strip()
 
 
@@ -37,7 +43,7 @@ def yuzde_rozeti(deger: float | None) -> str:
         return ":gray[—]"
     isaret = "▲" if deger >= 0 else "▼"
     renk = RENKLER["artis"] if deger >= 0 else RENKLER["dusus"]
-    return f"<span style='color:{renk}'>{isaret} %{deger:,.1f}</span>"
+    return f"<span style='color:{renk}'>{isaret} %{_tr_sayi(deger, 1)}</span>"
 
 
 def kpi_satiri(seriler: list[Seri]) -> None:
@@ -115,4 +121,7 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
             st.plotly_chart(fig, use_container_width=True, key=f"{seri.id}-{grafik}")
 
         with st.expander("Veri tablosu"):
-            st.dataframe(gosterilecek, use_container_width=True)
+            st.dataframe(
+                gosterilecek.rename(columns={"value": birim}),
+                use_container_width=True,
+            )

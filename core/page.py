@@ -46,3 +46,18 @@ def kategori_sayfasi_yap(kategori: Kategori) -> Callable[[], None]:
 
     sayfa.__name__ = f"sayfa_{kategori.slug.replace('-', '_')}"
     return sayfa
+
+
+def genel_bakis_yap(
+    eslesmeler: list[tuple[Kategori, "st.Page"]],
+) -> Callable[[], None]:
+    def sayfa() -> None:
+        st.title("BV Market Dashboard")
+        st.caption("Türkiye ekonomisi için veri ve grafikler · Kaynak: TCMB EVDS")
+        sutunlar = st.columns(2)
+        for sira, (kategori, hedef) in enumerate(eslesmeler):
+            with sutunlar[sira % 2], st.container(border=True):
+                st.page_link(hedef, label=f"**{kategori.title}**")
+                st.caption(f"{len(seri_listele(kategori.slug))} seri")
+
+    return sayfa
