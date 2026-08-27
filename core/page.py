@@ -10,9 +10,10 @@ from typing import Callable
 
 import streamlit as st
 
-from core.catalog import Kategori, seri_listele
+from core.catalog import Kategori, SIKLIK_ETIKETLERI, seri_listele
 from core.components import grafik_karti, kpi_satiri
 from core.stats import GORUNUMLER, VARSAYILAN
+from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
 
 
 def _kategoriyi_ciz(kategori: Kategori) -> None:
@@ -67,3 +68,35 @@ def genel_bakis_yap(
                 st.caption(f"{len(seri_listele(kategori.slug))} seri")
 
     return sayfa
+
+
+def veri_takvimi_sayfasi() -> None:
+    satirlar = takvim()
+    sorunlular = [s for s in satirlar if s.durum != GUNCEL]
+
+    st.title("Veri Takvimi")
+    st.caption(
+        f"{len(satirlar)} seri · {len(satirlar) - len(sorunlular)} güncel · "
+        f"{len(sorunlular)} dikkat gerektiriyor"
+    )
+    st.caption(
+        "Bir seri geciktiğinde ya kaynak geç kalmıştır ya da ingest kırılmıştır."
+    )
+
+    if sorunlular:
+        with st.container(border=True):
+            st.markdown(f"**⚠ {len(sorunlular)} seri dikkat gerektiriyor**")
+            for s in sorunlular:
+                if s.durum == OKUNAMADI:
+                    sure = "veri dosyası okunamıyor"
+                elif s.bekleme_gunu is None:
+                    sure = "hiç veri yok"
+                else:
+                    sure = f"{s.bekleme_gunu} gündür yeni veri yok"
+                st.markdown(
+                    f"- **{s.seri.title}** — {sure} "
+                    f"({SIKLIK_ETIKETLERI[s.seri.freq].lower()})"
+                )
+        st.divider()
+
+    st.dataframe(tablo_df(satirlar), width="stretch", hide_index=True)
