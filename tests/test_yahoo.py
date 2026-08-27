@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
 
-from ingest.yahoo import gun_yuvarla, noktalari_ayikla, sembol_kodla
+import pytest
+
+from core.catalog import seri_getir
+from ingest.yahoo import gun_yuvarla, noktalari_ayikla, sembol_kodla, seri_cek
 
 
 def ts(yil, ay, gun, saat):
@@ -61,3 +64,56 @@ def test_noktalari_ayikla_ardisik_ayni_tarihi_tekillestirir():
 def test_noktalari_ayikla_bos_yanitta_bos_liste():
     assert noktalari_ayikla({}) == []
     assert noktalari_ayikla({"chart": {"result": []}}) == []
+
+
+class SahteYanit:
+    def __init__(self, status_code, govde=None):
+        self.status_code = status_code
+        self._govde = govde or {}
+
+    def json(self):
+        return self._govde
+
+
+class SahteOturum:
+    def __init__(self, yanit):
+        self._yanit = yanit
+        self.cagrilan_url = None
+
+    def get(self, url, **kwargs):
+        self.cagrilan_url = url
+        return self._yanit
+
+
+def brent():
+    return seri_getir("emtia-enerji/brent")
+
+
+def test_seri_cek_http_hatasinda_yukselir():
+    oturum = SahteOturum(SahteYanit(429))
+    with pytest.raises(RuntimeError, match="429"):
+        seri_cek(brent(), session=oturum)
+
+
+def test_seri_cek_bos_seride_yukselir():
+    oturum = SahteOturum(SahteYanit(200, {"chart": {"result": []}}))
+    with pytest.raises(RuntimeError, match="boş seri"):
+        seri_cek(brent(), session=oturum)
+
+
+def test_seri_cek_sembolu_kodlayarak_ister():
+    govde = {
+        "chart": {
+            "result": [
+                {
+                    "timestamp": [ts(2026, 1, 5, 5)],
+                    "indicators": {"quote": [{"close": [80.5]}]},
+                }
+            ]
+        }
+    }
+    oturum = SahteOturum(SahteYanit(200, govde))
+    df = seri_cek(brent(), session=oturum)
+    assert "BZ%3DF" in oturum.cagrilan_url
+    assert list(df.columns) == ["date", "value"]
+    assert len(df) == 1

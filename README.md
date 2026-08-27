@@ -11,7 +11,7 @@ app.py                    # st.navigation — sol menü katalogdan üretilir
 catalog/series.yaml       # tek doğruluk kaynağı: seri tanımları
 catalog/categories.yaml   # menü ağacı
 core/                     # catalog, data, stats, charts, components, page
-ingest/                   # evds.py + run.py (orchestrator)
+ingest/                   # evds.py + yahoo.py + run.py (orchestrator)
 data/<kategori>/<seri>.csv
 .github/workflows/ingest.yml    # günlük cron: ingest → commit → push
 .github/workflows/test.yml      # her push/PR: pytest
@@ -71,7 +71,7 @@ repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 
 | Faz | İçerik | Durum |
 |---|---|---|
-| 1 | Streamlit iskeleti + EVDS dilimi (13 seri, 4 kategori) | ✅ kod hazır · ilk veri çekimi bekliyor |
+| 1 | Streamlit iskeleti + EVDS dilimi (13 seri, 4 kategori) | ✅ |
 | 2 | Emtia (10 seri, 2 kategori): Brent, WTI, doğalgaz, altın, gümüş, bakır, HRC çelik, platin, paladyum, alüminyum | ✅ |
 | 3 | Sektör sayfaları + Veri Takvimi | Planlandı |
 | 4 | Hisse sayfaları | Planlandı |

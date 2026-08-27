@@ -215,9 +215,11 @@ Kategori sayfasının açıklama satırına bu uyarı konur.
 
 ## Riskler
 
-1. **Yahoo resmî API değildir ve yedeği yoktur** (bilinçli karar). Kırılırsa
-   ingest yüksek sesle düşer, kısmi veri yayınlanmaz, "Son Dönem" etiketi
-   bayatlığı gösterir. Kalıcı kırılmada FRED ilk alternatiftir.
+1. **Yahoo resmî API değildir ve yedeği yoktur** (bilinçli karar). Kırılırsa o
+   serilerin çekimi başarısız olur, Actions kırmızıya döner ve panodaki "Son
+   Dönem" etiketi bayatlığı gösterir. Commit adımı `if: always()` taşıdığı için
+   başarılı seriler yine yazılır — tek bir Yahoo tökezlemesi resmî EVDS
+   dilimini dondurmaz. Kalıcı kırılmada FRED ilk alternatiftir.
 2. **Sembol semantiği sessizce değişebilir.** Yahoo bir sembolün kontrat
    tanımını değiştirirse veri sessizce başka bir şeyi ölçmeye başlar. Katalogdaki
    `unit` alanı ve ilk gerçek çekimdeki değer aralığı gözle kontrol edilerek

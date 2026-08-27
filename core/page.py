@@ -55,7 +55,11 @@ def genel_bakis_yap(
 ) -> Callable[[], None]:
     def sayfa() -> None:
         st.title("BV Market Dashboard")
-        st.caption("Türkiye ekonomisi için veri ve grafikler · Kaynak: TCMB EVDS")
+        kaynaklar = sorted({s.kaynak.name for s in seri_listele()})
+        st.caption(
+            "Türkiye ekonomisi ve küresel emtia için veri ve grafikler · "
+            f"Kaynak: {', '.join(kaynaklar)}"
+        )
         sutunlar = st.columns(2)
         for sira, (kategori, hedef) in enumerate(eslesmeler):
             with sutunlar[sira % 2], st.container(border=True):

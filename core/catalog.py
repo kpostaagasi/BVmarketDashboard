@@ -140,9 +140,20 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             raise KatalogHatasi(
                 f"{seri.id}: geçersiz evds_frequency '{seri.evds_frequency}'"
             )
+        if seri.yahoo_symbol:
+            raise KatalogHatasi(f"{seri.id}: evds kaynağı yahoo_symbol taşımamalı")
     if seri.kaynak_tipi == "yahoo":
         if not seri.yahoo_symbol:
             raise KatalogHatasi(f"{seri.id}: yahoo kaynağı için yahoo_symbol zorunlu")
+        if seri.evds_code or seri.evds_frequency:
+            raise KatalogHatasi(
+                f"{seri.id}: yahoo kaynağı evds alanları taşımamalı"
+            )
+        if seri.start_date:
+            raise KatalogHatasi(
+                f"{seri.id}: yahoo kaynağı start_date desteklemiyor "
+                "(range=15y sabit)"
+            )
 
 
 def seri_listele(kategori: str | None = None) -> list[Seri]:

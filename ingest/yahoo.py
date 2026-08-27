@@ -13,6 +13,7 @@ keşfedilip 2026-08-27'de yeniden doğrulanmıştır — sıfırdan keşfetmeye
 - close[] dizisi tatil ve işlem durması günlerinde null içerir.
 
 Yedek kaynak yoktur (bilinçli karar): başarısızlık yüksek sesle olur.
+Googlebot UA bağımlılığı yalnızca üretimde doğrulanabilir; test edilemez.
 """
 
 from __future__ import annotations

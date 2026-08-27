@@ -180,6 +180,8 @@
   monthly_agg: mean
   charts: [level, seasonality]
 
+# Metaller sırası bilinçlidir: KPI satırı ilk dört seriyi gösterir.
+# Altın/Gümüş/Bakır/HRC Çelik önde tutulur.
 - id: emtia-metaller/altin
   title: Altın
   category: emtia-metaller
