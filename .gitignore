@@ -1,27 +1,7 @@
-# dependencies
-node_modules/
-
-# next.js build output
-.next/
-out/
-build/
-dist/
-
-# env files
-.env
-.env*.local
-
-# misc
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
 .DS_Store
-*.pem
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.vercel
-*.tsbuildinfo
-next-env.d.ts
-
-# editors
-.vscode/*
-!.vscode/extensions.json
-.idea/
+.streamlit/secrets.toml
