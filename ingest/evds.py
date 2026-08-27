@@ -102,7 +102,11 @@ def _pencere(seri: Seri, bugun: date) -> tuple[str, str]:
     if seri.start_date:
         baslangic = date.fromisoformat(seri.start_date)
     else:
-        baslangic = bugun.replace(year=bugun.year - 15)
+        try:
+            baslangic = bugun.replace(year=bugun.year - 15)
+        except ValueError:
+            # 29 Şubat: hedef yıl artık yıl değil, 28'ine düşülür
+            baslangic = bugun.replace(year=bugun.year - 15, day=28)
     return tarih_formatla(baslangic), tarih_formatla(bugun)
 
 

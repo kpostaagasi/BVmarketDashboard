@@ -1,8 +1,11 @@
+import dataclasses
 from datetime import date
 
 import pytest
 
+from core.catalog import seri_getir
 from ingest.evds import (
+    _pencere,
     alan_adi,
     deger_parse,
     istek_govdesi,
@@ -73,3 +76,21 @@ def test_noktalari_ayikla_siralar_ve_gecersizleri_atar():
 
 def test_noktalari_ayikla_bos_yanitta_bos_liste():
     assert noktalari_ayikla({}, "TP.APIFON4") == []
+
+
+def test_pencere_varsayilan_on_bes_yil_geriye_gider():
+    seri = seri_getir("enflasyon/tufe-genel")
+    assert _pencere(seri, date(2026, 8, 27)) == ("27-08-2011", "27-08-2026")
+
+
+def test_pencere_29_subatta_patlamaz():
+    # hedef yıl (2013) artık yıl değil — replace() ValueError atardı
+    seri = seri_getir("enflasyon/tufe-genel")
+    assert _pencere(seri, date(2028, 2, 29)) == ("28-02-2013", "29-02-2028")
+
+
+def test_pencere_katalogdaki_start_date_i_kullanir():
+    seri = dataclasses.replace(
+        seri_getir("enflasyon/tufe-genel"), start_date="2025-01-01"
+    )
+    assert _pencere(seri, date(2026, 8, 27)) == ("01-01-2025", "27-08-2026")
