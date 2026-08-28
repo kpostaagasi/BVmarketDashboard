@@ -9,8 +9,8 @@ import pandas as pd
 import streamlit as st
 
 from core.catalog import SIKLIK_ETIKETLERI, Seri
-from core.charts import mevsimsellik_figuru, seviye_figuru
-from core.data import VeriYokHatasi, load_series
+from core.charts import kompozisyon_figuru, mevsimsellik_figuru, paylara_cevir, seviye_figuru
+from core.data import VeriYokHatasi, load_series, load_wide_series
 from core.stats import (
     VARSAYILAN,
     aralik_12a,
@@ -137,3 +137,58 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
                 gosterilecek.rename(columns={"value": birim}),
                 width="stretch",
             )
+
+
+def kompozisyon_karti(seri: Seri) -> None:
+    """Kaynak bazlı üretim kartı: kendi Pay%/GWh seçicisiyle.
+
+    Sayfa düzeyindeki Varsayılan/YoY/MoM seçicisine bağlanmaz —
+    kompozisyon grafiğinde YoY'un anlamı yoktur ve iki seçiciyi bağlamak
+    anlamsız kombinasyonlar üretir.
+    """
+    with st.container(border=True):
+        baslik, kaynak = st.columns([4, 1])
+        baslik.markdown(f"**{seri.title}**")
+        kaynak.markdown(
+            f"<div style='text-align:right;color:{RENKLER['metin_soluk']};"
+            f"font-size:0.8em'>"
+            f"<a href='{seri.kaynak.url}' style='color:inherit'>"
+            f"{seri.kaynak.name}</a></div>",
+            unsafe_allow_html=True,
+        )
+
+        try:
+            df = load_wide_series(seri.id)
+        except VeriYokHatasi as hata:
+            st.warning(str(hata))
+            return
+
+        gorunum = st.segmented_control(
+            "Görünüm",
+            ["Pay %", seri.unit],
+            default="Pay %",
+            key=f"kompozisyon_{seri.id}",
+            label_visibility="collapsed",
+        ) or "Pay %"
+
+        aylik = df.resample("MS").sum(min_count=1).dropna(how="all")
+        if aylik.index.max() < df.index.max() + pd.offsets.MonthEnd(0):
+            # Tamamlanmamış son ay sahte bir düşüş gibi görünür (aylige_cevir
+            # ile aynı gerekçe); bileşenli seri günlük olduğu için burada da
+            # geçerli.
+            aylik = aylik.iloc[:-1]
+
+        gosterilecek = paylara_cevir(aylik) if gorunum == "Pay %" else aylik
+        birim = "%" if gorunum == "Pay %" else seri.unit
+
+        st.caption(
+            f"Son Dönem: {donem_etiketi(aylik.index.max(), 'monthly')} · AYLIK"
+        )
+        st.plotly_chart(
+            kompozisyon_figuru(gosterilecek, birim),
+            width="stretch",
+            key=f"{seri.id}-composition",
+        )
+
+        with st.expander("Veri tablosu"):
+            st.dataframe(gosterilecek, width="stretch")

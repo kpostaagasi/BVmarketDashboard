@@ -45,7 +45,19 @@ yalnızca *komşu* çiftleri (çizgi grafik kuralı) zorunlu tutar; bilgi amaçl
 `--pairs all` koşusunda Kömür↔Doğalgaz (ΔE 1.8) ve Biyo/Atık↔Rüzgar (ΔE 4.7)
 gibi komşu olmayan çiftler zayıf kalıyor — çizgiler grafikte kesişirse bu
 ayrımı zayıflatabilir; sekiz grup korunuyor, ikincil kodlama (çizgi deseni)
-Task 5'te eklenecek.
+aşağıdaki `CIZGI_DESENLERI` ile eklendi.
+
+CIZGI_DESENLERI — renk tek başına yetmediği dört çift için ikincil (çizgi
+deseni) kodlama. Doğrulayıcının `--pairs all` raporunda ayrışmayan dört çift
+zorunlu kısıt: Kömür↔Doğalgaz, Biyo/Atık↔Rüzgar, Doğalgaz↔Güneş, Biyo/Atık↔
+Diğer. Yalnızca "solid"/"dash" iki desen kullanılır (görsel gürültüyü
+sınırlamak için) ve dörder dörde dengeli dağıtılır:
+  - dash: Doğalgaz, Biyo/Atık, Hidroelektrik, Jeotermal
+  - solid: Kömür, Güneş, Rüzgar, Diğer
+Bu atama dört zorunlu çiftin hepsini ayırır (her kenarın iki ucu farklı
+gruptadır) ve grafikte çizgilerin yarısından fazlası kesikli olmaz. Atama
+sütun ADINA bağlıdır, pozisyona değil — `RENKLER["kategorik"]` ile aynı
+gerekçe: katalogla sözleşme ayrışırsa `KeyError` doğal olarak fırlamalı.
 """
 
 RENKLER = {
@@ -68,6 +80,17 @@ RENKLER = {
         "Kömür": "#9c6620",  # kahverengi (semantik feda: koyu/nötr krom tabanını geçemiyor)
         "Jeotermal": "#e5685e",  # kırmızı
     },
+}
+
+CIZGI_DESENLERI = {
+    "Kömür": "solid",
+    "Hidroelektrik": "dash",
+    "Doğalgaz": "dash",
+    "Güneş": "solid",
+    "Rüzgar": "solid",
+    "Jeotermal": "dash",
+    "Biyo/Atık": "dash",
+    "Diğer": "solid",
 }
 
 TR_AYLAR = [

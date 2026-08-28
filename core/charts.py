@@ -13,7 +13,7 @@ from __future__ import annotations
 import pandas as pd
 import plotly.graph_objects as go
 
-from core.theme import RENKLER, TR_AYLAR
+from core.theme import CIZGI_DESENLERI, RENKLER, TR_AYLAR
 
 _AGG_FONKSIYONLARI = {"mean": "mean", "last": "last", "sum": "sum"}
 
@@ -123,6 +123,45 @@ def mevsimsellik_figuru(
     _temayi_uygula(fig, birim)
     fig.update_layout(showlegend=len(fig.data) >= 2)
     return fig
+
+
+def paylara_cevir(df: pd.DataFrame) -> pd.DataFrame:
+    """Her satırı kendi toplamının yüzdesine çevirir.
+
+    Payda yalnızca sütunlardaki üretim gruplarıdır; `importExport` zaten
+    ingest tarafında dışlandığı için paylar %100'e toplanır. Toplamı sıfır
+    olan satır NaN üretir — sessizce 0 pay göstermek, veri yokluğunu
+    "hiç üretim yok"muş gibi gösterirdi.
+    """
+    toplam = df.sum(axis=1)
+    return df.div(toplam.where(toplam != 0), axis=0) * 100
+
+
+def kompozisyon_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
+    """Grup başına bir çizgi.
+
+    Renk ve çizgi deseni sütun ADINA göre seçilir (`RENKLER["kategorik"]`,
+    `CIZGI_DESENLERI`) — pozisyona göre değil. Bilinmeyen bir sütun adı
+    gelirse `KeyError` doğal olarak fırlar: katalogla palet ayrışmışsa bunu
+    sessizce yutmak yerine görmemiz gerekir. Çizgi deseni, rengin tek başına
+    ayıramadığı bazı grup çiftleri için ikincil (erişilebilirlik) kodlamadır.
+    """
+    fig = go.Figure()
+    for sutun in df.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df[sutun],
+                name=sutun,
+                mode="lines",
+                line={
+                    "color": RENKLER["kategorik"][sutun],
+                    "dash": CIZGI_DESENLERI[sutun],
+                    "width": 2,
+                },
+            )
+        )
+    return _temayi_uygula(fig, birim)
 
 
 def seviye_figuru(df: pd.DataFrame, birim: str) -> go.Figure:

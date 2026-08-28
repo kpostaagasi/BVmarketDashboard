@@ -12,7 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from core.catalog import Kategori, KatalogHatasi, SIKLIK_ETIKETLERI, Seri, seri_listele
-from core.components import grafik_karti, kpi_satiri
+from core.components import grafik_karti, kompozisyon_karti, kpi_satiri
 from core.stats import GORUNUMLER, VARSAYILAN
 from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
 
@@ -86,7 +86,10 @@ def _kategoriyi_ciz(kategori: Kategori) -> None:
     sutunlar = st.columns(2)
     for sira, seri in enumerate(seriler):
         with sutunlar[sira % 2]:
-            grafik_karti(seri, gorunum)
+            if "composition" in seri.charts:
+                kompozisyon_karti(seri)
+            else:
+                grafik_karti(seri, gorunum)
 
 
 def kategori_sayfasi_yap(kategori: Kategori) -> Callable[[], None]:

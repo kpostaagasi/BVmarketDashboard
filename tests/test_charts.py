@@ -124,3 +124,103 @@ def test_aylige_cevir_mean_tamamlanmamis_son_ayi_korur():
     df = pd.DataFrame({"value": [100.0] * len(idx)}, index=idx)
     sonuc = aylige_cevir(df, "mean", freq="weekly")
     assert sonuc.index.max() == pd.Timestamp("2026-04-01")
+
+
+def test_paylara_cevir_yuzdeye_normalize_eder():
+    from core.charts import paylara_cevir
+
+    df = pd.DataFrame(
+        {"Kömür": [60.0, 30.0], "Rüzgar": [40.0, 10.0]},
+        index=pd.to_datetime(["2026-07-01", "2026-08-01"]),
+    )
+    paylar = paylara_cevir(df)
+    assert list(paylar["Kömür"]) == [60.0, 75.0]
+    assert list(paylar["Rüzgar"]) == [40.0, 25.0]
+
+
+def test_paylara_cevir_her_satir_yuze_toplanir():
+    from core.charts import paylara_cevir
+
+    df = pd.DataFrame(
+        {"A": [1.0, 2.0], "B": [3.0, 5.0], "C": [6.0, 3.0]},
+        index=pd.to_datetime(["2026-07-01", "2026-08-01"]),
+    )
+    toplamlar = paylara_cevir(df).sum(axis=1)
+    assert all(abs(t - 100.0) < 1e-9 for t in toplamlar)
+
+
+def test_paylara_cevir_sifir_toplamli_satirda_nan_uretir():
+    """Sıfıra bölme sessizce 0 pay üretmemeli — veri yokluğu görünür kalsın."""
+    from core.charts import paylara_cevir
+
+    df = pd.DataFrame(
+        {"A": [0.0, 2.0], "B": [0.0, 2.0]},
+        index=pd.to_datetime(["2026-07-01", "2026-08-01"]),
+    )
+    paylar = paylara_cevir(df)
+    assert paylar.iloc[0].isna().all()
+    assert list(paylar.iloc[1]) == [50.0, 50.0]
+
+
+def test_kompozisyon_figuru_her_gruba_bir_iz_ekler():
+    from core.charts import kompozisyon_figuru
+
+    df = pd.DataFrame(
+        {"Kömür": [60.0, 30.0], "Rüzgar": [40.0, 10.0]},
+        index=pd.to_datetime(["2026-07-01", "2026-08-01"]),
+    )
+    fig = kompozisyon_figuru(df, "GWh")
+    assert len(fig.data) == 2
+    assert {iz.name for iz in fig.data} == {"Kömür", "Rüzgar"}
+
+
+def test_kompozisyon_figuru_kategorik_paleti_sutun_adina_gore_kullanir():
+    """Renk sütun ADINA göre seçilmeli — pozisyona göre `zip` semantiği bozar.
+
+    RENKLER["kategorik"] artık grup adıyla anahtarlanmış bir dict (liste
+    değil); df'teki sütun sırası paletin doğrulayıcıya verilen sırasından
+    farklı olsa da her iz kendi grubunun rengini almalı.
+    """
+    from core.charts import kompozisyon_figuru
+
+    df = pd.DataFrame(
+        {"Rüzgar": [1.0], "Kömür": [2.0], "Güneş": [3.0]},
+        index=pd.to_datetime(["2026-07-01"]),
+    )
+    fig = kompozisyon_figuru(df, "GWh")
+    renkler = {iz.name: iz.line.color for iz in fig.data}
+    assert renkler == {
+        "Rüzgar": RENKLER["kategorik"]["Rüzgar"],
+        "Kömür": RENKLER["kategorik"]["Kömür"],
+        "Güneş": RENKLER["kategorik"]["Güneş"],
+    }
+
+
+def test_kompozisyon_figuru_bilinmeyen_sutun_key_error_firlatir():
+    """Katalogla palet ayrışırsa sessiz varsayılana düşmek yerine patlamalı."""
+    from core.charts import kompozisyon_figuru
+
+    df = pd.DataFrame(
+        {"Bilinmeyen-Grup": [1.0]},
+        index=pd.to_datetime(["2026-07-01"]),
+    )
+    with pytest.raises(KeyError):
+        kompozisyon_figuru(df, "GWh")
+
+
+def test_kompozisyon_figuru_desen_sutun_adina_gore_uygular():
+    """Çizgi deseni de CIZGI_DESENLERI'nden sütun adına göre gelmeli."""
+    from core.charts import kompozisyon_figuru
+    from core.theme import CIZGI_DESENLERI
+
+    df = pd.DataFrame(
+        {"Rüzgar": [1.0], "Kömür": [2.0], "Doğalgaz": [3.0]},
+        index=pd.to_datetime(["2026-07-01"]),
+    )
+    fig = kompozisyon_figuru(df, "GWh")
+    desenler = {iz.name: iz.line.dash for iz in fig.data}
+    assert desenler == {
+        "Rüzgar": CIZGI_DESENLERI["Rüzgar"],
+        "Kömür": CIZGI_DESENLERI["Kömür"],
+        "Doğalgaz": CIZGI_DESENLERI["Doğalgaz"],
+    }
