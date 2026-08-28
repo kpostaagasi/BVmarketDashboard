@@ -1,9 +1,9 @@
-from datetime import date
+from datetime import date, timedelta
 from types import SimpleNamespace
 
 import pytest
 
-from ingest.epias import noktalari_ayikla, seri_cek, tgt_al
+from ingest.epias import noktalari_ayikla, pencereleri_bol, seri_cek, tgt_al
 
 
 def yanit(kayitlar):
@@ -60,17 +60,40 @@ class SahteYanit:
 
 
 class SahteOturum:
+    """Her `post` çağrısını kaydeder.
+
+    `yanit` tek bir SahteYanit ise her çağrıda aynısı döner (çoğu test için
+    yeterli — kaç dilime bölündüğü umursanmıyor). Liste verilirse çağrı
+    sırasına göre tüketilir (parçalı çekimi birebir test etmek için).
+
+    `cagrilan_url` / `gonderilen_govde` / `gonderilen_basliklar` SON
+    çağrıyı yansıtır (eski testlerle uyumluluk); `cagrilar` TÜM çağrıları
+    sırasıyla tutar (yeni parçalı-çekim testleri için).
+    """
+
     def __init__(self, yanit):
-        self._yanit = yanit
-        self.cagrilan_url = None
-        self.gonderilen_govde = None
-        self.gonderilen_basliklar = None
+        self._yanitlar = yanit if isinstance(yanit, list) else None
+        self._sabit_yanit = None if self._yanitlar is not None else yanit
+        self.cagrilar: list[dict] = []
 
     def post(self, url, headers=None, data=None, json=None, timeout=None):
-        self.cagrilan_url = url
-        self.gonderilen_basliklar = headers
-        self.gonderilen_govde = json if json is not None else data
-        return self._yanit
+        govde = json if json is not None else data
+        self.cagrilar.append({"url": url, "headers": headers, "govde": govde})
+        if self._yanitlar is not None:
+            return self._yanitlar[len(self.cagrilar) - 1]
+        return self._sabit_yanit
+
+    @property
+    def cagrilan_url(self):
+        return self.cagrilar[-1]["url"] if self.cagrilar else None
+
+    @property
+    def gonderilen_govde(self):
+        return self.cagrilar[-1]["govde"] if self.cagrilar else None
+
+    @property
+    def gonderilen_basliklar(self):
+        return self.cagrilar[-1]["headers"] if self.cagrilar else None
 
 
 # --- tgt_al ---
@@ -100,6 +123,58 @@ def test_tgt_al_beklenmeyen_govdede_yukselir():
     oturum = SahteOturum(SahteYanit(200, metin="<html>hata</html>"))
     with pytest.raises(RuntimeError, match="TGT"):
         tgt_al("kullanici", "parola", session=oturum)
+
+
+# --- pencereleri_bol (saf, ağsız) ---
+
+
+def test_pencereleri_bol_tam_bolunen_araligi_esit_parcalara_ayirir():
+    pencereler = pencereleri_bol(date(2024, 1, 1), date(2024, 1, 22), azami_gun=10)
+    assert pencereler == [
+        (date(2024, 1, 1), date(2024, 1, 11)),
+        (date(2024, 1, 12), date(2024, 1, 22)),
+    ]
+
+
+def test_pencereleri_bol_kalan_kisa_dilimi_ayri_dondurur():
+    pencereler = pencereleri_bol(date(2024, 1, 1), date(2024, 1, 26), azami_gun=10)
+    assert pencereler == [
+        (date(2024, 1, 1), date(2024, 1, 11)),
+        (date(2024, 1, 12), date(2024, 1, 22)),
+        (date(2024, 1, 23), date(2024, 1, 26)),
+    ]
+
+
+def test_pencereleri_bol_kisa_aralik_tek_dilim_doner():
+    pencereler = pencereleri_bol(date(2024, 1, 1), date(2024, 1, 6), azami_gun=10)
+    assert pencereler == [(date(2024, 1, 1), date(2024, 1, 6))]
+
+
+def test_pencereleri_bol_sinir_durumu_tam_azami_gun_tek_dilim_doner():
+    bitis = date(2024, 1, 1) + timedelta(days=89)
+    pencereler = pencereleri_bol(date(2024, 1, 1), bitis, azami_gun=89)
+    assert pencereler == [(date(2024, 1, 1), bitis)]
+
+
+def test_pencereleri_bol_bir_gun_asinca_iki_dilime_boler():
+    bitis = date(2024, 1, 1) + timedelta(days=90)
+    pencereler = pencereleri_bol(date(2024, 1, 1), bitis, azami_gun=89)
+    assert len(pencereler) == 2
+
+
+def test_pencereleri_bol_ardisik_dilimler_arasinda_bosluk_ve_cakisma_olmaz():
+    pencereler = pencereleri_bol(date(2020, 1, 1), date(2026, 8, 27), azami_gun=89)
+    assert pencereler[0][0] == date(2020, 1, 1)
+    assert pencereler[-1][1] == date(2026, 8, 27)
+    for onceki, sonraki in zip(pencereler, pencereler[1:]):
+        assert sonraki[0] == onceki[1] + timedelta(days=1), "boşluk ya da çakışma var"
+    for baslangic, bitis in pencereler:
+        assert (bitis - baslangic).days <= 89
+
+
+def test_pencereleri_bol_baslangic_bitisten_sonraysa_hata():
+    with pytest.raises(ValueError):
+        pencereleri_bol(date(2024, 1, 10), date(2024, 1, 1))
 
 
 # --- seri_cek ---
@@ -140,7 +215,9 @@ def test_seri_cek_tgt_basligini_gonderir():
 
 def test_seri_cek_mean_serisi_gunluk_ortalama_alir():
     # PTF gibi monthly_agg="mean" seriler: aynı günün saatlik değerleri
-    # ORTALAMASI alınmalı, toplamı değil.
+    # ORTALAMASI alınmalı, toplamı değil. (Varsayılan çok-yıllık pencere
+    # birden çok dilime bölünüp aynı sahte yanıtı tekrar tekrar
+    # döndürecek olsa da ortalama tekrar sayısından etkilenmez.)
     oturum = SahteOturum(SahteYanit(200, yanit([
         {"date": "2026-08-01T00:00:00+03:00", "price": 100.0},
         {"date": "2026-08-01T01:00:00+03:00", "price": 300.0},
@@ -154,13 +231,17 @@ def test_seri_cek_mean_serisi_gunluk_ortalama_alir():
 def test_seri_cek_sum_serisi_gunluk_toplam_alir():
     # Üretim gibi monthly_agg="sum" seriler: saatlik MWh'lerin günlük
     # TOPLAMI alınmalı — ortalaması alınırsa değer 1/24'üne düşer.
+    # Toplam, tekrar sayısından (dilim sayısından) etkilenir; bu yüzden
+    # burada dar bir pencere (tek dilim) kullanılıyor.
     oturum = SahteOturum(SahteYanit(200, yanit([
         {"date": "2026-08-01T00:00:00+03:00", "total": 45000.0},
         {"date": "2026-08-01T01:00:00+03:00", "total": 46000.0},
     ])))
     seri = _epias_seri(id="elektrik/uretim", epias_ucu="uretim",
-                        epias_alani="total", monthly_agg="sum")
-    df = seri_cek(seri, "TGT-abc", session=oturum)
+                        epias_alani="total", monthly_agg="sum",
+                        start_date="2026-07-25")
+    df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 1))
+    assert len(oturum.cagrilar) == 1
     assert df.iloc[0]["value"] == pytest.approx(91000.0)
 
 
@@ -173,8 +254,9 @@ def test_seri_cek_olceklendirmeyi_indirgemeden_sonra_uygular():
         {"date": "2026-08-01T01:00:00+03:00", "total": 46000.0},
     ])))
     seri = _epias_seri(id="elektrik/uretim", epias_ucu="uretim",
-                        epias_alani="total", monthly_agg="sum", olcek=0.001)
-    df = seri_cek(seri, "TGT-abc", session=oturum)
+                        epias_alani="total", monthly_agg="sum", olcek=0.001,
+                        start_date="2026-07-25")
+    df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 1))
     assert df.iloc[0]["value"] == pytest.approx(91.0)
 
 
@@ -200,25 +282,54 @@ def test_seri_cek_uretim_ucunu_dogru_yola_ister():
     )
 
 
-def test_seri_cek_baslangic_gunu_start_date_varsa_ondan_alinir():
+def test_seri_cek_start_date_varsa_ilk_dilim_ondan_baslar_son_dilim_bugunde_biter():
     oturum = SahteOturum(SahteYanit(200, yanit([
         {"date": "2026-08-01T00:00:00+03:00", "price": 2500.0},
     ])))
     seri = _epias_seri(start_date="2020-01-01")
     seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 27))
-    assert oturum.gonderilen_govde["startDate"] == "2020-01-01T00:00:00+03:00"
-    assert oturum.gonderilen_govde["endDate"] == "2026-08-27T00:00:00+03:00"
+    ilk_govde = oturum.cagrilar[0]["govde"]
+    son_govde = oturum.cagrilar[-1]["govde"]
+    assert ilk_govde["startDate"] == "2020-01-01T00:00:00+03:00"
+    assert son_govde["endDate"] == "2026-08-27T00:00:00+03:00"
+    # 2020-01-01 → 2026-08-27 ~6.5 yıl; 89 günlük sınıra tek istekte sığmaz.
+    assert len(oturum.cagrilar) > 1
 
 
-def test_seri_cek_start_date_yoksa_varsayilan_pencere_uc_ayi_asmaz():
-    # EPİAŞ elektrik uçları tek istekte en fazla 3 aylık pencereye izin
-    # veriyor (HTTP 400 "(BUS)SEF1117" — canlı API'de doğrulandı). start_date
-    # verilmemişse varsayılan pencere bu sınırın altında kalmalı, yoksa her
-    # istek 400 ile başarısız olur.
+def test_seri_cek_start_date_yoksa_varsayilan_pencere_coklu_yil_ve_parcali():
+    # Varsayılan pencere artık 89 gün değil (o zaman mevsimsellik grafiği
+    # tek yarım yıllık çizgi kalıyordu); EVDS/Yahoo ile tutarlı biçimde
+    # birden çok yıl olmalı. Ama EPİAŞ tek istekte 3 aydan fazlasını kabul
+    # etmiyor, o yüzden bu çok-yıllık pencere PARÇALI istenmeli — her
+    # tekil dilim 89 günü aşmamalı.
     oturum = SahteOturum(SahteYanit(200, yanit([
         {"date": "2026-08-01T00:00:00+03:00", "price": 2500.0},
     ])))
     seri = _epias_seri(start_date=None)
-    seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 27))
-    baslangic = date.fromisoformat(oturum.gonderilen_govde["startDate"][:10])
-    assert (date(2026, 8, 27) - baslangic).days <= 90
+    bugun = date(2026, 8, 27)
+    seri_cek(seri, "TGT-abc", session=oturum, bugun=bugun)
+
+    ilk_baslangic = date.fromisoformat(oturum.cagrilar[0]["govde"]["startDate"][:10])
+    assert (bugun - ilk_baslangic).days >= 365 * 4, "varsayılan pencere en az ~4-5 yıl olmalı"
+    assert len(oturum.cagrilar) > 1, "çok yıllık pencere tek istekte gönderilemez"
+    for cagri in oturum.cagrilar:
+        b = date.fromisoformat(cagri["govde"]["startDate"][:10])
+        e = date.fromisoformat(cagri["govde"]["endDate"][:10])
+        assert (e - b).days <= 89, "her dilim EPİAŞ'ın 3 aylık sınırını aşmamalı"
+
+
+def test_seri_cek_parcali_yanitlari_birlestirir_tarih_artan_ve_tekil():
+    oturum = SahteOturum([
+        SahteYanit(200, yanit([
+            {"date": "2024-01-01T00:00:00+03:00", "price": 100.0},
+        ])),
+        SahteYanit(200, yanit([
+            {"date": "2024-04-01T00:00:00+03:00", "price": 200.0},
+        ])),
+    ])
+    seri = _epias_seri(start_date="2024-01-01")
+    df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2024, 4, 1))
+    assert len(oturum.cagrilar) == 2
+    assert list(df["date"]) == ["2024-01-01", "2024-04-01"]
+    assert df["date"].is_unique
+    assert list(df["date"]) == sorted(df["date"])
