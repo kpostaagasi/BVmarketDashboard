@@ -73,11 +73,13 @@ def _kategoriyi_ciz(kategori: Kategori) -> None:
     kpi_satiri(pano_serileri(kategori, seriler))
 
     with st.expander("Veri Takvimi", expanded=False):
+        takvim_df = tablo_df(takvim(kategori=kategori.slug))
         st.dataframe(
-            tablo_df(takvim(kategori=kategori.slug)),
+            takvim_df,
             width="stretch",
             hide_index=True,
             column_config=TAKVIM_SUTUN_AYARI,
+            column_order=takvim_sutun_sirasi(takvim_df),
         )
     st.divider()
 

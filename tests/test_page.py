@@ -44,7 +44,8 @@ def test_pano_serileri_pano_sirasini_korur():
     assert [s.id for s in pano_serileri(kategori, [a, b])] == ["k/b", "k/a"]
 
 
-def test_pano_bossa_ilk_seriler_dondurulur():
+def test_pano_bossa_seri_listesi_degismeden_donuyor():
+    """"İlk dördü göster" kırpması burada değil, kpi_satiri içinde olur."""
     import dataclasses
 
     from core.catalog import Kategori, seri_getir
@@ -67,3 +68,17 @@ def test_pano_bilinmeyen_id_hata_verir():
     kategori = Kategori(slug="k", title="K", pano=("k/yok",))
     with pytest.raises(KatalogHatasi):
         pano_serileri(kategori, [seri_getir("enflasyon/tufe-genel")])
+
+
+def test_kategori_takvim_sutun_sirasi_bos_sutunu_disliyor():
+    """Kategori takvimi de global takvim gibi tamamen boş sütunu gizlemeli.
+
+    Katalogdaki hiçbir seri yayin_notu taşımıyor, bu yüzden "Yayın notu"
+    her kategori df'inde tamamen boş olur — column_order bunu düşürmeli.
+    """
+    from core.takvim import SUTUNLAR, takvim, tablo_df
+
+    df = tablo_df(takvim(kategori="enflasyon"))
+    sira = takvim_sutun_sirasi(df)
+    assert "Yayın notu" not in sira
+    assert set(sira) == set(SUTUNLAR) - {"Yayın notu"}
