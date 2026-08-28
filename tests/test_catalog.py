@@ -200,3 +200,47 @@ def test_siklik_etiketleri_tum_frekanslari_kapsar():
     from core.catalog import GECERLI_FREKANSLAR, SIKLIK_ETIKETLERI
 
     assert set(SIKLIK_ETIKETLERI) == GECERLI_FREKANSLAR
+
+
+def test_kategori_pano_alani_tuple_olarak_okunur(tmp_path, monkeypatch):
+    # NOT: kategorileri_yukle() @lru_cache'li; dosyadaki önceki testler onu
+    # gerçek katalogla doldurmuş oluyor. cache_clear() olmadan bu test
+    # gerçek 6 kategoriyi görür ve (kategori,) unpacking'i ValueError verir.
+    # Test sonunda da cache'i temizliyoruz ki KATALOG_DIZINI monkeypatch'i
+    # geri alındığında sonraki testler yine gerçek katalog verisini görsün.
+    from core import catalog
+
+    (tmp_path / "categories.yaml").write_text(
+        "- slug: elektrik\n"
+        "  title: Elektrik\n"
+        "  pano: [elektrik/uretim, elektrik/ptf]\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(catalog, "KATALOG_DIZINI", tmp_path)
+    catalog.kategorileri_yukle.cache_clear()
+    try:
+        (kategori,) = catalog.kategorileri_yukle()
+        assert kategori.pano == ("elektrik/uretim", "elektrik/ptf")
+    finally:
+        catalog.kategorileri_yukle.cache_clear()
+
+
+def test_kategori_pano_yoksa_bos_tuple(tmp_path, monkeypatch):
+    from core import catalog
+
+    (tmp_path / "categories.yaml").write_text(
+        "- slug: enflasyon\n  title: Enflasyon\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(catalog, "KATALOG_DIZINI", tmp_path)
+    catalog.kategorileri_yukle.cache_clear()
+    try:
+        (kategori,) = catalog.kategorileri_yukle()
+        assert kategori.pano == ()
+    finally:
+        catalog.kategorileri_yukle.cache_clear()
+
+
+def test_epias_gecerli_kaynak_tipi():
+    from core.catalog import GECERLI_KAYNAK_TIPLERI
+
+    assert "epias" in GECERLI_KAYNAK_TIPLERI

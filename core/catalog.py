@@ -18,7 +18,7 @@ GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "level"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
-GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo"}
+GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias"}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 
 
@@ -37,6 +37,7 @@ class Kategori:
     slug: str
     title: str
     note: str | None = None
+    pano: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -77,7 +78,12 @@ def kategorileri_yukle() -> tuple[Kategori, ...]:
             raise KatalogHatasi(f"Kategori slug'ı tekrar ediyor: {slug}")
         gorulen.add(slug)
         kategoriler.append(
-            Kategori(slug=slug, title=ham["title"], note=ham.get("note"))
+            Kategori(
+                slug=slug,
+                title=ham["title"],
+                note=ham.get("note"),
+                pano=tuple(ham.get("pano", ())),
+            )
         )
     return tuple(kategoriler)
 
