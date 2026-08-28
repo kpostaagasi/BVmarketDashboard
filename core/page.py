@@ -11,7 +11,7 @@ from typing import Callable
 import pandas as pd
 import streamlit as st
 
-from core.catalog import Kategori, SIKLIK_ETIKETLERI, seri_listele
+from core.catalog import Kategori, KatalogHatasi, SIKLIK_ETIKETLERI, Seri, seri_listele
 from core.components import grafik_karti, kpi_satiri
 from core.stats import GORUNUMLER, VARSAYILAN
 from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
@@ -34,6 +34,24 @@ def takvim_sutun_sirasi(df: pd.DataFrame) -> list[str]:
     return [ad for ad in df.columns if df[ad].astype(str).str.strip().any()]
 
 
+def pano_serileri(kategori: Kategori, seriler: list[Seri]) -> list[Seri]:
+    """Panoda gösterilecek serileri, kategorinin belirlediği sırada döndürür.
+
+    Pano tanımlı değilse mevcut davranış korunur: kpi_satiri zaten ilk dördü
+    alır. Bilinmeyen bir id sessizce yutulmaz — yazım hatası, kartın sessizce
+    kaybolmasından daha ucuza yakalanmalı.
+    """
+    if not kategori.pano:
+        return seriler
+    indeks = {s.id: s for s in seriler}
+    eksik = [i for i in kategori.pano if i not in indeks]
+    if eksik:
+        raise KatalogHatasi(
+            f"{kategori.slug} panosunda bilinmeyen seri: {', '.join(eksik)}"
+        )
+    return [indeks[i] for i in kategori.pano]
+
+
 def _kategoriyi_ciz(kategori: Kategori) -> None:
     seriler = seri_listele(kategori.slug)
 
@@ -52,7 +70,15 @@ def _kategoriyi_ciz(kategori: Kategori) -> None:
     )
     gorunum = gorunum or VARSAYILAN
 
-    kpi_satiri(seriler)
+    kpi_satiri(pano_serileri(kategori, seriler))
+
+    with st.expander("Veri Takvimi", expanded=False):
+        st.dataframe(
+            tablo_df(takvim(kategori=kategori.slug)),
+            width="stretch",
+            hide_index=True,
+            column_config=TAKVIM_SUTUN_AYARI,
+        )
     st.divider()
 
     sutunlar = st.columns(2)

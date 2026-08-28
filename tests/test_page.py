@@ -30,3 +30,40 @@ def test_dolu_sutun_gizlenmez():
         {"Veri": ["a", "b"], "Durum": ["güncel", "güncel"], "Yayın notu": ["", "3. iş günü"]}
     )
     assert takvim_sutun_sirasi(df) == ["Veri", "Durum", "Yayın notu"]
+
+
+def test_pano_serileri_pano_sirasini_korur():
+    import dataclasses
+
+    from core.catalog import Kategori, seri_getir
+    from core.page import pano_serileri
+
+    a = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), id="k/a")
+    b = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), id="k/b")
+    kategori = Kategori(slug="k", title="K", pano=("k/b", "k/a"))
+    assert [s.id for s in pano_serileri(kategori, [a, b])] == ["k/b", "k/a"]
+
+
+def test_pano_bossa_ilk_seriler_dondurulur():
+    import dataclasses
+
+    from core.catalog import Kategori, seri_getir
+    from core.page import pano_serileri
+
+    seriler = [
+        dataclasses.replace(seri_getir("enflasyon/tufe-genel"), id=f"k/{i}")
+        for i in range(6)
+    ]
+    kategori = Kategori(slug="k", title="K")
+    assert pano_serileri(kategori, seriler) == seriler
+
+
+def test_pano_bilinmeyen_id_hata_verir():
+    import pytest
+
+    from core.catalog import Kategori, KatalogHatasi, seri_getir
+    from core.page import pano_serileri
+
+    kategori = Kategori(slug="k", title="K", pano=("k/yok",))
+    with pytest.raises(KatalogHatasi):
+        pano_serileri(kategori, [seri_getir("enflasyon/tufe-genel")])
