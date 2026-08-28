@@ -248,8 +248,25 @@ def test_epias_gecerli_kaynak_tipi():
     assert "epias" in GECERLI_KAYNAK_TIPLERI
 
 
-def test_olcek_varsayilan_bir():
-    assert seri_getir("enflasyon/tufe-genel").olcek == 1.0
+def test_olcek_verilmemisse_none():
+    """Varsayılan None; 1.0'a ingest tarafında düşülür.
+
+    Sebep: "verilmiş mi" sorusunun tek bir cevabı olsun. Varsayılan 1.0
+    olsaydı, katalogda açıkça yazılmış `olcek: 1.0` ile hiç yazılmamış olan
+    ayırt edilemezdi ve yasak-alan kontrolü o değerde delik kalırdı.
+    """
+    assert seri_getir("enflasyon/tufe-genel").olcek is None
+
+
+def test_olcek_verilmemisse_ingest_olceklemez():
+    """Sözleşmenin diğer yarısı: None ölçeklememek demek, sıfırlamak değil."""
+    import pandas as pd
+
+    from ingest.epias import _olcekle
+
+    df = pd.DataFrame({"value": [10.0, 20.0]})
+    assert list(_olcekle(df, None)["value"]) == [10.0, 20.0]
+    assert list(_olcekle(df, 0.001)["value"]) == [0.01, 0.02]
 
 
 def test_olcek_yaml_dan_float_olarak_okunur(tmp_path, monkeypatch):
@@ -395,3 +412,37 @@ def test_gercek_katalog_alan_sahipligini_gecer():
         assert len(serileri_yukle()) == 25
     finally:
         serileri_yukle.cache_clear()
+
+
+def test_bos_string_zorunlu_alani_karsilamaz():
+    """`evds_code: ""` katalogda kod yazmakla aynı şey değildir."""
+    with pytest.raises(KatalogHatasi, match="evds_code"):
+        _dogrula_ham(_ham_seri(evds_code=""))
+
+
+def test_bos_string_yahoo_sembolunu_karsilamaz():
+    with pytest.raises(KatalogHatasi, match="yahoo_symbol"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="yahoo", yahoo_symbol="",
+                evds_code=None, evds_frequency=None,
+            )
+        )
+
+
+def test_evds_serisi_acik_yazilmis_olcek_1_de_tasiyamaz():
+    """Etkisiz bir değer bile olsa, onurlandırılmayan alan katalogda durmamalı."""
+    with pytest.raises(KatalogHatasi, match="olcek"):
+        _dogrula_ham(_ham_seri(olcek=1.0))
+
+
+def test_olcek_sifir_veya_negatif_reddedilir():
+    """olcek=0 seriyi sessizce sıfırlar; grafik boş değil, YANLIŞ çizilir."""
+    for gecersiz in (0.0, -1.0):
+        with pytest.raises(KatalogHatasi, match="olcek"):
+            _dogrula_ham(
+                _ham_seri(
+                    kaynak_tipi="epias", epias_ucu="ptf", epias_alani="price",
+                    evds_code=None, evds_frequency=None, olcek=gecersiz,
+                )
+            )

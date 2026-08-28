@@ -85,21 +85,17 @@ class Seri:
     monthly_agg: str = "mean"
     start_date: str | None = None
     yayin_notu: str | None = None
-    olcek: float = 1.0
-
-
-@lru_cache(maxsize=1)
-def _alan_varsayilanlari() -> dict[str, object]:
-    return {a.name: a.default for a in fields(Seri)}
+    olcek: float | None = None
 
 
 def _alan_verilmis(seri: Seri, alan: str) -> bool:
-    """Alan varsayılanından sapmışsa verilmiş sayılır.
+    """Tipe özgü alanların tamamı None varsayılanlıdır: verilmiş = None değil.
 
-    `olcek`'in varsayılanı None değil 1.0 olduğu için düz doğruluk kontrolü
-    yetmez; karşılaştırma dataclass varsayılanına göre yapılır.
+    `olcek` de bu kurala uyar (varsayılanı None; 1.0'a `ingest` tarafında
+    düşülür), böylece katalogda açıkça yazılmış etkisiz bir `olcek: 1.0` da
+    yakalanır — onurlandırılmayan bir alan, değeri ne olursa olsun yanıltıcıdır.
     """
-    return getattr(seri, alan) != _alan_varsayilanlari()[alan]
+    return getattr(seri, alan) is not None
 
 
 def _alan_sahipligini_dogrula(seri: Seri) -> None:
@@ -107,7 +103,8 @@ def _alan_sahipligini_dogrula(seri: Seri) -> None:
     izinli = set(tanim["zorunlu"]) | set(tanim["istege_bagli"])
 
     for alan in tanim["zorunlu"]:
-        if not _alan_verilmis(seri, alan):
+        # Boş string alanı doldurmaz: `evds_code: ""` kod yazmakla aynı değil.
+        if not getattr(seri, alan):
             raise KatalogHatasi(
                 f"{seri.id}: {seri.kaynak_tipi} kaynağı için {alan} zorunlu"
             )
@@ -174,7 +171,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
-            olcek=float(ham.get("olcek", 1.0)),
+            olcek=float(ham["olcek"]) if "olcek" in ham else None,
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)
@@ -215,6 +212,10 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             "(yalnızca 'sum' ya da 'mean' desteklenir)"
         )
     # Alan varlığı tabloda; burada yalnızca değer geçerliliği kalıyor.
+    if seri.olcek is not None and seri.olcek <= 0:
+        raise KatalogHatasi(
+            f"{seri.id}: olcek pozitif olmalı (verilen: {seri.olcek})"
+        )
     if seri.kaynak_tipi == "evds" and seri.evds_frequency not in GECERLI_EVDS_FREKANSLARI:
         raise KatalogHatasi(
             f"{seri.id}: geçersiz evds_frequency '{seri.evds_frequency}'"
