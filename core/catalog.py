@@ -56,6 +56,7 @@ class Seri:
     monthly_agg: str = "mean"
     start_date: str | None = None
     yayin_notu: str | None = None
+    olcek: float = 1.0
 
 
 def _yaml_oku(ad: str) -> list[dict]:
@@ -111,6 +112,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
+            olcek=float(ham.get("olcek", 1.0)),
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)

@@ -244,3 +244,36 @@ def test_epias_gecerli_kaynak_tipi():
     from core.catalog import GECERLI_KAYNAK_TIPLERI
 
     assert "epias" in GECERLI_KAYNAK_TIPLERI
+
+
+def test_olcek_varsayilan_bir():
+    assert seri_getir("enflasyon/tufe-genel").olcek == 1.0
+
+
+def test_olcek_yaml_dan_float_olarak_okunur(tmp_path, monkeypatch):
+    from core import catalog
+
+    (tmp_path / "categories.yaml").write_text(
+        "- slug: elektrik\n  title: Elektrik\n", encoding="utf-8"
+    )
+    (tmp_path / "series.yaml").write_text(
+        "- id: elektrik/uretim\n"
+        "  title: Elektrik Üretimi\n"
+        "  category: elektrik\n"
+        "  kaynak: {name: EPİAŞ, url: https://example.com}\n"
+        "  kaynak_tipi: epias\n"
+        "  unit: GWh\n"
+        "  freq: daily\n"
+        "  charts: [level]\n"
+        "  olcek: 0.001\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(catalog, "KATALOG_DIZINI", tmp_path)
+    catalog.kategorileri_yukle.cache_clear()
+    catalog.serileri_yukle.cache_clear()
+    try:
+        (seri,) = catalog.serileri_yukle()
+        assert seri.olcek == pytest.approx(0.001)
+    finally:
+        catalog.kategorileri_yukle.cache_clear()
+        catalog.serileri_yukle.cache_clear()
