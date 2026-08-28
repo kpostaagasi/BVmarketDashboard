@@ -40,3 +40,27 @@ def seri_csv_oku(yol: Path) -> pd.DataFrame:
 def load_series(seri_id: str) -> pd.DataFrame:
     """Katalogdaki bir serinin verisini döndürür (önbellekli)."""
     return seri_csv_oku(seri_yolu(seri_id))
+
+
+def genis_csv_oku(yol: Path) -> pd.DataFrame:
+    """Çok sütunlu (bileşenli) seri dosyasını okur.
+
+    `seri_csv_oku` gövdesinde `df[["value"]]` vardır ve geniş dosyada
+    `value` sütunu yoktur. 24 seri o fonksiyona bağlı olduğu için
+    sözleşmesi değiştirilmez; geniş biçim ayrı kapıdan okunur.
+    """
+    if not yol.exists():
+        raise VeriYokHatasi(
+            f"Veri dosyası yok: {yol}\n"
+            "Veriyi üretmek için `python -m ingest.run` çalıştırın."
+        )
+    df = pd.read_csv(yol, parse_dates=["date"])
+    df = df.sort_values("date").set_index("date")
+    df.index.name = "date"
+    return df.astype("float64")
+
+
+@st.cache_data(show_spinner=False)
+def load_wide_series(seri_id: str) -> pd.DataFrame:
+    """Çok bileşenli serinin verisini döndürür (önbellekli)."""
+    return genis_csv_oku(seri_yolu(seri_id))

@@ -34,3 +34,38 @@ def test_bos_degerler_atilir(tmp_path):
 def test_dosya_yoksa_turkce_hata(tmp_path):
     with pytest.raises(VeriYokHatasi, match="ingest.run"):
         seri_csv_oku(tmp_path / "olmayan.csv")
+
+
+def test_genis_csv_oku_tum_sutunlari_dondurur(tmp_path):
+    from core.data import genis_csv_oku
+
+    yol = tmp_path / "k.csv"
+    yol.write_text(
+        "date,Kömür,Rüzgar\n2026-08-01,10.0,5.0\n2026-08-02,12.0,6.0\n",
+        encoding="utf-8",
+    )
+    df = genis_csv_oku(yol)
+    assert list(df.columns) == ["Kömür", "Rüzgar"]
+    assert df.index.name == "date"
+    assert len(df) == 2
+    assert df["Kömür"].dtype == "float64"
+
+
+def test_genis_csv_oku_tarihe_gore_siralar(tmp_path):
+    from core.data import genis_csv_oku
+
+    yol = tmp_path / "k.csv"
+    yol.write_text(
+        "date,Kömür\n2026-08-02,12.0\n2026-08-01,10.0\n", encoding="utf-8"
+    )
+    df = genis_csv_oku(yol)
+    assert list(df["Kömür"]) == [10.0, 12.0]
+
+
+def test_genis_csv_oku_dosya_yoksa_veri_yok_hatasi(tmp_path):
+    import pytest
+
+    from core.data import VeriYokHatasi, genis_csv_oku
+
+    with pytest.raises(VeriYokHatasi):
+        genis_csv_oku(tmp_path / "yok.csv")
