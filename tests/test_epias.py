@@ -480,6 +480,39 @@ def test_bilesen_noktalari_ayikla_bilinmeyen_alanda_hata_verir():
         bilesen_noktalari_ayikla(yanit, {"X": ("yokBoyleAlan",)})
 
 
+def test_bilesen_noktalari_ayikla_bilinmeyen_alan_none_kontrolunden_once_hata_verir():
+    """`.get` değil `kayit[alan]` kullanılmalı: "alan yok" (KeyError) ile
+
+    "alan var ama null" (aşağıdaki atlama testi) ayrımı korunmalı — None
+    kontrolü, eksik anahtarı sessizce None'a çevirip KeyError'ı yutmamalı.
+    """
+    from ingest.epias import bilesen_noktalari_ayikla
+
+    yanit = {"items": [_uretim_kaydi("2026-08-01", "00", wind=10.0)]}
+    with pytest.raises(KeyError):
+        bilesen_noktalari_ayikla(yanit, {"X": ("yokBoyleAlan", "wind")})
+
+
+def test_bilesen_noktalari_ayikla_none_iceren_saati_atlar():
+    """EPİAŞ bir bileşen alanında `null` dönerse o saat 0 sayılmaz, atlanır.
+
+    None'ı 0 saymak kaynağın üretimini sessizce sıfır gösterip grup
+    toplamını eksik raporlar; bunun yerine saat tamamen dışlanır — aynı
+    yanıttaki TAM saatler etkilenmeden korunur.
+    """
+    from ingest.epias import bilesen_noktalari_ayikla
+
+    tam_saat = _uretim_kaydi("2026-08-01", "00", importCoal=100.0, wind=10.0)
+    eksik_saat = _uretim_kaydi("2026-08-01", "01", importCoal=None, wind=5.0)
+    yanit = {"items": [tam_saat, eksik_saat]}
+
+    noktalar = bilesen_noktalari_ayikla(yanit, GRUPLAR)
+
+    assert len(noktalar) == 1
+    assert noktalar[0]["Kömür"] == 100.0
+    assert noktalar[0]["Rüzgar"] == 10.0
+
+
 def test_seri_cek_bilesenli_seriyi_genis_df_olarak_dondurur():
     from ingest.epias import seri_cek
 

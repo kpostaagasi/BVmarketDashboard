@@ -125,13 +125,27 @@ def bilesen_noktalari_ayikla(
 
     Bilinmeyen alan adı sessizce sıfır sayılmaz; KeyError yükselir, çünkü
     EPİAŞ bir alanı yeniden adlandırırsa o grup sessizce boşalır ve grafik
-    yanlış çizilir.
+    yanlış çizilir. `kayit[alan]` (`.get` değil) kasıtlı: bu, "alan hiç yok"
+    (KeyError) ile "alan var ama değeri null" (aşağıdaki None kontrolü)
+    ayrımını korur.
+
+    Bir kaydın gruplara giren alanlarından HERHANGİ BİRİ `None` ise o SAAT
+    tamamen atlanır — `None`'ı 0 saymak o kaynağın üretimini sessizce sıfır
+    gösterir ve grup toplamını eksik raporlar (kardeş `noktalari_ayikla` ile
+    aynı "veri uydurma" karşıtı davranış). Atlanan saat, aşağı akışta zaten
+    `seri_cek`'in eksik-saat filtresine (`SAAT_SAYISI_TAM_GUN`) düşer: o gün
+    24 saati tamamlayamaz ve günlük indirgemeden önce elenir.
     """
     noktalar = []
     for kayit in yanit.get("items") or []:
+        degerler = {
+            alan: kayit[alan] for alanlar in gruplar.values() for alan in alanlar
+        }
+        if any(deger is None for deger in degerler.values()):
+            continue
         nokta = {"date": kayit["date"][:10]}
         for grup, alanlar in gruplar.items():
-            nokta[grup] = float(sum(kayit[alan] for alan in alanlar))
+            nokta[grup] = float(sum(degerler[alan] for alan in alanlar))
         noktalar.append(nokta)
     return noktalar
 
