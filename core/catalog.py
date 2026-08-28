@@ -5,7 +5,7 @@ Metadata burada yaşar; veri dosyaları yalnızca `date,value` içerir.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from functools import lru_cache
 from pathlib import Path
 
@@ -20,6 +20,33 @@ GECERLI_GRAFIKLER = {"seasonality", "level"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias"}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
+
+# Hangi kaynak tipi hangi alanı taşıyabilir. Bir alan burada listelenmemişse o
+# kaynak için YASAKTIR: sessizce yok sayılan bir alan (ör. yalnızca epias'ın
+# onurlandırdığı `olcek`) grafiği fark edilmeden yanlış ölçekte çizdirir.
+# Yeni bir kaynak tipi eklemek, üç mevcut tipe ayrı ayrı red kuralı yazmak
+# değil, buraya bir satır eklemektir.
+KAYNAK_ALANLARI = {
+    "evds": {
+        "zorunlu": ("evds_code", "evds_frequency"),
+        "istege_bagli": ("start_date",),
+    },
+    "yahoo": {
+        # start_date yok: yahoo istemcisi range=15y sabitiyle çalışıyor.
+        "zorunlu": ("yahoo_symbol",),
+        "istege_bagli": (),
+    },
+    "epias": {
+        "zorunlu": ("epias_ucu", "epias_alani"),
+        "istege_bagli": ("start_date", "olcek"),
+    },
+}
+
+TIPE_OZGU_ALANLAR = frozenset(
+    alan
+    for tanim in KAYNAK_ALANLARI.values()
+    for alan in tanim["zorunlu"] + tanim["istege_bagli"]
+)
 
 
 class KatalogHatasi(Exception):
@@ -59,6 +86,37 @@ class Seri:
     start_date: str | None = None
     yayin_notu: str | None = None
     olcek: float = 1.0
+
+
+@lru_cache(maxsize=1)
+def _alan_varsayilanlari() -> dict[str, object]:
+    return {a.name: a.default for a in fields(Seri)}
+
+
+def _alan_verilmis(seri: Seri, alan: str) -> bool:
+    """Alan varsayılanından sapmışsa verilmiş sayılır.
+
+    `olcek`'in varsayılanı None değil 1.0 olduğu için düz doğruluk kontrolü
+    yetmez; karşılaştırma dataclass varsayılanına göre yapılır.
+    """
+    return getattr(seri, alan) != _alan_varsayilanlari()[alan]
+
+
+def _alan_sahipligini_dogrula(seri: Seri) -> None:
+    tanim = KAYNAK_ALANLARI[seri.kaynak_tipi]
+    izinli = set(tanim["zorunlu"]) | set(tanim["istege_bagli"])
+
+    for alan in tanim["zorunlu"]:
+        if not _alan_verilmis(seri, alan):
+            raise KatalogHatasi(
+                f"{seri.id}: {seri.kaynak_tipi} kaynağı için {alan} zorunlu"
+            )
+
+    for alan in sorted(TIPE_OZGU_ALANLAR - izinli):
+        if _alan_verilmis(seri, alan):
+            raise KatalogHatasi(
+                f"{seri.id}: {seri.kaynak_tipi} kaynağı {alan} taşıyamaz"
+            )
 
 
 def _yaml_oku(ad: str) -> list[dict]:
@@ -148,10 +206,7 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(f"{seri.id}: charts listesinde tekrar var {seri.charts}")
     if seri.kaynak_tipi not in GECERLI_KAYNAK_TIPLERI:
         raise KatalogHatasi(f"{seri.id}: geçersiz kaynak_tipi '{seri.kaynak_tipi}'")
-    if seri.kaynak_tipi == "epias" and not (seri.epias_ucu and seri.epias_alani):
-        raise KatalogHatasi(
-            f"epias serisi epias_ucu ve epias_alani ister: {seri.id}"
-        )
+    _alan_sahipligini_dogrula(seri)
     if seri.kaynak_tipi == "epias" and seri.monthly_agg == "last":
         # epias.seri_cek yalnızca sum/mean günlük indirgemesi biliyor;
         # "last" verilirse else dalı bunu sessizce ortalamaya çeviriyordu.
@@ -159,27 +214,11 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             f"{seri.id}: epias kaynağı monthly_agg='last' alamaz "
             "(yalnızca 'sum' ya da 'mean' desteklenir)"
         )
-    if seri.kaynak_tipi == "evds":
-        if not seri.evds_code:
-            raise KatalogHatasi(f"{seri.id}: evds kaynağı için evds_code zorunlu")
-        if seri.evds_frequency not in GECERLI_EVDS_FREKANSLARI:
-            raise KatalogHatasi(
-                f"{seri.id}: geçersiz evds_frequency '{seri.evds_frequency}'"
-            )
-        if seri.yahoo_symbol:
-            raise KatalogHatasi(f"{seri.id}: evds kaynağı yahoo_symbol taşımamalı")
-    if seri.kaynak_tipi == "yahoo":
-        if not seri.yahoo_symbol:
-            raise KatalogHatasi(f"{seri.id}: yahoo kaynağı için yahoo_symbol zorunlu")
-        if seri.evds_code or seri.evds_frequency:
-            raise KatalogHatasi(
-                f"{seri.id}: yahoo kaynağı evds alanları taşımamalı"
-            )
-        if seri.start_date:
-            raise KatalogHatasi(
-                f"{seri.id}: yahoo kaynağı start_date desteklemiyor "
-                "(range=15y sabit)"
-            )
+    # Alan varlığı tabloda; burada yalnızca değer geçerliliği kalıyor.
+    if seri.kaynak_tipi == "evds" and seri.evds_frequency not in GECERLI_EVDS_FREKANSLARI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz evds_frequency '{seri.evds_frequency}'"
+        )
 
 
 def seri_listele(kategori: str | None = None) -> list[Seri]:

@@ -3,6 +3,7 @@ import dataclasses
 import pytest
 
 from core.catalog import (
+    Kaynak,
     KatalogHatasi,
     Seri,
     _dogrula,
@@ -164,7 +165,7 @@ def test_yahoo_serisi_evds_alani_tasiyamaz():
     seri = dataclasses.replace(
         seri_getir("emtia-enerji/brent"), evds_code="TP.XXX"
     )
-    with pytest.raises(KatalogHatasi, match="evds alanları"):
+    with pytest.raises(KatalogHatasi, match="evds_code"):
         _dogrula(seri, _sluglar(), set())
 
 
@@ -301,3 +302,96 @@ def test_epias_serisi_uc_ve_alan_ister():
     for s in epias:
         assert s.epias_ucu, f"{s.id}: epias_ucu boş"
         assert s.epias_alani, f"{s.id}: epias_alani boş"
+
+
+# --- Alan sahipliği tablosu ---
+
+
+def _ham_seri(**degisiklikler):
+    """Geçerli bir evds seri sözlüğü; testler tek alanı değiştirip bozar."""
+    ham = {
+        "id": "enflasyon/deneme",
+        "title": "Deneme",
+        "category": "enflasyon",
+        "kaynak": {"name": "TCMB EVDS", "url": "https://evds3.tcmb.gov.tr"},
+        "kaynak_tipi": "evds",
+        "unit": "%",
+        "freq": "monthly",
+        "charts": ["level"],
+        "evds_code": "TP.X",
+        "evds_frequency": "5",
+    }
+    ham.update(degisiklikler)
+    return ham
+
+
+def _dogrula_ham(ham):
+    from core.catalog import Seri, _dogrula
+
+    alanlar = {a: ham[a] for a in ham if a != "kaynak"}
+    seri = Seri(kaynak=Kaynak(**ham["kaynak"]), **alanlar)
+    _dogrula(seri, {"enflasyon"}, set())
+
+
+def test_kaynak_alanlari_tablosu_her_kaynak_tipini_kapsar():
+    from core.catalog import GECERLI_KAYNAK_TIPLERI, KAYNAK_ALANLARI
+
+    assert set(KAYNAK_ALANLARI) == GECERLI_KAYNAK_TIPLERI
+
+
+def test_evds_serisi_olcek_tasiyamaz():
+    """olcek'i yalnızca epias onurlandırıyor; sessizce yok saymak yerine reddet."""
+    with pytest.raises(KatalogHatasi, match="olcek"):
+        _dogrula_ham(_ham_seri(olcek=0.001))
+
+
+def test_evds_serisi_epias_alani_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="epias_ucu"):
+        _dogrula_ham(_ham_seri(epias_ucu="ptf"))
+
+
+def test_epias_serisi_evds_alani_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="evds_code"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="epias", epias_ucu="ptf", epias_alani="price",
+                evds_frequency=None,
+            )
+        )
+
+
+def test_epias_serisi_olcek_ve_start_date_tasiyabilir():
+    _dogrula_ham(
+        _ham_seri(
+            kaynak_tipi="epias", epias_ucu="ptf", epias_alani="price",
+            evds_code=None, evds_frequency=None,
+            olcek=0.001, start_date="2021-01-01",
+        )
+    )
+
+
+def test_yahoo_serisi_start_date_tasiyamaz():
+    """Mevcut davranış korunmalı: yahoo range=15y sabit."""
+    with pytest.raises(KatalogHatasi, match="start_date"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="yahoo", yahoo_symbol="BZ=F",
+                evds_code=None, evds_frequency=None, start_date="2021-01-01",
+            )
+        )
+
+
+def test_eksik_zorunlu_alan_reddedilir():
+    with pytest.raises(KatalogHatasi, match="evds_code"):
+        _dogrula_ham(_ham_seri(evds_code=None))
+
+
+def test_gercek_katalog_alan_sahipligini_gecer():
+    """Regresyon kalkanı: tablo mevcut 25 seriyi reddetmemeli."""
+    from core.catalog import serileri_yukle
+
+    serileri_yukle.cache_clear()
+    try:
+        assert len(serileri_yukle()) == 25
+    finally:
+        serileri_yukle.cache_clear()
