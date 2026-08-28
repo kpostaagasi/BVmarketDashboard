@@ -309,18 +309,34 @@ def test_epias_serisinde_monthly_agg_last_reddedilir():
         _dogrula(seri, _sluglar(), set())
 
 
-def test_epias_serisi_uc_ve_alan_ister():
-    from core.catalog import KatalogHatasi, serileri_yukle
+def test_tek_alanli_epias_serileri_epias_alani_tasir_bilesen_tasimaz():
+    from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     seriler = serileri_yukle()
-    epias = [s for s in seriler if s.kaynak_tipi == "epias"]
-    assert epias, "katalogda epias serisi yok"
-    for s in epias:
+    tek_alanlilar = [
+        s for s in seriler if s.kaynak_tipi == "epias" and s.epias_bilesenler is None
+    ]
+    assert tek_alanlilar, "katalogda tek alanlı epias serisi yok"
+    for s in tek_alanlilar:
         assert s.epias_ucu, f"{s.id}: epias_ucu boş"
-        assert s.epias_alani or s.epias_bilesenler, (
-            f"{s.id}: epias_alani ve epias_bilesenler ikisi de boş"
-        )
+        assert s.epias_alani, f"{s.id}: epias_alani boş"
+        assert s.epias_bilesenler is None, f"{s.id}: epias_bilesenler dolu olmamalı"
+
+
+def test_bilesenli_epias_serileri_epias_bilesenler_tasir_alan_tasimaz():
+    from core.catalog import serileri_yukle
+
+    serileri_yukle.cache_clear()
+    seriler = serileri_yukle()
+    bilesenliler = [
+        s for s in seriler if s.kaynak_tipi == "epias" and s.epias_bilesenler is not None
+    ]
+    assert bilesenliler, "katalogda bileşenli epias serisi yok"
+    for s in bilesenliler:
+        assert s.epias_ucu, f"{s.id}: epias_ucu boş"
+        assert s.epias_bilesenler, f"{s.id}: epias_bilesenler boş"
+        assert s.epias_alani is None, f"{s.id}: epias_alani dolu olmamalı"
 
 
 # --- Alan sahipliği tablosu ---
