@@ -18,6 +18,27 @@ from core.theme import CIZGI_DESENLERI, RENKLER, TR_AYLAR
 _AGG_FONKSIYONLARI = {"mean": "mean", "last": "last", "sum": "sum"}
 
 
+def son_ay_tamamlanmamissa_dus(
+    aylik: pd.DataFrame, ham_son: pd.Timestamp
+) -> pd.DataFrame:
+    """Ay-başlangıcına indirgenmiş bir seride tamamlanmamış son ayı düşürür.
+
+    Kural: ham verinin son tarihi, indirgenmiş son ayın son gününden ÖNCEYSE
+    (`ham_son < aylik.index[-1] + MonthEnd(0)`) o ay henüz tamamlanmamıştır —
+    düşürülür. Ayın 1'i (`aylik.index[-1]`) ile ayın son günü (`+ MonthEnd(0)`)
+    farklı çapalardır; bu ikisini `ham_son`'la ters karşılaştırmak (ham_son'u
+    ay-başlangıcıyla kıyaslamak) ay tamamlanmış olsa bile hemen hemen her
+    zaman True verir — bu kural tek yerde uygulanır ki bir daha ayrışmasın.
+    Boş `aylik` için no-op.
+    """
+    if aylik.empty:
+        return aylik
+    son_ay_sonu = aylik.index[-1] + pd.offsets.MonthEnd(0)
+    if ham_son < son_ay_sonu:
+        return aylik.iloc[:-1]
+    return aylik
+
+
 def aylige_cevir(
     df: pd.DataFrame, agg: str = "mean", freq: str = "monthly"
 ) -> pd.DataFrame:
@@ -36,10 +57,8 @@ def aylige_cevir(
         seri = df["value"].resample("MS").agg(_AGG_FONKSIYONLARI[agg])
     seri = seri.dropna().to_frame("value")
 
-    if agg == "sum" and freq != "monthly" and not seri.empty:
-        son_ay_sonu = seri.index[-1] + pd.offsets.MonthEnd(0)
-        if df.index.max() < son_ay_sonu:
-            seri = seri.iloc[:-1]
+    if agg == "sum" and freq != "monthly":
+        seri = son_ay_tamamlanmamissa_dus(seri, df.index.max())
 
     return seri
 

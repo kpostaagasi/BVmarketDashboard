@@ -224,3 +224,35 @@ def test_kompozisyon_figuru_desen_sutun_adina_gore_uygular():
         "Kömür": CIZGI_DESENLERI["Kömür"],
         "Doğalgaz": CIZGI_DESENLERI["Doğalgaz"],
     }
+
+
+def test_son_ay_tamamlanmamissa_dus_tam_ayi_dusurmez():
+    """Ham son gün ayın son günüyse ay TAMAMLANMIŞ demektir — düşülmemeli."""
+    from core.charts import son_ay_tamamlanmamissa_dus
+
+    aylik = pd.DataFrame(
+        {"A": [1.0, 2.0]},
+        index=pd.to_datetime(["2026-07-01", "2026-08-01"]),
+    )
+    sonuc = son_ay_tamamlanmamissa_dus(aylik, pd.Timestamp("2026-08-31"))
+    assert list(sonuc.index) == list(aylik.index)
+
+
+def test_son_ay_tamamlanmamissa_dus_eksik_ayi_dusurur():
+    """Ham son gün ayın ortasındaysa ay EKSİK demektir — son satır düşülmeli."""
+    from core.charts import son_ay_tamamlanmamissa_dus
+
+    aylik = pd.DataFrame(
+        {"A": [1.0, 2.0]},
+        index=pd.to_datetime(["2026-07-01", "2026-08-01"]),
+    )
+    sonuc = son_ay_tamamlanmamissa_dus(aylik, pd.Timestamp("2026-08-15"))
+    assert list(sonuc.index) == [pd.Timestamp("2026-07-01")]
+
+
+def test_son_ay_tamamlanmamissa_dus_bos_df_hata_vermez():
+    from core.charts import son_ay_tamamlanmamissa_dus
+
+    aylik = pd.DataFrame({"A": []}, index=pd.DatetimeIndex([]))
+    sonuc = son_ay_tamamlanmamissa_dus(aylik, pd.Timestamp("2026-08-15"))
+    assert sonuc.empty

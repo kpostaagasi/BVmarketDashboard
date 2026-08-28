@@ -9,7 +9,13 @@ import pandas as pd
 import streamlit as st
 
 from core.catalog import SIKLIK_ETIKETLERI, Seri
-from core.charts import kompozisyon_figuru, mevsimsellik_figuru, paylara_cevir, seviye_figuru
+from core.charts import (
+    kompozisyon_figuru,
+    mevsimsellik_figuru,
+    paylara_cevir,
+    seviye_figuru,
+    son_ay_tamamlanmamissa_dus,
+)
 from core.data import VeriYokHatasi, load_series, load_wide_series
 from core.stats import (
     VARSAYILAN,
@@ -172,11 +178,10 @@ def kompozisyon_karti(seri: Seri) -> None:
         ) or "Pay %"
 
         aylik = df.resample("MS").sum(min_count=1).dropna(how="all")
-        if aylik.index.max() < df.index.max() + pd.offsets.MonthEnd(0):
-            # Tamamlanmamış son ay sahte bir düşüş gibi görünür (aylige_cevir
-            # ile aynı gerekçe); bileşenli seri günlük olduğu için burada da
-            # geçerli.
-            aylik = aylik.iloc[:-1]
+        # Tamamlanmamış son ay sahte bir düşüş gibi görünür (aylige_cevir ile
+        # aynı gerekçe, aynı uygulama); bileşenli seri günlük olduğu için
+        # burada da geçerli.
+        aylik = son_ay_tamamlanmamissa_dus(aylik, df.index.max())
 
         gosterilecek = paylara_cevir(aylik) if gorunum == "Pay %" else aylik
         birim = "%" if gorunum == "Pay %" else seri.unit
