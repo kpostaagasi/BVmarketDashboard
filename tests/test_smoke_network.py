@@ -37,15 +37,22 @@ def pencere() -> tuple[date, date]:
 
 
 def test_epias_uclari_beklenen_alanlari_donduruyor(pencere):
-    """UCLAR'daki her uç yaşıyor ve katalogdaki epias_alani'nı taşıyor."""
+    """UCLAR'daki her uç yaşıyor ve katalogdaki alanları (tekil ya da bileşen) taşıyor.
+
+    Bir uca birden çok seri bağlanabilir (ör. `uretim` hem tekil `total`
+    alanlı `elektrik/uretim` serisine hem bileşen alanlı
+    `elektrik/uretim-kompozisyon` serisine bağlıdır) — bu yüzden uç başına
+    tek bir beklenen alan yerine, o ucu kullanan TÜM serilerin beklediği
+    alanlar kontrol edilir.
+    """
     from core.catalog import seri_listele
     from ingest.epias import TABAN, UCLAR, ZAMAN_ASIMI, tgt_al
 
     kimlik = _atla_kimlik_yoksa("EPIAS_USERNAME", "EPIAS_PASSWORD")
     baslangic, bitis = pencere
 
-    beklenen_alan = {s.epias_ucu: s.epias_alani for s in seri_listele("elektrik")}
-    assert set(beklenen_alan) == set(UCLAR), "katalog ile UCLAR ayrışmış"
+    seriler = seri_listele("elektrik")
+    assert {s.epias_ucu for s in seriler} == set(UCLAR), "katalog ile UCLAR ayrışmış"
 
     with requests.Session() as oturum:
         tgt = tgt_al(kimlik["EPIAS_USERNAME"], kimlik["EPIAS_PASSWORD"], session=oturum)
@@ -67,10 +74,26 @@ def test_epias_uclari_beklenen_alanlari_donduruyor(pencere):
             assert kayitlar, f"{uc}: 'items' boş ya da yok"
             ilk = kayitlar[0]
             assert "date" in ilk, f"{uc}: 'date' alanı kaybolmuş"
-            assert beklenen_alan[uc] in ilk, (
-                f"{uc}: katalogun beklediği '{beklenen_alan[uc]}' alanı yanıtta yok "
-                f"(mevcut alanlar: {sorted(ilk)})"
-            )
+
+            for seri in seriler:
+                if seri.epias_ucu != uc:
+                    continue
+                if seri.epias_bilesenler:
+                    beklenen_alanlar = {
+                        alan
+                        for alanlar in seri.epias_bilesenler.values()
+                        for alan in alanlar
+                    }
+                    eksik = beklenen_alanlar - set(ilk)
+                    assert not eksik, (
+                        f"{seri.id}: bileşen alanları yanıtta yok: {sorted(eksik)} "
+                        f"(mevcut alanlar: {sorted(ilk)})"
+                    )
+                else:
+                    assert seri.epias_alani in ilk, (
+                        f"{seri.id}: katalogun beklediği '{seri.epias_alani}' alanı "
+                        f"yanıtta yok (mevcut alanlar: {sorted(ilk)})"
+                    )
 
 
 def test_evds_serisi_nokta_donduruyor(pencere):
