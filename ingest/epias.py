@@ -31,6 +31,14 @@ UCLAR = {
     "ptf": "/electricity-service/v1/markets/dam/data/mcp",
 }
 
+# EPİAŞ elektrik uçları tek istekte en fazla 3 aylık pencereye izin veriyor
+# (canlı API'de doğrulandı: pencere aşılınca HTTP 400 "(BUS)SEF1117 —
+# Verilen tarihler tanımlanmış aralıktan (3 MONTH) fazla olamaz!"). Varsayılan
+# pencere bu sınırın altında kalmalı, aksi halde start_date verilmeyen her
+# istek başarısız olur. `bugun`e göre hesaplandığı için otomatik koşularda
+# pencere her zaman güncel kalır — sabit bir tarih gibi zamanla sınırı aşmaz.
+VARSAYILAN_PENCERE_GUN = 89
+
 
 def tgt_al(kullanici: str, parola: str,
            session: requests.Session | None = None) -> str:
@@ -85,7 +93,7 @@ def seri_cek(seri, tgt: str, session: requests.Session | None = None,
     baslangic = (
         date.fromisoformat(seri.start_date)
         if seri.start_date
-        else bugun - timedelta(days=365 * 5)
+        else bugun - timedelta(days=VARSAYILAN_PENCERE_GUN)
     )
     http = session or requests
 

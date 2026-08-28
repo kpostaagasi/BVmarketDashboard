@@ -53,6 +53,8 @@ class Seri:
     evds_code: str | None = None
     evds_frequency: str | None = None
     yahoo_symbol: str | None = None
+    epias_ucu: str | None = None
+    epias_alani: str | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
     yayin_notu: str | None = None
@@ -109,6 +111,8 @@ def serileri_yukle() -> tuple[Seri, ...]:
             evds_code=ham.get("evds_code"),
             evds_frequency=None if evds_frekans is None else str(evds_frekans),
             yahoo_symbol=ham.get("yahoo_symbol"),
+            epias_ucu=ham.get("epias_ucu"),
+            epias_alani=ham.get("epias_alani"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -144,6 +148,10 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(f"{seri.id}: charts listesinde tekrar var {seri.charts}")
     if seri.kaynak_tipi not in GECERLI_KAYNAK_TIPLERI:
         raise KatalogHatasi(f"{seri.id}: geçersiz kaynak_tipi '{seri.kaynak_tipi}'")
+    if seri.kaynak_tipi == "epias" and not (seri.epias_ucu and seri.epias_alani):
+        raise KatalogHatasi(
+            f"epias serisi epias_ucu ve epias_alani ister: {seri.id}"
+        )
     if seri.kaynak_tipi == "evds":
         if not seri.evds_code:
             raise KatalogHatasi(f"{seri.id}: evds kaynağı için evds_code zorunlu")

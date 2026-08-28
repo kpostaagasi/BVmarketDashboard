@@ -19,7 +19,7 @@ def test_cek_yahoo_serisini_yahoo_moduline_yonlendirir(monkeypatch):
         return sahte_df()
 
     monkeypatch.setattr("ingest.run.yahoo.seri_cek", sahte)
-    _cek(seri_getir("emtia-enerji/brent"), None, None)
+    _cek(seri_getir("emtia-enerji/brent"), None, None, None)
     assert gorulen["id"] == "emtia-enerji/brent"
 
 
@@ -32,7 +32,7 @@ def test_cek_evds_serisini_evds_moduline_yonlendirir(monkeypatch):
         return sahte_df()
 
     monkeypatch.setattr("ingest.run.evds.seri_cek", sahte)
-    _cek(seri_getir("enflasyon/tufe-genel"), "gizli", None)
+    _cek(seri_getir("enflasyon/tufe-genel"), "gizli", None, None)
     assert gorulen["id"] == "enflasyon/tufe-genel"
     assert gorulen["key"] == "gizli"
 
@@ -40,4 +40,26 @@ def test_cek_evds_serisini_evds_moduline_yonlendirir(monkeypatch):
 def test_cek_bilinmeyen_kaynak_tipinde_hata():
     seri = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), kaynak_tipi="bloomberg")
     with pytest.raises(ValueError, match="Bilinmeyen kaynak tipi"):
-        _cek(seri, "gizli", None)
+        _cek(seri, "gizli", None, None)
+
+
+def test_cek_epias_serisini_epias_modulune_yonlendirir(monkeypatch):
+    import dataclasses
+
+    from core.catalog import seri_getir
+    from ingest import run
+
+    cagrildi = {}
+
+    def sahte_seri_cek(seri, tgt, session=None):
+        cagrildi["tgt"] = tgt
+        cagrildi["id"] = seri.id
+        return "DF"
+
+    monkeypatch.setattr(run.epias, "seri_cek", sahte_seri_cek)
+    seri = dataclasses.replace(
+        seri_getir("enflasyon/tufe-genel"),
+        kaynak_tipi="epias", epias_ucu="ptf", epias_alani="price",
+    )
+    assert run._cek(seri, "ANAHTAR", "TGT-123", None) == "DF"
+    assert cagrildi == {"tgt": "TGT-123", "id": "enflasyon/tufe-genel"}

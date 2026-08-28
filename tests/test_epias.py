@@ -208,3 +208,17 @@ def test_seri_cek_baslangic_gunu_start_date_varsa_ondan_alinir():
     seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 27))
     assert oturum.gonderilen_govde["startDate"] == "2020-01-01T00:00:00+03:00"
     assert oturum.gonderilen_govde["endDate"] == "2026-08-27T00:00:00+03:00"
+
+
+def test_seri_cek_start_date_yoksa_varsayilan_pencere_uc_ayi_asmaz():
+    # EPİAŞ elektrik uçları tek istekte en fazla 3 aylık pencereye izin
+    # veriyor (HTTP 400 "(BUS)SEF1117" — canlı API'de doğrulandı). start_date
+    # verilmemişse varsayılan pencere bu sınırın altında kalmalı, yoksa her
+    # istek 400 ile başarısız olur.
+    oturum = SahteOturum(SahteYanit(200, yanit([
+        {"date": "2026-08-01T00:00:00+03:00", "price": 2500.0},
+    ])))
+    seri = _epias_seri(start_date=None)
+    seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 27))
+    baslangic = date.fromisoformat(oturum.gonderilen_govde["startDate"][:10])
+    assert (date(2026, 8, 27) - baslangic).days <= 90

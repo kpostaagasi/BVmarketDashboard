@@ -26,6 +26,8 @@ jobs:
       - name: Verileri çek
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+          EPIAS_USERNAME: ${{ secrets.EPIAS_USERNAME }}
+          EPIAS_PASSWORD: ${{ secrets.EPIAS_PASSWORD }}
         run: python -m ingest.run
 
       - name: Değişiklikleri commit'le

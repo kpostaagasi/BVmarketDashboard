@@ -22,11 +22,12 @@ def test_kategori_sirasi():
         "enflasyon",
         "insaat",
         "kredi-karti",
+        "elektrik",
     ]
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 23
+    assert len(serileri_yukle()) == 25
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -101,7 +102,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -262,6 +263,8 @@ def test_olcek_yaml_dan_float_olarak_okunur(tmp_path, monkeypatch):
         "  category: elektrik\n"
         "  kaynak: {name: EPİAŞ, url: https://example.com}\n"
         "  kaynak_tipi: epias\n"
+        "  epias_ucu: uretim\n"
+        "  epias_alani: total\n"
         "  unit: GWh\n"
         "  freq: daily\n"
         "  charts: [level]\n"
@@ -277,3 +280,15 @@ def test_olcek_yaml_dan_float_olarak_okunur(tmp_path, monkeypatch):
     finally:
         catalog.kategorileri_yukle.cache_clear()
         catalog.serileri_yukle.cache_clear()
+
+
+def test_epias_serisi_uc_ve_alan_ister():
+    from core.catalog import KatalogHatasi, serileri_yukle
+
+    serileri_yukle.cache_clear()
+    seriler = serileri_yukle()
+    epias = [s for s in seriler if s.kaynak_tipi == "epias"]
+    assert epias, "katalogda epias serisi yok"
+    for s in epias:
+        assert s.epias_ucu, f"{s.id}: epias_ucu boş"
+        assert s.epias_alani, f"{s.id}: epias_alani boş"
