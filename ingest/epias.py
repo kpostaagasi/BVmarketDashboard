@@ -26,7 +26,8 @@ from core.catalog import Seri
 
 TGT_URL = "https://giris.epias.com.tr/cas/v1/tickets"
 TABAN = "https://seffaflik.epias.com.tr"
-ZAMAN_ASIMI = 30
+# evds ve yahoo ile aynı: ölçümde istek başına ~9s görüldü, 30s'lik pay dardı.
+ZAMAN_ASIMI = 60
 
 UCLAR = {
     "uretim": "/electricity-service/v1/generation/data/realtime-generation",
@@ -113,6 +114,15 @@ def noktalari_ayikla(yanit: dict, alan: str) -> list[tuple[str, float]]:
     return noktalar
 
 
+def _olcekle(df: pd.DataFrame, olcek: float | None) -> pd.DataFrame:
+    """None = ölçekleme yok. Katalog `olcek`i vermediyse seri olduğu gibi kalır."""
+    if olcek is None:
+        return df
+    df = df.copy()
+    df["value"] = df["value"] * olcek
+    return df
+
+
 def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
              bugun: date | None = None) -> pd.DataFrame:
     """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı).
@@ -194,5 +204,5 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
     else:
         gunluk = df.groupby("date", as_index=False)["value"].mean()
     gunluk = gunluk.sort_values("date").reset_index(drop=True)
-    gunluk["value"] = gunluk["value"] * seri.olcek
+    gunluk = _olcekle(gunluk, seri.olcek)
     return gunluk

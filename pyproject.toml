@@ -1,3 +1,9 @@
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+# Ağa çıkan testler varsayılan koşuda ve CI'da atlanır; elle çağrılır:
+#   pytest -m network
+addopts = "-m 'not network'"
+markers = [
+    "network: gerçek kaynağa istek atar; kimlik bilgisi ve internet ister",
+]
