@@ -10,6 +10,24 @@ def yanit(kayitlar):
     return {"items": kayitlar}
 
 
+def _gun(tarih: str, alan: str, deger) -> list[dict]:
+    """24 saatlik TAM bir günün kayıtlarını üretir.
+
+    `deger` tek sayıysa tüm saatler aynı değeri taşır; sözlükse
+    (saat -> değer) yalnızca verilen saatler üretilir — kesik gün
+    simüle etmek için `_gun(...)[:12]` gibi dilimlemek de mümkün
+    (liste saat 0..23 sırasında döner).
+    """
+    if isinstance(deger, dict):
+        saatler = sorted(deger.items())
+    else:
+        saatler = [(saat, deger) for saat in range(24)]
+    return [
+        {"date": f"{tarih}T{saat:02d}:00:00+03:00", alan: v}
+        for saat, v in saatler
+    ]
+
+
 def test_noktalari_ayikla_tarih_ve_degeri_cikarir():
     ham = yanit([
         {"date": "2026-08-01T00:00:00+03:00", "price": 2500.0},
@@ -201,7 +219,7 @@ def test_seri_cek_http_hatasinda_yukselir():
 
 def test_seri_cek_bos_seride_yukselir():
     oturum = SahteOturum(SahteYanit(200, yanit([])))
-    with pytest.raises(RuntimeError, match="boş seri"):
+    with pytest.raises(RuntimeError, match="boş"):
         seri_cek(_epias_seri(), "TGT-abc", session=oturum)
 
 
@@ -215,14 +233,14 @@ def test_seri_cek_tgt_basligini_gonderir():
 
 def test_seri_cek_mean_serisi_gunluk_ortalama_alir():
     # PTF gibi monthly_agg="mean" seriler: aynı günün saatlik değerleri
-    # ORTALAMASI alınmalı, toplamı değil. (Varsayılan çok-yıllık pencere
-    # birden çok dilime bölünüp aynı sahte yanıtı tekrar tekrar
-    # döndürecek olsa da ortalama tekrar sayısından etkilenmez.)
-    oturum = SahteOturum(SahteYanit(200, yanit([
-        {"date": "2026-08-01T00:00:00+03:00", "price": 100.0},
-        {"date": "2026-08-01T01:00:00+03:00", "price": 300.0},
-    ])))
-    df = seri_cek(_epias_seri(monthly_agg="mean"), "TGT-abc", session=oturum)
+    # ORTALAMASI alınmalı, toplamı değil. Gün TAM 24 saat içeriyor (C1
+    # kuralı: eksik saatli günler atılır) — 12 saat 100, 12 saat 300.
+    oturum = SahteOturum(SahteYanit(200, yanit(
+        _gun("2026-08-01", "price", {**{s: 100.0 for s in range(12)},
+                                      **{s: 300.0 for s in range(12, 24)}})
+    )))
+    df = seri_cek(_epias_seri(monthly_agg="mean", start_date="2026-07-25"),
+                  "TGT-abc", session=oturum, bugun=date(2026, 8, 1))
     assert list(df.columns) == ["date", "value"]
     assert len(df) == 1
     assert df.iloc[0]["value"] == pytest.approx(200.0)
@@ -230,34 +248,81 @@ def test_seri_cek_mean_serisi_gunluk_ortalama_alir():
 
 def test_seri_cek_sum_serisi_gunluk_toplam_alir():
     # Üretim gibi monthly_agg="sum" seriler: saatlik MWh'lerin günlük
-    # TOPLAMI alınmalı — ortalaması alınırsa değer 1/24'üne düşer.
-    # Toplam, tekrar sayısından (dilim sayısından) etkilenir; bu yüzden
-    # burada dar bir pencere (tek dilim) kullanılıyor.
-    oturum = SahteOturum(SahteYanit(200, yanit([
-        {"date": "2026-08-01T00:00:00+03:00", "total": 45000.0},
-        {"date": "2026-08-01T01:00:00+03:00", "total": 46000.0},
-    ])))
+    # TOPLAMI alınmalı — ortalaması alınırsa değer 1/24'üne düşer. Gün
+    # TAM 24 saat içeriyor (C1 kuralı); burada dar bir pencere (tek
+    # dilim) kullanılıyor ki toplam dilim tekrarından etkilenmesin.
+    oturum = SahteOturum(SahteYanit(200, yanit(
+        _gun("2026-08-01", "total", 2000.0)  # 24 saat x 2000 = 48000
+    )))
     seri = _epias_seri(id="elektrik/uretim", epias_ucu="uretim",
                         epias_alani="total", monthly_agg="sum",
                         start_date="2026-07-25")
     df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 1))
     assert len(oturum.cagrilar) == 1
-    assert df.iloc[0]["value"] == pytest.approx(91000.0)
+    assert df.iloc[0]["value"] == pytest.approx(48000.0)
 
 
 def test_seri_cek_olceklendirmeyi_indirgemeden_sonra_uygular():
     # Üretim MWh döner, GWh olarak gösterilecek: olcek=0.001.
-    # Ölçekleme günlük TOPLAMDAN sonra uygulanmalı (91000 * 0.001 = 91.0),
+    # Ölçekleme günlük TOPLAMDAN sonra uygulanmalı (48000 * 0.001 = 48.0),
     # tek tek saatlik değerlere değil.
-    oturum = SahteOturum(SahteYanit(200, yanit([
-        {"date": "2026-08-01T00:00:00+03:00", "total": 45000.0},
-        {"date": "2026-08-01T01:00:00+03:00", "total": 46000.0},
-    ])))
+    oturum = SahteOturum(SahteYanit(200, yanit(
+        _gun("2026-08-01", "total", 2000.0)
+    )))
     seri = _epias_seri(id="elektrik/uretim", epias_ucu="uretim",
                         epias_alani="total", monthly_agg="sum", olcek=0.001,
                         start_date="2026-07-25")
     df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 1))
-    assert df.iloc[0]["value"] == pytest.approx(91.0)
+    assert df.iloc[0]["value"] == pytest.approx(48.0)
+
+
+# --- C1: eksik saatli günler günlük indirgemeden önce düşülmeli ---
+# (bkz. ingest/epias.py seri_cek docstring'i — son dilimin endDate'i bugün
+# olduğu için EPİAŞ o gün yalnızca yayınlanmış saatleri döner; groupby(...)
+# bunu günün bir kesri olan, ama günlük toplam/ortalama gibi görünen bir
+# sayıya indirger. Kural yalnızca son güne özel değil, genel: "24 saatlik
+# kaydı olmayan gün atılır".)
+
+
+def test_seri_cek_eksik_saatli_son_gun_mean_serisinde_atilir():
+    # 2026-08-01 tam (24 saat, 100.0); 2026-08-02 kesik (yalnızca ilk 12
+    # saat yayınlanmış, henüz tamamlanmamış son gün senaryosu).
+    kayitlar = (
+        _gun("2026-08-01", "price", 100.0)
+        + _gun("2026-08-02", "price", 300.0)[:12]
+    )
+    oturum = SahteOturum(SahteYanit(200, yanit(kayitlar)))
+    seri = _epias_seri(monthly_agg="mean", start_date="2026-07-25")
+    df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 2))
+    assert list(df["date"]) == ["2026-08-01"]
+    assert df.iloc[0]["value"] == pytest.approx(100.0)
+
+
+def test_seri_cek_eksik_saatli_son_gun_sum_serisinde_atilir():
+    kayitlar = (
+        _gun("2026-08-01", "total", 1000.0)
+        + _gun("2026-08-02", "total", 2000.0)[:12]
+    )
+    oturum = SahteOturum(SahteYanit(200, yanit(kayitlar)))
+    seri = _epias_seri(id="elektrik/uretim", epias_ucu="uretim",
+                        epias_alani="total", monthly_agg="sum",
+                        start_date="2026-07-25")
+    df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 2))
+    assert list(df["date"]) == ["2026-08-01"]
+    assert df.iloc[0]["value"] == pytest.approx(24000.0)
+
+
+def test_seri_cek_ilk_gun_de_eksikse_atilir():
+    # Kural son güne özel değil: start_date gün ortasına denk gelirse ilk
+    # gün de eksik olabilir.
+    kayitlar = (
+        _gun("2026-07-25", "price", 500.0)[12:]  # ilk gün kesik (12 saat)
+        + _gun("2026-07-26", "price", 100.0)  # tam gün
+    )
+    oturum = SahteOturum(SahteYanit(200, yanit(kayitlar)))
+    seri = _epias_seri(monthly_agg="mean", start_date="2026-07-25")
+    df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 7, 26))
+    assert list(df["date"]) == ["2026-07-26"]
 
 
 def test_seri_cek_ptf_ucunu_dogru_yola_ister():
@@ -319,13 +384,12 @@ def test_seri_cek_start_date_yoksa_varsayilan_pencere_coklu_yil_ve_parcali():
 
 
 def test_seri_cek_parcali_yanitlari_birlestirir_tarih_artan_ve_tekil():
+    # Her dilim TAM 24 saatlik bir gün döndürüyor (C1 kuralı: eksik saatli
+    # günler düşülür — burada dilim birleştirme davranışı test ediliyor,
+    # gün tamlığı değil).
     oturum = SahteOturum([
-        SahteYanit(200, yanit([
-            {"date": "2024-01-01T00:00:00+03:00", "price": 100.0},
-        ])),
-        SahteYanit(200, yanit([
-            {"date": "2024-04-01T00:00:00+03:00", "price": 200.0},
-        ])),
+        SahteYanit(200, yanit(_gun("2024-01-01", "price", 100.0))),
+        SahteYanit(200, yanit(_gun("2024-04-01", "price", 200.0))),
     ])
     seri = _epias_seri(start_date="2024-01-01")
     df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2024, 4, 1))
@@ -333,3 +397,27 @@ def test_seri_cek_parcali_yanitlari_birlestirir_tarih_artan_ve_tekil():
     assert list(df["date"]) == ["2024-01-01", "2024-04-01"]
     assert df["date"].is_unique
     assert list(df["date"]) == sorted(df["date"])
+    assert list(df["value"]) == pytest.approx([100.0, 200.0])
+
+
+# --- I3: dilim başına boşluk kontrolü ---
+
+
+def test_seri_cek_orta_dilim_bos_donerse_hangi_dilim_oldugunu_belirtir():
+    # Parçalı çekimde bir dilim HTTP 200 ile boş items dönerse (regresyon:
+    # tek istekli eski hâlde bu senaryo zaten hataydı), o dilimin kapsadığı
+    # günler sessizce kaybolmamalı — hangi dilim olduğu hataya yazılmalı.
+    baslangic = date(2024, 1, 1)
+    ilk_dilim_bitis = baslangic + timedelta(days=89)
+    ikinci_dilim_baslangic = ilk_dilim_bitis + timedelta(days=1)
+    bugun = baslangic + timedelta(days=100)  # 89 günü aşar -> 2 dilim
+    oturum = SahteOturum([
+        SahteYanit(200, yanit(_gun("2024-01-01", "price", 100.0))),
+        SahteYanit(200, yanit([])),  # ikinci dilim boş
+    ])
+    seri = _epias_seri(start_date=baslangic.isoformat())
+    with pytest.raises(RuntimeError) as hata:
+        seri_cek(seri, "TGT-abc", session=oturum, bugun=bugun)
+    mesaj = str(hata.value)
+    assert "boş" in mesaj
+    assert ikinci_dilim_baslangic.isoformat() in mesaj

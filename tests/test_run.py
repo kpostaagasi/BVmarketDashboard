@@ -1,9 +1,10 @@
 import dataclasses
+import sys
 
 import pandas as pd
 import pytest
 
-from core.catalog import seri_getir
+from core.catalog import seri_getir, seri_listele
 from ingest.run import _cek
 
 
@@ -63,3 +64,51 @@ def test_cek_epias_serisini_epias_modulune_yonlendirir(monkeypatch):
     )
     assert run._cek(seri, "ANAHTAR", "TGT-123", None) == "DF"
     assert cagrildi == {"tgt": "TGT-123", "id": "enflasyon/tufe-genel"}
+
+
+# --- I2: EPİAŞ TGT girişi hata izolasyonunun İÇİNDE olmalı ---
+# (docstring: "Bir serinin başarısızlığı diğerlerini düşürmez" — ama
+# tgt_al try/except'in dışındaydı; giriş başarısız olursa main()
+# traceback ile ölüyor, EVDS/Yahoo serileri de o gün güncellenmiyordu.)
+
+
+def test_main_epias_giris_basarisizsa_diger_kaynaklar_calismaya_devam_eder(
+    monkeypatch, tmp_path
+):
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte-anahtar")
+    monkeypatch.setenv("EPIAS_USERNAME", "sahte-kullanici")
+    monkeypatch.setenv("EPIAS_PASSWORD", "sahte-parola")
+    monkeypatch.setattr(sys, "argv", ["run.py"])
+
+    def patlayan_tgt_al(kullanici, parola, session=None):
+        raise RuntimeError("EPİAŞ giriş başarısız: HTTP 503")
+
+    def patlayan_epias_cek(seri, tgt, session=None):
+        raise AssertionError("tgt yokken epias.seri_cek çağrılmamalı")
+
+    yazilanlar: list[str] = []
+
+    def sahte_seriyi_yaz(seri, df):
+        yazilanlar.append(seri.id)
+        return len(df)
+
+    monkeypatch.setattr(run.epias, "tgt_al", patlayan_tgt_al)
+    monkeypatch.setattr(run.epias, "seri_cek", patlayan_epias_cek)
+    monkeypatch.setattr(run.evds, "seri_cek", lambda seri, api_key, session=None, bugun=None: sahte_df())
+    monkeypatch.setattr(run.yahoo, "seri_cek", lambda seri, session=None: sahte_df())
+    monkeypatch.setattr(run, "seriyi_yaz", sahte_seriyi_yaz)
+
+    kod = run.main()
+
+    tum_seriler = seri_listele()
+    epias_idler = {s.id for s in tum_seriler if s.kaynak_tipi == "epias"}
+    assert epias_idler, "katalogda epias serisi yok"
+    diger_idler = {s.id for s in tum_seriler if s.kaynak_tipi != "epias"}
+
+    assert kod == 1, "en az bir hata varsa exit kodu 1 olmalı"
+    assert set(yazilanlar) == diger_idler, (
+        "epias dışındaki seriler yine yazılmalı"
+    )
+    assert not (set(yazilanlar) & epias_idler)

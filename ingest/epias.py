@@ -22,6 +22,8 @@ from datetime import date, timedelta
 import pandas as pd
 import requests
 
+from core.catalog import Seri
+
 TGT_URL = "https://giris.epias.com.tr/cas/v1/tickets"
 TABAN = "https://seffaflik.epias.com.tr"
 ZAMAN_ASIMI = 30
@@ -45,6 +47,11 @@ AZAMI_PENCERE_GUN = 89
 # 5 yıl / 89 günlük dilim ≈ seri başına ~21 istek: makul bir hacim, EPİAŞ'ı
 # tek seferde yıllarca geriye giden ağır bir sorguyla zorlamaz.
 VARSAYILAN_GECMIS_YIL = 5
+
+# Türkiye 2016'dan beri sabit UTC+3 kullanıyor (DST yok) — bu yüzden TAM bir
+# gün her zaman tam 24 saatlik kayıt içerir. Bu sabit, günlük indirgemeden
+# önce eksik saatli günleri elemek için kullanılır (bkz. seri_cek).
+SAAT_SAYISI_TAM_GUN = 24
 
 
 def pencereleri_bol(
@@ -106,7 +113,7 @@ def noktalari_ayikla(yanit: dict, alan: str) -> list[tuple[str, float]]:
     return noktalar
 
 
-def seri_cek(seri, tgt: str, session: requests.Session | None = None,
+def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
              bugun: date | None = None) -> pd.DataFrame:
     """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı).
 
@@ -116,7 +123,23 @@ def seri_cek(seri, tgt: str, session: requests.Session | None = None,
     günlüğe indirgenir ve ölçeklenir — dilim başına değil. Dilimler tarih
     sınırında ayrıldığı için (bir gün asla iki dilime bölünmez) bu, tek
     istekli eski davranışla birebir aynı sonucu verir; sadece istek sayısı
-    artar.
+    artar. Bir dilim HTTP 200 ile boş `items` dönerse (regresyon: tek
+    istekli eski hâlde bu zaten hataydı) o dilim sessizce atlanmaz —
+    hangi dilimin boş olduğu belirtilerek RuntimeError yükselir; aksi
+    halde o dilimin kapsadığı günler sessizce kaybolur ve `seriyi_yaz`
+    dosyanın tamamını delikli veriyle üzerine yazar.
+
+    Günlüğe indirgemeden ÖNCE, TAM 24 saatlik kaydı olmayan günler
+    düşülür (bkz. SAAT_SAYISI_TAM_GUN). EPİAŞ, henüz yayınlanmamış
+    saatler için o güne ait eksik veri döner — özellikle son dilimin
+    `endDate`'i bugünse, gün cron'un koştuğu saate kadar yalnızca kısmen
+    yayınlanmış olur. Böyle bir günü toplam/ortalamaya dahil etmek, günün
+    bir kesrini günlük değer gibi göstererek KPI'ları ve YoY
+    karşılaştırmalarını (yön dahil) yanlış üretir. Kural yalnızca son güne
+    özel değildir — ilk gün de `start_date` gün ortasına denk gelirse
+    eksik olabilir. Türkiye 2016'dan beri sabit UTC+3 kullandığından
+    (DST yok) her sağlıklı gün zaten tam 24 saat içerir; bu filtre yalnızca
+    uçtaki kesik günleri atar, iç veriyi kırpmaz.
 
     Saatlik veri günlüğe indirgenir: `seri.monthly_agg == "sum"` ise günlük
     TOPLAM (üretim gibi akış büyüklükleri için — ortalama alınırsa değer
@@ -154,12 +177,18 @@ def seri_cek(seri, tgt: str, session: requests.Session | None = None,
             raise RuntimeError(
                 f"EPİAŞ HTTP {yanit.status_code} ({seri.id})"
             )
-        tum_noktalar.extend(noktalari_ayikla(yanit.json(), seri.epias_alani))
-
-    if not tum_noktalar:
-        raise RuntimeError(f"EPİAŞ boş seri döndürdü ({seri.id})")
+        dilim_noktalari = noktalari_ayikla(yanit.json(), seri.epias_alani)
+        if not dilim_noktalari:
+            raise RuntimeError(
+                f"EPİAŞ dilimi boş döndü ({seri.id}, "
+                f"{cur_baslangic.isoformat()}–{cur_bitis.isoformat()})"
+            )
+        tum_noktalar.extend(dilim_noktalari)
 
     df = pd.DataFrame(tum_noktalar, columns=["date", "value"])
+    gun_basina_saat = df.groupby("date")["value"].transform("size")
+    df = df[gun_basina_saat == SAAT_SAYISI_TAM_GUN]
+
     if seri.monthly_agg == "sum":
         gunluk = df.groupby("date", as_index=False)["value"].sum()
     else:

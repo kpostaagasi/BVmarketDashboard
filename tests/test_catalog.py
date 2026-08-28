@@ -282,6 +282,15 @@ def test_olcek_yaml_dan_float_olarak_okunur(tmp_path, monkeypatch):
         catalog.serileri_yukle.cache_clear()
 
 
+def test_epias_serisinde_monthly_agg_last_reddedilir():
+    # M6: GECERLI_AYLIK_AGG "last"i kabul ediyor ama epias.seri_cek'in
+    # else dalı bunu sessizce ortalamaya çeviriyordu. Bugün böyle bir seri
+    # yok ama şablon tuzağa yerleşmesin: epias serisi last alamaz.
+    seri = dataclasses.replace(seri_getir("elektrik/ptf"), monthly_agg="last")
+    with pytest.raises(KatalogHatasi, match="monthly_agg"):
+        _dogrula(seri, _sluglar(), set())
+
+
 def test_epias_serisi_uc_ve_alan_ister():
     from core.catalog import KatalogHatasi, serileri_yukle
 

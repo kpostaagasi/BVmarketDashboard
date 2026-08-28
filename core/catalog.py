@@ -152,6 +152,13 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(
             f"epias serisi epias_ucu ve epias_alani ister: {seri.id}"
         )
+    if seri.kaynak_tipi == "epias" and seri.monthly_agg == "last":
+        # epias.seri_cek yalnızca sum/mean günlük indirgemesi biliyor;
+        # "last" verilirse else dalı bunu sessizce ortalamaya çeviriyordu.
+        raise KatalogHatasi(
+            f"{seri.id}: epias kaynağı monthly_agg='last' alamaz "
+            "(yalnızca 'sum' ya da 'mean' desteklenir)"
+        )
     if seri.kaynak_tipi == "evds":
         if not seri.evds_code:
             raise KatalogHatasi(f"{seri.id}: evds kaynağı için evds_code zorunlu")

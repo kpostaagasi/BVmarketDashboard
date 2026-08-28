@@ -72,9 +72,25 @@ def main() -> int:
     hatalar: list[tuple[str, str]] = []
 
     with requests.Session() as oturum:
-        if any(s.kaynak_tipi == "epias" for s in seriler):
-            tgt = epias.tgt_al(kullanici, parola, session=oturum)
+        epias_seriler = [s for s in seriler if s.kaynak_tipi == "epias"]
+        if epias_seriler:
+            try:
+                tgt = epias.tgt_al(kullanici, parola, session=oturum)
+            except Exception as hata:  # noqa: BLE001 — modül bazlı izolasyon
+                # EPİAŞ girişi başarısızsa (parola süresi dolar, giriş
+                # sunucusu 503 verir) yalnızca epias serileri düşer;
+                # EVDS/Yahoo serileri koşmaya devam etmeli (docstring:
+                # "bir serinin başarısızlığı diğerlerini düşürmez").
+                for seri in epias_seriler:
+                    hatalar.append((seri.id, f"EPİAŞ girişi başarısız: {hata}"))
+                    print(
+                        f"  ✗ {seri.id} — EPİAŞ girişi başarısız: {hata}",
+                        file=sys.stderr,
+                    )
+
         for seri in seriler:
+            if seri.kaynak_tipi == "epias" and tgt is None:
+                continue  # giriş başarısız — hatalar listesine zaten eklendi
             try:
                 df = _cek(seri, api_key, tgt, oturum)
                 adet = seriyi_yaz(seri, df)
