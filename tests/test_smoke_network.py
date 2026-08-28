@@ -75,6 +75,10 @@ def test_epias_uclari_beklenen_alanlari_donduruyor(pencere):
             ilk = kayitlar[0]
             assert "date" in ilk, f"{uc}: 'date' alanı kaybolmuş"
 
+            # `total` ve `importExport` zarfta hep bulunur ama hiçbir grubun
+            # parçası değildir (bkz. bilesen_noktalari_ayikla): türetilmiş
+            # toplam ve ticaret kalemi, üretim kaynağı değil.
+            bilinen_alanlar = {"total", "importExport"}
             for seri in seriler:
                 if seri.epias_ucu != uc:
                     continue
@@ -84,16 +88,39 @@ def test_epias_uclari_beklenen_alanlari_donduruyor(pencere):
                         for alanlar in seri.epias_bilesenler.values()
                         for alan in alanlar
                     }
+                    bilinen_alanlar |= beklenen_alanlar
                     eksik = beklenen_alanlar - set(ilk)
                     assert not eksik, (
                         f"{seri.id}: bileşen alanları yanıtta yok: {sorted(eksik)} "
                         f"(mevcut alanlar: {sorted(ilk)})"
                     )
                 else:
+                    bilinen_alanlar.add(seri.epias_alani)
                     assert seri.epias_alani in ilk, (
                         f"{seri.id}: katalogun beklediği '{seri.epias_alani}' alanı "
                         f"yanıtta yok (mevcut alanlar: {sorted(ilk)})"
                     )
+
+            # TERS YÖN: yanıttaki her alan katalogda tanınmalı — ama yalnızca
+            # bu ucu BİLEŞENLİ (composition) bir serinin kullandığı durumda.
+            # Risk yalnızca orada var: `paylara_cevir` grup toplamlarından
+            # pay hesaplar, yeni bir alan hiçbir gruba girmeden sessizce
+            # kaybolabilir (bkz. I1, Akkuyu/nuclear senaryosu). Tekil-alanlı
+            # bir seri (ör. ptf → yalnızca `price` okunur) adıyla seçtiği
+            # tek alanı okur; yanıttaki ilgisiz ek alanlar (ör. `priceEur`,
+            # `priceUsd`) onun için risk taşımaz — bunları da zorunlu kılmak
+            # sahte kırmızıya yol açar. `date` ve `hour` sayısal değildir,
+            # karşılaştırma dışı tutulur.
+            uc_bilesenli_mi = any(
+                s.epias_ucu == uc and s.epias_bilesenler for s in seriler
+            )
+            if uc_bilesenli_mi:
+                fazlalik = (set(ilk) - {"date", "hour"}) - bilinen_alanlar
+                assert not fazlalik, (
+                    f"{uc}: yanıtta katalogda tanınmayan yeni alan(lar) var: "
+                    f"{sorted(fazlalik)} — EPİAŞ yeni bir üretim kaynağı eklemiş "
+                    "olabilir; kataloğa (epias_bilesenler) ekleyin"
+                )
 
 
 def test_evds_serisi_nokta_donduruyor(pencere):

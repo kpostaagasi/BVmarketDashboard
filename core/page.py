@@ -38,8 +38,13 @@ def pano_serileri(kategori: Kategori, seriler: list[Seri]) -> list[Seri]:
     """Panoda gösterilecek serileri, kategorinin belirlediği sırada döndürür.
 
     Pano tanımlı değilse mevcut davranış korunur: kpi_satiri zaten ilk dördü
-    alır. Bilinmeyen bir id sessizce yutulmaz — yazım hatası, kartın sessizce
-    kaybolmasından daha ucuza yakalanmalı.
+    alır (ve çok bileşenli serileri kendi içinde sessizce atlar — bkz.
+    `core.components._kpi_uygun_seriler`). Bilinmeyen bir id sessizce
+    yutulmaz — yazım hatası, kartın sessizce kaybolmasından daha ucuza
+    yakalanmalı. Aynı gerekçeyle, `pano`da AÇIKÇA çok bileşenli (geniş) bir
+    seri istenmişse de hata verilir: KPI kartı tek bir sayı gösterir, böyle
+    bir serinin tek sayısı yoktur — bunu açıkça istemek de bir yazım/tasarım
+    hatasıdır ve sessizce kaybolmamalı (bkz. I3).
     """
     if not kategori.pano:
         return seriler
@@ -48,6 +53,13 @@ def pano_serileri(kategori: Kategori, seriler: list[Seri]) -> list[Seri]:
     if eksik:
         raise KatalogHatasi(
             f"{kategori.slug} panosunda bilinmeyen seri: {', '.join(eksik)}"
+        )
+    genis = [i for i in kategori.pano if indeks[i].epias_bilesenler]
+    if genis:
+        raise KatalogHatasi(
+            f"{kategori.slug} panosunda çok bileşenli (geniş) seri: "
+            f"{', '.join(genis)} — KPI kartı tek sayı gösterir, bu serilerin "
+            "tek sayısı yoktur"
         )
     return [indeks[i] for i in kategori.pano]
 

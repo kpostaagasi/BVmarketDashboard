@@ -53,3 +53,24 @@ def test_donem_etiketi_aylik_seride_gun_gostermez():
 def test_donem_etiketi_gunluk_ve_haftalik_seride_gun_gosterir():
     assert donem_etiketi(pd.Timestamp("2026-08-27"), "daily") == "2026-08-27"
     assert donem_etiketi(pd.Timestamp("2026-08-24"), "weekly") == "2026-08-24"
+
+
+def test_kpi_uygun_seriler_genis_seriyi_atlar():
+    """KPI kartı tek sayı gösterir; çok bileşenli serinin tek sayısı yoktur (I3).
+
+    Bu, `pano`da AÇIKÇA listelenmemiş (örtük "ilk dördü göster") durum
+    için sessiz atlama davranışıdır — açık listelemede `pano_serileri`
+    KatalogHatasi fırlatır (bkz. tests/test_page.py).
+    """
+    from core.components import _kpi_uygun_seriler
+
+    genis = seri_getir("elektrik/uretim-kompozisyon")
+    tekil = seri_getir("elektrik/uretim")
+    assert [s.id for s in _kpi_uygun_seriler([genis, tekil])] == [tekil.id]
+
+
+def test_kpi_uygun_seriler_tekil_serileri_korur():
+    from core.components import _kpi_uygun_seriler
+
+    seriler = [seri_getir("enflasyon/tufe-genel"), seri_getir("elektrik/uretim")]
+    assert _kpi_uygun_seriler(seriler) == seriler

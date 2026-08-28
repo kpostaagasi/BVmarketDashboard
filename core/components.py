@@ -11,10 +11,9 @@ import streamlit as st
 from core.catalog import SIKLIK_ETIKETLERI, Seri
 from core.charts import (
     kompozisyon_figuru,
+    kompozisyon_verisi_hazirla,
     mevsimsellik_figuru,
-    paylara_cevir,
     seviye_figuru,
-    son_ay_tamamlanmamissa_dus,
 )
 from core.data import VeriYokHatasi, load_series, load_wide_series
 from core.stats import (
@@ -61,8 +60,22 @@ def donem_etiketi(tarih: pd.Timestamp, freq: str) -> str:
     return f"{tarih:%Y-%m}" if freq == "monthly" else f"{tarih:%Y-%m-%d}"
 
 
+def _kpi_uygun_seriler(seriler: list[Seri]) -> list[Seri]:
+    """Çok bileşenli (geniş) serileri KPI listesinden atlar.
+
+    KPI kartı tek bir sayı gösterir; çok bileşenli bir serinin tek sayısı
+    yoktur — bu bir hata değil, uygulanamazlıktır, bu yüzden burada
+    SESSİZCE atlanır. `load_wide_series`'in geniş CSV'sinde `value` sütunu
+    olmadığından, atlanmazsa `load_series` KeyError fırlatır ve bu, yalnızca
+    `VeriYokHatasi` yakalayan `kpi_satiri` içinde yakalanmadan sayfayı
+    düşürür. Bir seri `pano`da AÇIKÇA istenmişse bu sessiz atlama devreye
+    girmez — `pano_serileri` (core/page.py) orada KatalogHatasi fırlatır.
+    """
+    return [s for s in seriler if not s.epias_bilesenler]
+
+
 def kpi_satiri(seriler: list[Seri]) -> None:
-    gosterilecek = seriler[:4]
+    gosterilecek = _kpi_uygun_seriler(seriler)[:4]
     if not gosterilecek:
         return
     sutunlar = st.columns(len(gosterilecek))
@@ -151,6 +164,13 @@ def kompozisyon_karti(seri: Seri) -> None:
     Sayfa düzeyindeki Varsayılan/YoY/MoM seçicisine bağlanmaz —
     kompozisyon grafiğinde YoY'un anlamı yoktur ve iki seçiciyi bağlamak
     anlamsız kombinasyonlar üretir.
+
+    İndirgeme + tamamlanmamış-ay kuralı + görünüm seçimi
+    `kompozisyon_verisi_hazirla`de (core/charts.py) yaşar — bu fonksiyon
+    yalnızca render yapar. "Son Dönem" altyazısı GERÇEKTEN gösterilen
+    aralığın son ayını yansıtır: Pay % ve GWh görünümleri, kısmi son ay
+    kuralı yalnızca GWh'de uygulandığı için farklı son ay gösterebilir —
+    bu doğru davranıştır (bkz. I2).
     """
     with st.container(border=True):
         baslik, kaynak = st.columns([4, 1])
@@ -177,17 +197,12 @@ def kompozisyon_karti(seri: Seri) -> None:
             label_visibility="collapsed",
         ) or "Pay %"
 
-        aylik = df.resample("MS").sum(min_count=1).dropna(how="all")
-        # Tamamlanmamış son ay sahte bir düşüş gibi görünür (aylige_cevir ile
-        # aynı gerekçe, aynı uygulama); bileşenli seri günlük olduğu için
-        # burada da geçerli.
-        aylik = son_ay_tamamlanmamissa_dus(aylik, df.index.max())
-
-        gosterilecek = paylara_cevir(aylik) if gorunum == "Pay %" else aylik
-        birim = "%" if gorunum == "Pay %" else seri.unit
+        gorunum_mutlak = gorunum != "Pay %"
+        gosterilecek = kompozisyon_verisi_hazirla(df, gorunum_mutlak, seri.freq)
+        birim = seri.unit if gorunum_mutlak else "%"
 
         st.caption(
-            f"Son Dönem: {donem_etiketi(aylik.index.max(), 'monthly')} · AYLIK"
+            f"Son Dönem: {donem_etiketi(gosterilecek.index.max(), 'monthly')} · AYLIK"
         )
         st.plotly_chart(
             kompozisyon_figuru(gosterilecek, birim),

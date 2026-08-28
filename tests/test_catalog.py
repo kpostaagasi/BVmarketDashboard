@@ -516,6 +516,21 @@ def test_composition_grafigi_bilesen_ister():
         )
 
 
+def test_composition_baska_grafikle_birlikte_reddedilir():
+    """[composition, level] katalogca kabul edilirse page.py level'i sessizce
+
+    yutar (bkz. M1) — composition her zaman TEK BAŞINA olmalı."""
+    with pytest.raises(KatalogHatasi, match="composition"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="epias", epias_ucu="uretim",
+                epias_bilesenler={"Kömür": ["lignite"]},
+                charts=["composition", "level"],
+                evds_code=None, evds_frequency=None,
+            )
+        )
+
+
 def test_bilesenler_tuple_olarak_okunur():
     from core.catalog import seri_getir, serileri_yukle
 

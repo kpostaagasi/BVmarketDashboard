@@ -256,3 +256,46 @@ def test_son_ay_tamamlanmamissa_dus_bos_df_hata_vermez():
     aylik = pd.DataFrame({"A": []}, index=pd.DatetimeIndex([]))
     sonuc = son_ay_tamamlanmamissa_dus(aylik, pd.Timestamp("2026-08-15"))
     assert sonuc.empty
+
+
+# --- kompozisyon_verisi_hazirla (I2/M2): indirgeme + kural + görünüm ---
+
+
+def _gunluk_kompozisyon_df(gun_sayisi_haziran=30, gun_sayisi_temmuz=5):
+    """Haziran'ı tam, Temmuz'u (Ay tamamlanmamış) kısmi doldurur."""
+    idx_haziran = pd.date_range("2026-06-01", periods=gun_sayisi_haziran, freq="D")
+    idx_temmuz = pd.date_range("2026-07-01", periods=gun_sayisi_temmuz, freq="D")
+    idx = idx_haziran.append(idx_temmuz)
+    idx.name = "date"
+    return pd.DataFrame({"A": [10.0] * len(idx), "B": [30.0] * len(idx)}, index=idx)
+
+
+def test_kompozisyon_verisi_hazirla_yuzdede_kismi_son_ay_korunur():
+    """Pay % ölçekten bağımsızdır: kısmi ayın kaynak karışımı geçerli bir gözlemdir."""
+    from core.charts import kompozisyon_verisi_hazirla
+
+    df = _gunluk_kompozisyon_df()
+    sonuc = kompozisyon_verisi_hazirla(df, gorunum_mutlak=False, freq="daily")
+    assert list(sonuc.index) == [pd.Timestamp("2026-06-01"), pd.Timestamp("2026-07-01")]
+    assert sonuc.loc["2026-07-01", "A"] == pytest.approx(25.0)
+    assert sonuc.loc["2026-07-01", "B"] == pytest.approx(75.0)
+
+
+def test_kompozisyon_verisi_hazirla_mutlakta_kismi_son_ay_dusurulur():
+    """GWh (mutlak) görünüm bir ölçektir: kısmi ayın TOPLAMI sahte düşüş gösterir."""
+    from core.charts import kompozisyon_verisi_hazirla
+
+    df = _gunluk_kompozisyon_df()
+    sonuc = kompozisyon_verisi_hazirla(df, gorunum_mutlak=True, freq="daily")
+    assert list(sonuc.index) == [pd.Timestamp("2026-06-01")]
+    assert sonuc.loc["2026-06-01", "A"] == pytest.approx(300.0)
+
+
+def test_kompozisyon_verisi_hazirla_aylik_freqde_dusurulmez():
+    """`aylige_cevir`'deki freq != "monthly" koruması burada da geçerli olmalı (M2)."""
+    from core.charts import kompozisyon_verisi_hazirla
+
+    idx = pd.date_range("2026-06-01", periods=2, freq="MS", name="date")
+    df = pd.DataFrame({"A": [10.0, 10.0], "B": [30.0, 30.0]}, index=idx)
+    sonuc = kompozisyon_verisi_hazirla(df, gorunum_mutlak=True, freq="monthly")
+    assert list(sonuc.index) == list(idx)

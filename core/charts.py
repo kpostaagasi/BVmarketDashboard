@@ -156,6 +156,27 @@ def paylara_cevir(df: pd.DataFrame) -> pd.DataFrame:
     return df.div(toplam.where(toplam != 0), axis=0) * 100
 
 
+def kompozisyon_verisi_hazirla(
+    df: pd.DataFrame, gorunum_mutlak: bool, freq: str
+) -> pd.DataFrame:
+    """Geniş (bileşenli) günlük/haftalık seriyi kart için aylığa indirger.
+
+    Tamamlanmamış son ayı düşürme kuralı yalnızca MUTLAK (GWh) görünümde
+    uygulanır: bu bir ÖLÇEK düzeltmesidir (kısmi ayın TOPLAMI sahte bir
+    düşüş gösterir) — tıpkı `aylige_cevir`'in `agg == "sum"` durumunda
+    yaptığı gibi. Pay % görünümü ölçekten BAĞIMSIZDIR: kısmi bir ayın
+    kaynak karışımı tamamen geçerli bir gözlemdir, bu yüzden orada kural
+    hiç uygulanmaz ve o ayın verisi korunur.
+
+    `aylige_cevir` ile aynı gerekçeyle: `freq == "monthly"` ise kural yine
+    uygulanmaz (kaynak zaten aylıksa "tamamlanmamış ay" kavramı yoktur).
+    """
+    aylik = df.resample("MS").sum(min_count=1).dropna(how="all")
+    if gorunum_mutlak and freq != "monthly":
+        aylik = son_ay_tamamlanmamissa_dus(aylik, df.index.max())
+    return aylik if gorunum_mutlak else paylara_cevir(aylik)
+
+
 def kompozisyon_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
     """Grup başına bir çizgi.
 

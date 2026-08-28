@@ -224,6 +224,16 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             f"{seri.id}: epias_bilesenler ile composition grafiği birlikte "
             "kullanılır; biri varsa diğeri de olmalı"
         )
+    if "composition" in seri.charts and set(seri.charts) != {"composition"}:
+        # `page.py` bileşenli seri için yalnızca kompozisyon grafiğini çizer;
+        # composition başka bir grafikle (ör. level) birlikte listelenirse
+        # o ikinci grafik sessizce hiç çizilmez — KAYNAK_ALANLARI tablosunun
+        # var oluş gerekçesiyle aynı ilke: sessizce yok sayılan bir alan
+        # yanıltıcıdır.
+        raise KatalogHatasi(
+            f"{seri.id}: composition tek başına olmalı, başka grafikle "
+            f"birleştirilemez (charts={list(seri.charts)})"
+        )
     if seri.kaynak_tipi == "epias" and seri.monthly_agg == "last":
         # epias.seri_cek yalnızca sum/mean günlük indirgemesi biliyor;
         # "last" verilirse else dalı bunu sessizce ortalamaya çeviriyordu.
