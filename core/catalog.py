@@ -16,7 +16,7 @@ KATALOG_DIZINI = KOK / "catalog"
 
 GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
-GECERLI_GRAFIKLER = {"seasonality", "level"}
+GECERLI_GRAFIKLER = {"seasonality", "level", "composition"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias"}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
@@ -37,8 +37,8 @@ KAYNAK_ALANLARI = {
         "istege_bagli": (),
     },
     "epias": {
-        "zorunlu": ("epias_ucu", "epias_alani"),
-        "istege_bagli": ("start_date", "olcek"),
+        "zorunlu": ("epias_ucu",),
+        "istege_bagli": ("epias_alani", "epias_bilesenler", "start_date", "olcek"),
     },
 }
 
@@ -82,6 +82,7 @@ class Seri:
     yahoo_symbol: str | None = None
     epias_ucu: str | None = None
     epias_alani: str | None = None
+    epias_bilesenler: dict[str, tuple[str, ...]] | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
     yayin_notu: str | None = None
@@ -170,6 +171,11 @@ def serileri_yukle() -> tuple[Seri, ...]:
             yahoo_symbol=ham.get("yahoo_symbol"),
             epias_ucu=ham.get("epias_ucu"),
             epias_alani=ham.get("epias_alani"),
+            epias_bilesenler=(
+                {ad: tuple(alanlar) for ad, alanlar in ham["epias_bilesenler"].items()}
+                if "epias_bilesenler" in ham
+                else None
+            ),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -206,6 +212,18 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
     if seri.kaynak_tipi not in GECERLI_KAYNAK_TIPLERI:
         raise KatalogHatasi(f"{seri.id}: geçersiz kaynak_tipi '{seri.kaynak_tipi}'")
     _alan_sahipligini_dogrula(seri)
+    if seri.kaynak_tipi == "epias":
+        # Tek alan mı, bileşen grubu mu: biri ya da diğeri, ikisi birden değil.
+        if bool(seri.epias_alani) == bool(seri.epias_bilesenler):
+            raise KatalogHatasi(
+                f"{seri.id}: epias serisi ya epias_alani ya epias_bilesenler "
+                "taşımalı (ikisi birden ya da hiçbiri değil)"
+            )
+    if bool(seri.epias_bilesenler) != ("composition" in seri.charts):
+        raise KatalogHatasi(
+            f"{seri.id}: epias_bilesenler ile composition grafiği birlikte "
+            "kullanılır; biri varsa diğeri de olmalı"
+        )
     if seri.kaynak_tipi == "epias" and seri.monthly_agg == "last":
         # epias.seri_cek yalnızca sum/mean günlük indirgemesi biliyor;
         # "last" verilirse else dalı bunu sessizce ortalamaya çeviriyordu.
