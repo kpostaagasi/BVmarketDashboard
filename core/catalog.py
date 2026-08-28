@@ -5,7 +5,7 @@ Metadata burada yaşar; veri dosyaları yalnızca `date,value` içerir.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
@@ -104,6 +104,8 @@ def _alan_sahipligini_dogrula(seri: Seri) -> None:
 
     for alan in tanim["zorunlu"]:
         # Boş string alanı doldurmaz: `evds_code: ""` kod yazmakla aynı değil.
+        # Not: zorunlu alanlar bugün yalnızca string. Sayısal bir zorunlu alan
+        # eklenirse bu falsy kontrolü 0'ı da reddeder — o gün ayrılması gerekir.
         if not getattr(seri, alan):
             raise KatalogHatasi(
                 f"{seri.id}: {seri.kaynak_tipi} kaynağı için {alan} zorunlu"
