@@ -176,3 +176,11 @@ def test_tablo_df_bos_listede_sutunlari_korur():
     df = tablo_df([])
     assert list(df.columns) == SUTUNLAR
     assert len(df) == 0
+
+
+def test_takvim_kategoriye_filtreler():
+    from core.takvim import takvim
+
+    satirlar = takvim(kategori="enflasyon")
+    assert satirlar, "enflasyon kategorisinde seri yok"
+    assert {s.seri.category for s in satirlar} == {"enflasyon"}

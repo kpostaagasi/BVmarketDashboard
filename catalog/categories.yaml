@@ -18,3 +18,9 @@
   title: İnşaat
 - slug: kredi-karti
   title: Kredi Kartı Harcamaları
+- slug: elektrik
+  title: Elektrik
+  pano: [elektrik/uretim, elektrik/ptf]
+  note: >-
+    Üretim ve PTF saatlik yayımlanır; üretim günlük toplama, PTF günlük
+    ortalamaya indirgenmiştir.

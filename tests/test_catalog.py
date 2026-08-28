@@ -22,11 +22,12 @@ def test_kategori_sirasi():
         "enflasyon",
         "insaat",
         "kredi-karti",
+        "elektrik",
     ]
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 23
+    assert len(serileri_yukle()) == 25
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -101,7 +102,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -200,3 +201,103 @@ def test_siklik_etiketleri_tum_frekanslari_kapsar():
     from core.catalog import GECERLI_FREKANSLAR, SIKLIK_ETIKETLERI
 
     assert set(SIKLIK_ETIKETLERI) == GECERLI_FREKANSLAR
+
+
+def test_kategori_pano_alani_tuple_olarak_okunur(tmp_path, monkeypatch):
+    # NOT: kategorileri_yukle() @lru_cache'li; dosyadaki önceki testler onu
+    # gerçek katalogla doldurmuş oluyor. cache_clear() olmadan bu test
+    # gerçek 6 kategoriyi görür ve (kategori,) unpacking'i ValueError verir.
+    # Test sonunda da cache'i temizliyoruz ki KATALOG_DIZINI monkeypatch'i
+    # geri alındığında sonraki testler yine gerçek katalog verisini görsün.
+    from core import catalog
+
+    (tmp_path / "categories.yaml").write_text(
+        "- slug: elektrik\n"
+        "  title: Elektrik\n"
+        "  pano: [elektrik/uretim, elektrik/ptf]\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(catalog, "KATALOG_DIZINI", tmp_path)
+    catalog.kategorileri_yukle.cache_clear()
+    try:
+        (kategori,) = catalog.kategorileri_yukle()
+        assert kategori.pano == ("elektrik/uretim", "elektrik/ptf")
+    finally:
+        catalog.kategorileri_yukle.cache_clear()
+
+
+def test_kategori_pano_yoksa_bos_tuple(tmp_path, monkeypatch):
+    from core import catalog
+
+    (tmp_path / "categories.yaml").write_text(
+        "- slug: enflasyon\n  title: Enflasyon\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(catalog, "KATALOG_DIZINI", tmp_path)
+    catalog.kategorileri_yukle.cache_clear()
+    try:
+        (kategori,) = catalog.kategorileri_yukle()
+        assert kategori.pano == ()
+    finally:
+        catalog.kategorileri_yukle.cache_clear()
+
+
+def test_epias_gecerli_kaynak_tipi():
+    from core.catalog import GECERLI_KAYNAK_TIPLERI
+
+    assert "epias" in GECERLI_KAYNAK_TIPLERI
+
+
+def test_olcek_varsayilan_bir():
+    assert seri_getir("enflasyon/tufe-genel").olcek == 1.0
+
+
+def test_olcek_yaml_dan_float_olarak_okunur(tmp_path, monkeypatch):
+    from core import catalog
+
+    (tmp_path / "categories.yaml").write_text(
+        "- slug: elektrik\n  title: Elektrik\n", encoding="utf-8"
+    )
+    (tmp_path / "series.yaml").write_text(
+        "- id: elektrik/uretim\n"
+        "  title: Elektrik Üretimi\n"
+        "  category: elektrik\n"
+        "  kaynak: {name: EPİAŞ, url: https://example.com}\n"
+        "  kaynak_tipi: epias\n"
+        "  epias_ucu: uretim\n"
+        "  epias_alani: total\n"
+        "  unit: GWh\n"
+        "  freq: daily\n"
+        "  charts: [level]\n"
+        "  olcek: 0.001\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(catalog, "KATALOG_DIZINI", tmp_path)
+    catalog.kategorileri_yukle.cache_clear()
+    catalog.serileri_yukle.cache_clear()
+    try:
+        (seri,) = catalog.serileri_yukle()
+        assert seri.olcek == pytest.approx(0.001)
+    finally:
+        catalog.kategorileri_yukle.cache_clear()
+        catalog.serileri_yukle.cache_clear()
+
+
+def test_epias_serisinde_monthly_agg_last_reddedilir():
+    # M6: GECERLI_AYLIK_AGG "last"i kabul ediyor ama epias.seri_cek'in
+    # else dalı bunu sessizce ortalamaya çeviriyordu. Bugün böyle bir seri
+    # yok ama şablon tuzağa yerleşmesin: epias serisi last alamaz.
+    seri = dataclasses.replace(seri_getir("elektrik/ptf"), monthly_agg="last")
+    with pytest.raises(KatalogHatasi, match="monthly_agg"):
+        _dogrula(seri, _sluglar(), set())
+
+
+def test_epias_serisi_uc_ve_alan_ister():
+    from core.catalog import KatalogHatasi, serileri_yukle
+
+    serileri_yukle.cache_clear()
+    seriler = serileri_yukle()
+    epias = [s for s in seriler if s.kaynak_tipi == "epias"]
+    assert epias, "katalogda epias serisi yok"
+    for s in epias:
+        assert s.epias_ucu, f"{s.id}: epias_ucu boş"
+        assert s.epias_alani, f"{s.id}: epias_alani boş"

@@ -128,11 +128,13 @@ def tablo_df(satirlar: list[TakvimSatiri]) -> pd.DataFrame:
     return pd.DataFrame(kayitlar, columns=SUTUNLAR)
 
 
-def takvim(bugun: date | None = None) -> list[TakvimSatiri]:
+def takvim(bugun: date | None = None,
+           kategori: str | None = None) -> list[TakvimSatiri]:
     """Katalogdaki her seri için satır üretir. Tek I/O yapan fonksiyon."""
     bugun = bugun or date.today()
+    seriler = seri_listele(kategori)
     satirlar = []
-    for seri in seri_listele():
+    for seri in seriler:
         try:
             df = seri_csv_oku(seri_yolu(seri.id))
             son = df.index.max().date()

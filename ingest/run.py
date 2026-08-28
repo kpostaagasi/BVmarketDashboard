@@ -15,15 +15,17 @@ import requests
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import evds, yahoo
+from ingest import epias, evds, yahoo
 
 
-def _cek(seri: Seri, api_key: str | None, oturum):
+def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir."""
     if seri.kaynak_tipi == "evds":
         return evds.seri_cek(seri, api_key, session=oturum)
     if seri.kaynak_tipi == "yahoo":
         return yahoo.seri_cek(seri, session=oturum)
+    if seri.kaynak_tipi == "epias":
+        return epias.seri_cek(seri, tgt, session=oturum)
     raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
 
 
@@ -55,13 +57,42 @@ def main() -> int:
         print("HATA: EVDS_API_KEY tanımlı değil veya boş", file=sys.stderr)
         return 2
 
+    tgt = None
+    if any(s.kaynak_tipi == "epias" for s in seriler):
+        kullanici = os.environ.get("EPIAS_USERNAME")
+        parola = os.environ.get("EPIAS_PASSWORD")
+        if not (kullanici and parola):
+            print(
+                "HATA: EPIAS_USERNAME veya EPIAS_PASSWORD tanımlı değil",
+                file=sys.stderr,
+            )
+            return 2
+
     basarili: list[str] = []
     hatalar: list[tuple[str, str]] = []
 
     with requests.Session() as oturum:
-        for seri in seriler:
+        epias_seriler = [s for s in seriler if s.kaynak_tipi == "epias"]
+        if epias_seriler:
             try:
-                df = _cek(seri, api_key, oturum)
+                tgt = epias.tgt_al(kullanici, parola, session=oturum)
+            except Exception as hata:  # noqa: BLE001 — modül bazlı izolasyon
+                # EPİAŞ girişi başarısızsa (parola süresi dolar, giriş
+                # sunucusu 503 verir) yalnızca epias serileri düşer;
+                # EVDS/Yahoo serileri koşmaya devam etmeli (docstring:
+                # "bir serinin başarısızlığı diğerlerini düşürmez").
+                for seri in epias_seriler:
+                    hatalar.append((seri.id, f"EPİAŞ girişi başarısız: {hata}"))
+                    print(
+                        f"  ✗ {seri.id} — EPİAŞ girişi başarısız: {hata}",
+                        file=sys.stderr,
+                    )
+
+        for seri in seriler:
+            if seri.kaynak_tipi == "epias" and tgt is None:
+                continue  # giriş başarısız — hatalar listesine zaten eklendi
+            try:
+                df = _cek(seri, api_key, tgt, oturum)
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")
                 print(f"  ✓ {seri.id} — {adet} nokta")

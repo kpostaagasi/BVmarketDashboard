@@ -258,3 +258,28 @@
   freq: daily
   monthly_agg: mean
   charts: [level, seasonality]
+
+- id: elektrik/uretim
+  title: Toplam Elektrik Üretimi
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: uretim
+  epias_alani: total
+  unit: "GWh"
+  freq: daily
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [level, seasonality]
+
+- id: elektrik/ptf
+  title: Piyasa Takas Fiyatı (PTF)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: ptf
+  epias_alani: price
+  unit: "TL/MWh"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]

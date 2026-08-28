@@ -18,7 +18,7 @@ GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "level"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
-GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo"}
+GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias"}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 
 
@@ -37,6 +37,7 @@ class Kategori:
     slug: str
     title: str
     note: str | None = None
+    pano: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -52,9 +53,12 @@ class Seri:
     evds_code: str | None = None
     evds_frequency: str | None = None
     yahoo_symbol: str | None = None
+    epias_ucu: str | None = None
+    epias_alani: str | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
     yayin_notu: str | None = None
+    olcek: float = 1.0
 
 
 def _yaml_oku(ad: str) -> list[dict]:
@@ -77,7 +81,12 @@ def kategorileri_yukle() -> tuple[Kategori, ...]:
             raise KatalogHatasi(f"Kategori slug'ı tekrar ediyor: {slug}")
         gorulen.add(slug)
         kategoriler.append(
-            Kategori(slug=slug, title=ham["title"], note=ham.get("note"))
+            Kategori(
+                slug=slug,
+                title=ham["title"],
+                note=ham.get("note"),
+                pano=tuple(ham.get("pano", ())),
+            )
         )
     return tuple(kategoriler)
 
@@ -102,9 +111,12 @@ def serileri_yukle() -> tuple[Seri, ...]:
             evds_code=ham.get("evds_code"),
             evds_frequency=None if evds_frekans is None else str(evds_frekans),
             yahoo_symbol=ham.get("yahoo_symbol"),
+            epias_ucu=ham.get("epias_ucu"),
+            epias_alani=ham.get("epias_alani"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
+            olcek=float(ham.get("olcek", 1.0)),
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)
@@ -136,6 +148,17 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(f"{seri.id}: charts listesinde tekrar var {seri.charts}")
     if seri.kaynak_tipi not in GECERLI_KAYNAK_TIPLERI:
         raise KatalogHatasi(f"{seri.id}: geçersiz kaynak_tipi '{seri.kaynak_tipi}'")
+    if seri.kaynak_tipi == "epias" and not (seri.epias_ucu and seri.epias_alani):
+        raise KatalogHatasi(
+            f"epias serisi epias_ucu ve epias_alani ister: {seri.id}"
+        )
+    if seri.kaynak_tipi == "epias" and seri.monthly_agg == "last":
+        # epias.seri_cek yalnızca sum/mean günlük indirgemesi biliyor;
+        # "last" verilirse else dalı bunu sessizce ortalamaya çeviriyordu.
+        raise KatalogHatasi(
+            f"{seri.id}: epias kaynağı monthly_agg='last' alamaz "
+            "(yalnızca 'sum' ya da 'mean' desteklenir)"
+        )
     if seri.kaynak_tipi == "evds":
         if not seri.evds_code:
             raise KatalogHatasi(f"{seri.id}: evds kaynağı için evds_code zorunlu")
