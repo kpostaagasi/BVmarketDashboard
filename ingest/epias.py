@@ -26,7 +26,8 @@ from core.catalog import Seri
 
 TGT_URL = "https://giris.epias.com.tr/cas/v1/tickets"
 TABAN = "https://seffaflik.epias.com.tr"
-ZAMAN_ASIMI = 30
+# evds ve yahoo ile aynı: ölçümde istek başına ~9s görüldü, 30s'lik pay dardı.
+ZAMAN_ASIMI = 60
 
 UCLAR = {
     "uretim": "/electricity-service/v1/generation/data/realtime-generation",
