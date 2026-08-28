@@ -8,12 +8,30 @@ from __future__ import annotations
 
 from typing import Callable
 
+import pandas as pd
 import streamlit as st
 
 from core.catalog import Kategori, SIKLIK_ETIKETLERI, seri_listele
 from core.components import grafik_karti, kpi_satiri
 from core.stats import GORUNUMLER, VARSAYILAN
 from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
+
+
+# Yalnızca "Durum" ayarlanır: "bekleniyor (59 gün)" otomatik genişliğe
+# sığmıyor. Diğer sütunlarda otomatik boyutlandırma zaten doğru sonuç
+# veriyor; genişlik dayatmak onları kesiyordu.
+TAKVIM_SUTUN_AYARI = {
+    "Durum": st.column_config.TextColumn("Durum", width="medium"),
+}
+
+
+def takvim_sutun_sirasi(df: pd.DataFrame) -> list[str]:
+    """Tamamen boş sütunları çıkarır.
+
+    "Yayın notu" bugün her seride boş; yer kaplayıp bilgi taşımıyor ve
+    kalan sütunları daraltıyor. Not girildiğinde sütun kendiliğinden döner.
+    """
+    return [ad for ad in df.columns if df[ad].astype(str).str.strip().any()]
 
 
 def _kategoriyi_ciz(kategori: Kategori) -> None:
@@ -99,4 +117,11 @@ def veri_takvimi_sayfasi() -> None:
                 )
         st.divider()
 
-    st.dataframe(tablo_df(satirlar), width="stretch", hide_index=True)
+    df = tablo_df(satirlar)
+    st.dataframe(
+        df,
+        width="stretch",
+        hide_index=True,
+        column_config=TAKVIM_SUTUN_AYARI,
+        column_order=takvim_sutun_sirasi(df),
+    )
