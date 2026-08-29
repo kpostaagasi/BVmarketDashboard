@@ -150,17 +150,25 @@ def bilesen_noktalari_ayikla(
     return noktalar
 
 
-def _olcekle(df: pd.DataFrame, olcek: float | None) -> pd.DataFrame:
-    """None = ölçekleme yok. Katalog `olcek`i vermediyse seri olduğu gibi kalır."""
+def _olcekle(
+    df: pd.DataFrame, olcek: float | None, sutunlar: tuple[str, ...] = ("value",)
+) -> pd.DataFrame:
+    """None = ölçekleme yok. Katalog `olcek`i vermediyse seri olduğu gibi kalır.
+
+    `sutunlar` bileşenli (geniş) seriler için: tek çağrıda tüm grup
+    sütunları ölçeklenir, sütun-başına rename dolambacı gerekmez.
+    """
     if olcek is None:
         return df
     df = df.copy()
-    df["value"] = df["value"] * olcek
+    for sutun in sutunlar:
+        df[sutun] = df[sutun] * olcek
     return df
 
 
 def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
-             bugun: date | None = None) -> pd.DataFrame:
+             bugun: date | None = None,
+             onbellek: dict | None = None) -> pd.DataFrame:
     """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı).
 
     Pencere `pencereleri_bol` ile EPİAŞ'ın kabul ettiği azami dilimlere
@@ -210,25 +218,36 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
 
     tum_noktalar: list[tuple[str, float]] = []
     for cur_baslangic, cur_bitis in pencereleri_bol(baslangic, bugun):
-        yanit = http.post(
-            TABAN + UCLAR[seri.epias_ucu],
-            headers={"Content-Type": "application/json", "TGT": tgt},
-            json={
-                "startDate": f"{cur_baslangic.isoformat()}T00:00:00+03:00",
-                "endDate": f"{cur_bitis.isoformat()}T00:00:00+03:00",
-            },
-            timeout=ZAMAN_ASIMI,
-        )
-        if yanit.status_code != 200:
-            raise RuntimeError(
-                f"EPİAŞ HTTP {yanit.status_code} ({seri.id})"
+        # Aynı ucu aynı pencereyle paylaşan seriler (ör. elektrik/uretim ile
+        # elektrik/uretim-kompozisyon) koşu başına tek dict paylaşırsa yanıt
+        # bir kez çekilir — 42 istek yerine 21. Önbellek isteğe bağlıdır;
+        # verilmezse davranış eskisiyle birebir aynı.
+        anahtar = (seri.epias_ucu, cur_baslangic, cur_bitis)
+        if onbellek is not None and anahtar in onbellek:
+            govde = onbellek[anahtar]
+        else:
+            yanit = http.post(
+                TABAN + UCLAR[seri.epias_ucu],
+                headers={"Content-Type": "application/json", "TGT": tgt},
+                json={
+                    "startDate": f"{cur_baslangic.isoformat()}T00:00:00+03:00",
+                    "endDate": f"{cur_bitis.isoformat()}T00:00:00+03:00",
+                },
+                timeout=ZAMAN_ASIMI,
             )
+            if yanit.status_code != 200:
+                raise RuntimeError(
+                    f"EPİAŞ HTTP {yanit.status_code} ({seri.id})"
+                )
+            govde = yanit.json()
+            if onbellek is not None:
+                onbellek[anahtar] = govde
         if seri.epias_bilesenler:
             dilim_noktalari = bilesen_noktalari_ayikla(
-                yanit.json(), seri.epias_bilesenler
+                govde, seri.epias_bilesenler
             )
         else:
-            dilim_noktalari = noktalari_ayikla(yanit.json(), seri.epias_alani)
+            dilim_noktalari = noktalari_ayikla(govde, seri.epias_alani)
         if not dilim_noktalari:
             raise RuntimeError(
                 f"EPİAŞ dilimi boş döndü ({seri.id}, "
@@ -251,7 +270,5 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
     toplama = "sum" if seri.monthly_agg == "sum" else "mean"
     gunluk = df.groupby("date", as_index=False)[gruplar].agg(toplama)
     gunluk = gunluk.sort_values("date").reset_index(drop=True)
-    for grup in gruplar:
-        gunluk[grup] = _olcekle(gunluk[[grup]].rename(columns={grup: "value"}),
-                                seri.olcek)["value"]
+    gunluk = _olcekle(gunluk, seri.olcek, tuple(gruplar))
     return gunluk

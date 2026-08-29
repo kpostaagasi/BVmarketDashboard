@@ -226,39 +226,116 @@ def test_kompozisyon_figuru_desen_sutun_adina_gore_uygular():
     }
 
 
-def test_son_ay_tamamlanmamissa_dus_tam_ayi_dusurmez():
-    """Ham son gün ayın son günüyse ay TAMAMLANMIŞ demektir — düşülmemeli."""
-    from core.charts import son_ay_tamamlanmamissa_dus
-
-    aylik = pd.DataFrame(
-        {"A": [1.0, 2.0]},
-        index=pd.to_datetime(["2026-07-01", "2026-08-01"]),
+def _aylik(*aylar):
+    return pd.DataFrame(
+        {"value": [float(i) for i in range(len(aylar))]},
+        index=pd.to_datetime(list(aylar)),
     )
-    sonuc = son_ay_tamamlanmamissa_dus(aylik, pd.Timestamp("2026-08-31"))
-    assert list(sonuc.index) == list(aylik.index)
 
 
-def test_son_ay_tamamlanmamissa_dus_eksik_ayi_dusurur():
-    """Ham son gün ayın ortasındaysa ay EKSİK demektir — son satır düşülmeli."""
-    from core.charts import son_ay_tamamlanmamissa_dus
+def test_uc_aylar_tam_ise_dusurulmez():
+    from core.charts import uc_aylar_tamamlanmamissa_dus
 
-    aylik = pd.DataFrame(
-        {"A": [1.0, 2.0]},
-        index=pd.to_datetime(["2026-07-01", "2026-08-01"]),
+    aylik = _aylik("2026-07-01", "2026-08-01")
+    sonuc = uc_aylar_tamamlanmamissa_dus(
+        aylik, pd.Timestamp("2026-07-01"), pd.Timestamp("2026-08-31")
     )
-    sonuc = son_ay_tamamlanmamissa_dus(aylik, pd.Timestamp("2026-08-15"))
+    assert len(sonuc) == 2
+
+
+def test_uc_aylar_eksik_son_ayi_dusurur():
+    from core.charts import uc_aylar_tamamlanmamissa_dus
+
+    aylik = _aylik("2026-07-01", "2026-08-01")
+    sonuc = uc_aylar_tamamlanmamissa_dus(
+        aylik, pd.Timestamp("2026-07-01"), pd.Timestamp("2026-08-15")
+    )
     assert list(sonuc.index) == [pd.Timestamp("2026-07-01")]
 
 
-def test_son_ay_tamamlanmamissa_dus_bos_df_hata_vermez():
-    from core.charts import son_ay_tamamlanmamissa_dus
+def test_uc_aylar_eksik_ilk_ayi_dusurur():
+    """Veri ayın ortasında başlıyorsa ilk ay sahte bir dip üretir (M5)."""
+    from core.charts import uc_aylar_tamamlanmamissa_dus
 
-    aylik = pd.DataFrame({"A": []}, index=pd.DatetimeIndex([]))
-    sonuc = son_ay_tamamlanmamissa_dus(aylik, pd.Timestamp("2026-08-15"))
+    aylik = _aylik("2026-06-01", "2026-07-01", "2026-08-01")
+    sonuc = uc_aylar_tamamlanmamissa_dus(
+        aylik, pd.Timestamp("2026-06-28"), pd.Timestamp("2026-08-31")
+    )
+    assert list(sonuc.index) == [
+        pd.Timestamp("2026-07-01"), pd.Timestamp("2026-08-01")
+    ]
+
+
+def test_uc_aylar_iki_uc_da_eksikse_ikisi_de_duser():
+    from core.charts import uc_aylar_tamamlanmamissa_dus
+
+    aylik = _aylik("2026-06-01", "2026-07-01", "2026-08-01")
+    sonuc = uc_aylar_tamamlanmamissa_dus(
+        aylik, pd.Timestamp("2026-06-28"), pd.Timestamp("2026-08-15")
+    )
+    assert list(sonuc.index) == [pd.Timestamp("2026-07-01")]
+
+
+def test_uc_aylar_bos_df_hata_vermez():
+    from core.charts import uc_aylar_tamamlanmamissa_dus
+
+    aylik = pd.DataFrame({"value": []}, index=pd.DatetimeIndex([]))
+    sonuc = uc_aylar_tamamlanmamissa_dus(
+        aylik, pd.Timestamp("2026-08-01"), pd.Timestamp("2026-08-15")
+    )
     assert sonuc.empty
 
 
-# --- kompozisyon_verisi_hazirla (I2/M2): indirgeme + kural + görünüm ---
+def test_aylige_cevir_sum_kismi_ilk_ayi_da_atar():
+    """4 günlük 2021-08, 7 kat sahte dip olarak çiziliyordu (M5)."""
+    gunler = pd.date_range("2026-06-28", "2026-08-15", freq="D")
+    df = pd.DataFrame({"value": [1.0] * len(gunler)}, index=gunler)
+    sonuc = aylige_cevir(df, agg="sum", freq="daily")
+    assert list(sonuc.index) == [pd.Timestamp("2026-07-01")]
+
+
+def test_kompozisyon_verisi_hazirla_mutlakta_kismi_ilk_ayi_atar():
+    from core.charts import kompozisyon_verisi_hazirla
+
+    gunler = pd.date_range("2026-06-28", "2026-08-15", freq="D")
+    df = pd.DataFrame(
+        {"A": [1.0] * len(gunler), "B": [2.0] * len(gunler)}, index=gunler
+    )
+    sonuc = kompozisyon_verisi_hazirla(df, gorunum_mutlak=True, freq="daily")
+    assert list(sonuc.index) == [pd.Timestamp("2026-07-01")]
+
+
+def test_kompozisyon_verisi_hazirla_yuzdede_kismi_uclar_korunur():
+    from core.charts import kompozisyon_verisi_hazirla
+
+    gunler = pd.date_range("2026-06-28", "2026-08-15", freq="D")
+    df = pd.DataFrame(
+        {"A": [1.0] * len(gunler), "B": [3.0] * len(gunler)}, index=gunler
+    )
+    sonuc = kompozisyon_verisi_hazirla(df, gorunum_mutlak=False, freq="daily")
+    assert len(sonuc) == 3  # Haz, Tem, Ağu — kısmi uçlar pay görünümünde geçerli
+    assert sonuc.iloc[0]["A"] == pytest.approx(25.0)
+
+
+def test_kompozisyon_verisi_hazirla_bos_girdide_bos_doner():
+    from core.charts import kompozisyon_verisi_hazirla
+
+    df = pd.DataFrame({"A": []}, index=pd.DatetimeIndex([]))
+    sonuc = kompozisyon_verisi_hazirla(df, gorunum_mutlak=True, freq="daily")
+    assert sonuc.empty
+
+
+def test_kompozisyon_figuru_hovertemplate_birim_icerir():
+    """Unified hover'daki sekiz satır birimsiz çıkıyordu (M4)."""
+    from core.charts import kompozisyon_figuru
+
+    df = pd.DataFrame(
+        {"Kömür": [1.0], "Rüzgar": [2.0]},
+        index=pd.to_datetime(["2026-07-01"]),
+    )
+    fig = kompozisyon_figuru(df, "GWh")
+    for iz in fig.data:
+        assert iz.hovertemplate and "GWh" in iz.hovertemplate
 
 
 def _gunluk_kompozisyon_df(gun_sayisi_haziran=30, gun_sayisi_temmuz=5):

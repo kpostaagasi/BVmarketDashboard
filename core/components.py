@@ -135,6 +135,11 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
             st.warning(str(hata))
             return
 
+        if df.empty:
+            # Başlığı olup satırı olmayan CSV: son_tarih NaT döner, sayfa düşer.
+            st.warning(f"{seri.title}: veri dosyası boş")
+            return
+
         etiket = SIKLIK_ETIKETLERI[seri.freq]
         st.caption(f"Son Dönem: {donem_etiketi(son_tarih(df), seri.freq)} · {etiket}")
         _istatistik_satiri(df, seri)
@@ -200,6 +205,11 @@ def kompozisyon_karti(seri: Seri) -> None:
         gorunum_mutlak = gorunum != "Pay %"
         gosterilecek = kompozisyon_verisi_hazirla(df, gorunum_mutlak, seri.freq)
         birim = seri.unit if gorunum_mutlak else "%"
+
+        if gosterilecek.empty:
+            # Boş/tamamen kısmi veri: NaT üzerinde strftime sayfayı düşürür.
+            st.warning(f"{seri.title}: gösterilecek tam ay yok")
+            return
 
         st.caption(
             f"Son Dönem: {donem_etiketi(gosterilecek.index.max(), 'monthly')} · AYLIK"

@@ -52,7 +52,7 @@ def test_cek_epias_serisini_epias_modulune_yonlendirir(monkeypatch):
 
     cagrildi = {}
 
-    def sahte_seri_cek(seri, tgt, session=None):
+    def sahte_seri_cek(seri, tgt, session=None, onbellek=None):
         cagrildi["tgt"] = tgt
         cagrildi["id"] = seri.id
         return "DF"
@@ -85,7 +85,7 @@ def test_main_epias_giris_basarisizsa_diger_kaynaklar_calismaya_devam_eder(
     def patlayan_tgt_al(kullanici, parola, session=None):
         raise RuntimeError("EPİAŞ giriş başarısız: HTTP 503")
 
-    def patlayan_epias_cek(seri, tgt, session=None):
+    def patlayan_epias_cek(seri, tgt, session=None, onbellek=None):
         raise AssertionError("tgt yokken epias.seri_cek çağrılmamalı")
 
     yazilanlar: list[str] = []
@@ -112,3 +112,31 @@ def test_main_epias_giris_basarisizsa_diger_kaynaklar_calismaya_devam_eder(
         "epias dışındaki seriler yine yazılmalı"
     )
     assert not (set(yazilanlar) & epias_idler)
+
+
+def test_main_epias_serileri_tek_onbellek_paylasir(monkeypatch):
+    """Aynı uç iki seri için iki kez tam çekiliyordu (M6) — koşu başına
+    tek önbellek dict'i tüm epias çağrılarına aynı nesne olarak gitmeli."""
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte-anahtar")
+    monkeypatch.setenv("EPIAS_USERNAME", "sahte-kullanici")
+    monkeypatch.setenv("EPIAS_PASSWORD", "sahte-parola")
+    monkeypatch.setattr(sys, "argv", ["run.py"])
+
+    gorulen_onbellekler = []
+
+    def sahte_epias_cek(seri, tgt, session=None, onbellek=None):
+        gorulen_onbellekler.append(onbellek)
+        return sahte_df()
+
+    monkeypatch.setattr(run.epias, "tgt_al", lambda k, p, session=None: "TGT-x")
+    monkeypatch.setattr(run.epias, "seri_cek", sahte_epias_cek)
+    monkeypatch.setattr(run.evds, "seri_cek", lambda seri, api_key, session=None, bugun=None: sahte_df())
+    monkeypatch.setattr(run.yahoo, "seri_cek", lambda seri, session=None: sahte_df())
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    assert run.main() == 0
+    assert len(gorulen_onbellekler) >= 3  # üç epias serisi var
+    assert all(o is not None for o in gorulen_onbellekler)
+    assert all(o is gorulen_onbellekler[0] for o in gorulen_onbellekler)

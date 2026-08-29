@@ -876,6 +876,10 @@ def kompozisyon_karti(seri: Seri) -> None:
             label_visibility="collapsed",
         ) or "Pay %"
 
+        # NOT (yürütme sonrası): Aşağıdaki karşılaştırma TERSTİR ve final
+        # incelemede Critical bulgu oldu — koşul her zaman True verir.
+        # DÜZELTİLDİ: bkz. core/charts.py `uc_aylar_tamamlanmamissa_dus`.
+        # Bu plan yeniden yürütülürse aşağıdaki blok KULLANILMAMALIDIR.
         aylik = df.resample("MS").sum(min_count=1).dropna(how="all")
         if aylik.index.max() < df.index.max() + pd.offsets.MonthEnd(0):
             # Tamamlanmamış son ay sahte bir düşüş gibi görünür (aylige_cevir
