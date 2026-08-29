@@ -46,8 +46,9 @@ def genis_csv_oku(yol: Path) -> pd.DataFrame:
     """Çok sütunlu (bileşenli) seri dosyasını okur.
 
     `seri_csv_oku` gövdesinde `df[["value"]]` vardır ve geniş dosyada
-    `value` sütunu yoktur. 24 seri o fonksiyona bağlı olduğu için
-    sözleşmesi değiştirilmez; geniş biçim ayrı kapıdan okunur.
+    `value` sütunu yoktur. Tek değerli serilerin tamamı o fonksiyona
+    bağlı olduğu için sözleşmesi değiştirilmez; geniş biçim ayrı kapıdan
+    okunur.
     """
     if not yol.exists():
         raise VeriYokHatasi(

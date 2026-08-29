@@ -557,3 +557,58 @@ def test_seri_cek_bilesenli_seride_eksik_saatli_gunu_atar():
     df = seri_cek(seri, "TGT-x", session=oturum, bugun=date(2026, 8, 3))
 
     assert list(df["date"]) == ["2026-08-01"]
+
+
+def test_seri_cek_paylasilan_onbellek_ayni_ucu_yeniden_cekmez():
+    """uretim ucu iki seri tarafından günde iki kez tam çekiliyordu (M6)."""
+    kayitlar = [
+        _uretim_kaydi("2026-08-01", f"{s:02d}", importCoal=100.0, wind=10.0)
+        for s in range(24)
+    ]
+    onbellek: dict = {}
+
+    oturum1 = SahteOturum(SahteYanit(200, {"items": kayitlar}))
+    tekil = _epias_seri(
+        id="elektrik/uretim", epias_ucu="uretim", epias_alani="total",
+        monthly_agg="sum", start_date="2026-08-01",
+    )
+    seri_cek(tekil, "TGT-x", session=oturum1, bugun=date(2026, 8, 2),
+             onbellek=onbellek)
+    assert len(oturum1.cagrilar) == 1
+
+    oturum2 = SahteOturum(SahteYanit(500))  # çağrılırsa 500 → RuntimeError
+    bilesenli = _epias_seri(
+        id="elektrik/uretim-kompozisyon", epias_ucu="uretim", epias_alani=None,
+        epias_bilesenler=GRUPLAR, monthly_agg="sum", start_date="2026-08-01",
+    )
+    df = seri_cek(bilesenli, "TGT-x", session=oturum2, bugun=date(2026, 8, 2),
+                  onbellek=onbellek)
+    assert len(oturum2.cagrilar) == 0  # tamamen önbellekten
+    assert not df.empty
+
+
+def test_seri_cek_onbellek_verilmezse_davranis_degismez():
+    kayitlar = [
+        _uretim_kaydi("2026-08-01", f"{s:02d}", importCoal=100.0)
+        for s in range(24)
+    ]
+    oturum = SahteOturum(SahteYanit(200, {"items": kayitlar}))
+    seri = _epias_seri(
+        id="elektrik/uretim", epias_ucu="uretim", epias_alani="total",
+        monthly_agg="sum", start_date="2026-08-01",
+    )
+    df = seri_cek(seri, "TGT-x", session=oturum, bugun=date(2026, 8, 2))
+    assert len(oturum.cagrilar) == 1
+    assert not df.empty
+
+
+def test_olcekle_sutun_listesiyle_coklu_sutunu_olcekler():
+    import pandas as pd
+
+    from ingest.epias import _olcekle
+
+    df = pd.DataFrame({"A": [10.0], "B": [20.0], "date": ["2026-08-01"]})
+    sonuc = _olcekle(df, 0.1, sutunlar=("A", "B"))
+    assert sonuc["A"].iloc[0] == pytest.approx(1.0)
+    assert sonuc["B"].iloc[0] == pytest.approx(2.0)
+    assert df["A"].iloc[0] == 10.0  # girdi mutasyona uğramaz

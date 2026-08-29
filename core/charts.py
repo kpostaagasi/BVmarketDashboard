@@ -18,24 +18,29 @@ from core.theme import CIZGI_DESENLERI, RENKLER, TR_AYLAR
 _AGG_FONKSIYONLARI = {"mean": "mean", "last": "last", "sum": "sum"}
 
 
-def son_ay_tamamlanmamissa_dus(
-    aylik: pd.DataFrame, ham_son: pd.Timestamp
+def uc_aylar_tamamlanmamissa_dus(
+    aylik: pd.DataFrame, ham_ilk: pd.Timestamp, ham_son: pd.Timestamp
 ) -> pd.DataFrame:
-    """Ay-başlangıcına indirgenmiş bir seride tamamlanmamış son ayı düşürür.
+    """Ay-başlangıcına indirgenmiş seride tamamlanmamış UÇ ayları düşürür.
 
-    Kural: ham verinin son tarihi, indirgenmiş son ayın son gününden ÖNCEYSE
-    (`ham_son < aylik.index[-1] + MonthEnd(0)`) o ay henüz tamamlanmamıştır —
-    düşürülür. Ayın 1'i (`aylik.index[-1]`) ile ayın son günü (`+ MonthEnd(0)`)
-    farklı çapalardır; bu ikisini `ham_son`'la ters karşılaştırmak (ham_son'u
-    ay-başlangıcıyla kıyaslamak) ay tamamlanmış olsa bile hemen hemen her
-    zaman True verir — bu kural tek yerde uygulanır ki bir daha ayrışmasın.
+    Son ay: ham verinin son tarihi o ayın son gününden önceyse ay bitmemiştir
+    (`ham_son < index[-1] + MonthEnd(0)`) — düşer. Ayın 1'i ile ayın son günü
+    farklı çapalardır; ham_son'u ay-başlangıcıyla kıyaslamak ay tamamlanmış
+    olsa bile hemen her zaman True verir (Faz 3c final incelemesinin Critical
+    bulgusu buydu) — kural tek yerde uygulanır ki bir daha ayrışmasın.
+
+    İlk ay: ham veri ayın 1'inden SONRA başlıyorsa ilk ay da kısmidir ve
+    `sum` serilerinde sahte bir dip üretir (2021-08 dört günlüktü, grafiğin
+    sol ucunda 7 kat çöküş görünüyordu). Simetri: iki uç da aynı kurala tabi.
+
     Boş `aylik` için no-op.
     """
     if aylik.empty:
         return aylik
-    son_ay_sonu = aylik.index[-1] + pd.offsets.MonthEnd(0)
-    if ham_son < son_ay_sonu:
-        return aylik.iloc[:-1]
+    if ham_son < aylik.index[-1] + pd.offsets.MonthEnd(0):
+        aylik = aylik.iloc[:-1]
+    if not aylik.empty and ham_ilk > aylik.index[0]:
+        aylik = aylik.iloc[1:]
     return aylik
 
 
@@ -58,7 +63,7 @@ def aylige_cevir(
     seri = seri.dropna().to_frame("value")
 
     if agg == "sum" and freq != "monthly":
-        seri = son_ay_tamamlanmamissa_dus(seri, df.index.max())
+        seri = uc_aylar_tamamlanmamissa_dus(seri, df.index.min(), df.index.max())
 
     return seri
 
@@ -161,7 +166,8 @@ def kompozisyon_verisi_hazirla(
 ) -> pd.DataFrame:
     """Geniş (bileşenli) günlük/haftalık seriyi kart için aylığa indirger.
 
-    Tamamlanmamış son ayı düşürme kuralı yalnızca MUTLAK (GWh) görünümde
+    Tamamlanmamış uç ayları (ilk ve son) düşürme kuralı yalnızca MUTLAK
+    (GWh) görünümde
     uygulanır: bu bir ÖLÇEK düzeltmesidir (kısmi ayın TOPLAMI sahte bir
     düşüş gösterir) — tıpkı `aylige_cevir`'in `agg == "sum"` durumunda
     yaptığı gibi. Pay % görünümü ölçekten BAĞIMSIZDIR: kısmi bir ayın
@@ -173,7 +179,7 @@ def kompozisyon_verisi_hazirla(
     """
     aylik = df.resample("MS").sum(min_count=1).dropna(how="all")
     if gorunum_mutlak and freq != "monthly":
-        aylik = son_ay_tamamlanmamissa_dus(aylik, df.index.max())
+        aylik = uc_aylar_tamamlanmamissa_dus(aylik, df.index.min(), df.index.max())
     return aylik if gorunum_mutlak else paylara_cevir(aylik)
 
 
@@ -199,6 +205,7 @@ def kompozisyon_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
                     "dash": CIZGI_DESENLERI[sutun],
                     "width": 2,
                 },
+                hovertemplate=f"{sutun}: %{{y:,.2f}} {birim}<extra></extra>",
             )
         )
     return _temayi_uygula(fig, birim)
