@@ -24,7 +24,7 @@ from datetime import date, timedelta
 import pandas as pd
 
 from core.catalog import SIKLIK_ETIKETLERI, Seri, seri_listele
-from core.data import VeriYokHatasi, seri_csv_oku, seri_yolu
+from core.data import VeriYokHatasi, genis_csv_oku, seri_csv_oku, seri_yolu
 
 ESIKLER = {"daily": 5, "weekly": 14, "monthly": 50}
 
@@ -128,6 +128,18 @@ def tablo_df(satirlar: list[TakvimSatiri]) -> pd.DataFrame:
     return pd.DataFrame(kayitlar, columns=SUTUNLAR)
 
 
+def _seriyi_oku(seri: Seri) -> pd.DataFrame:
+    """Biçime göre doğru okuyucuyu seçer; hataları yukarı bırakır.
+
+    Kompozisyon serilerinde `value` sütunu yoktur ve `seri_csv_oku`
+    gövdesindeki `df[["value"]]` KeyError fırlatır. Hata yakalama
+    `takvim()` içinde kalır: VERI_YOK ile OKUNAMADI ayrımı oraya aittir.
+    """
+    if seri.epias_bilesenler:
+        return genis_csv_oku(seri_yolu(seri.id))
+    return seri_csv_oku(seri_yolu(seri.id))
+
+
 def takvim(bugun: date | None = None,
            kategori: str | None = None) -> list[TakvimSatiri]:
     """Katalogdaki her seri için satır üretir. Tek I/O yapan fonksiyon."""
@@ -136,7 +148,7 @@ def takvim(bugun: date | None = None,
     satirlar = []
     for seri in seriler:
         try:
-            df = seri_csv_oku(seri_yolu(seri.id))
+            df = _seriyi_oku(seri)
             son = df.index.max().date()
         except VeriYokHatasi:
             satirlar.append(satir_uret(seri, None, bugun))

@@ -184,3 +184,34 @@ def test_takvim_kategoriye_filtreler():
     satirlar = takvim(kategori="enflasyon")
     assert satirlar, "enflasyon kategorisinde seri yok"
     assert {s.seri.category for s in satirlar} == {"enflasyon"}
+
+
+def test_seriyi_oku_genis_biciminde_kirilmaz():
+    """Kompozisyon serisinde `value` sütunu yok; seri_csv_oku KeyError verir."""
+    from core.catalog import seri_getir
+    from core.takvim import _seriyi_oku
+
+    df = _seriyi_oku(seri_getir("elektrik/uretim-kompozisyon"))
+    assert "Kömür" in df.columns
+    assert not df.empty
+
+
+def test_seriyi_oku_tek_degerli_seride_value_dondurur():
+    """Dallanma mevcut 25 seriyi etkilememeli."""
+    from core.catalog import seri_getir
+    from core.takvim import _seriyi_oku
+
+    df = _seriyi_oku(seri_getir("enflasyon/tufe-genel"))
+    assert list(df.columns) == ["value"]
+
+
+def test_takvim_kompozisyon_serisini_okunamadi_saymaz():
+    """Geniş CSV bozuk değil; OKUNAMADI'ya düşerse dallanma çalışmıyordur."""
+    from core.takvim import OKUNAMADI, takvim
+
+    (satir,) = [
+        s for s in takvim(kategori="elektrik")
+        if s.seri.id == "elektrik/uretim-kompozisyon"
+    ]
+    assert satir.durum != OKUNAMADI
+    assert satir.son_donem is not None

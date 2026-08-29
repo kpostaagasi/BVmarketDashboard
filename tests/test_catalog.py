@@ -28,7 +28,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 25
+    assert len(serileri_yukle()) == 26
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -89,7 +89,7 @@ def test_alan_degerleri_gecerli_kumelerde():
         assert seri.freq in {"daily", "weekly", "monthly"}, seri.id
         assert seri.monthly_agg in {"mean", "last", "sum"}, seri.id
         assert seri.charts, seri.id
-        assert set(seri.charts) <= {"seasonality", "level"}, seri.id
+        assert set(seri.charts) <= {"seasonality", "level", "composition"}, seri.id
         if seri.kaynak_tipi == "evds":
             assert seri.evds_frequency in {"1", "2", "5"}, seri.id
             assert seri.evds_code, seri.id
@@ -309,16 +309,34 @@ def test_epias_serisinde_monthly_agg_last_reddedilir():
         _dogrula(seri, _sluglar(), set())
 
 
-def test_epias_serisi_uc_ve_alan_ister():
-    from core.catalog import KatalogHatasi, serileri_yukle
+def test_tek_alanli_epias_serileri_epias_alani_tasir_bilesen_tasimaz():
+    from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     seriler = serileri_yukle()
-    epias = [s for s in seriler if s.kaynak_tipi == "epias"]
-    assert epias, "katalogda epias serisi yok"
-    for s in epias:
+    tek_alanlilar = [
+        s for s in seriler if s.kaynak_tipi == "epias" and s.epias_bilesenler is None
+    ]
+    assert tek_alanlilar, "katalogda tek alanlı epias serisi yok"
+    for s in tek_alanlilar:
         assert s.epias_ucu, f"{s.id}: epias_ucu boş"
         assert s.epias_alani, f"{s.id}: epias_alani boş"
+        assert s.epias_bilesenler is None, f"{s.id}: epias_bilesenler dolu olmamalı"
+
+
+def test_bilesenli_epias_serileri_epias_bilesenler_tasir_alan_tasimaz():
+    from core.catalog import serileri_yukle
+
+    serileri_yukle.cache_clear()
+    seriler = serileri_yukle()
+    bilesenliler = [
+        s for s in seriler if s.kaynak_tipi == "epias" and s.epias_bilesenler is not None
+    ]
+    assert bilesenliler, "katalogda bileşenli epias serisi yok"
+    for s in bilesenliler:
+        assert s.epias_ucu, f"{s.id}: epias_ucu boş"
+        assert s.epias_bilesenler, f"{s.id}: epias_bilesenler boş"
+        assert s.epias_alani is None, f"{s.id}: epias_alani dolu olmamalı"
 
 
 # --- Alan sahipliği tablosu ---
@@ -404,12 +422,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 25 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut 26 seriyi reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 25
+        assert len(serileri_yukle()) == 26
     finally:
         serileri_yukle.cache_clear()
 
@@ -446,3 +464,89 @@ def test_olcek_sifir_veya_negatif_reddedilir():
                     evds_code=None, evds_frequency=None, olcek=gecersiz,
                 )
             )
+
+
+def test_composition_gecerli_grafik_turu():
+    from core.catalog import GECERLI_GRAFIKLER
+
+    assert "composition" in GECERLI_GRAFIKLER
+
+
+def test_epias_serisi_alan_ve_bilesenleri_birlikte_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="epias_bilesenler"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="epias", epias_ucu="uretim", epias_alani="total",
+                epias_bilesenler={"Kömür": ["lignite"]},
+                evds_code=None, evds_frequency=None,
+            )
+        )
+
+
+def test_epias_serisi_ikisinden_birini_tasimali():
+    with pytest.raises(KatalogHatasi, match="epias_alani"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="epias", epias_ucu="uretim",
+                evds_code=None, evds_frequency=None,
+            )
+        )
+
+
+def test_bilesenli_seri_composition_grafigi_ister():
+    with pytest.raises(KatalogHatasi, match="composition"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="epias", epias_ucu="uretim",
+                epias_bilesenler={"Kömür": ["lignite"]},
+                charts=["level"],
+                evds_code=None, evds_frequency=None,
+            )
+        )
+
+
+def test_composition_grafigi_bilesen_ister():
+    with pytest.raises(KatalogHatasi, match="composition"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="epias", epias_ucu="ptf", epias_alani="price",
+                charts=["composition"],
+                evds_code=None, evds_frequency=None,
+            )
+        )
+
+
+def test_composition_baska_grafikle_birlikte_reddedilir():
+    """[composition, level] katalogca kabul edilirse page.py level'i sessizce
+
+    yutar (bkz. M1) — composition her zaman TEK BAŞINA olmalı."""
+    with pytest.raises(KatalogHatasi, match="composition"):
+        _dogrula_ham(
+            _ham_seri(
+                kaynak_tipi="epias", epias_ucu="uretim",
+                epias_bilesenler={"Kömür": ["lignite"]},
+                charts=["composition", "level"],
+                evds_code=None, evds_frequency=None,
+            )
+        )
+
+
+def test_bilesenler_tuple_olarak_okunur():
+    from core.catalog import seri_getir, serileri_yukle
+
+    serileri_yukle.cache_clear()
+    try:
+        seri = seri_getir("elektrik/uretim-kompozisyon")
+        assert seri.epias_bilesenler["Hidroelektrik"] == ("dammedHydro", "river")
+        assert "importExport" not in {
+            alan for alanlar in seri.epias_bilesenler.values() for alan in alanlar
+        }
+    finally:
+        serileri_yukle.cache_clear()
+
+
+def test_uretim_serisi_basligi_net_ithalati_belirtir():
+    """total = üretim + net ithalat; başlık bunu saklamamalı."""
+    from core.catalog import seri_getir
+
+    assert "ithalat" in seri_getir("elektrik/uretim").title.lower()

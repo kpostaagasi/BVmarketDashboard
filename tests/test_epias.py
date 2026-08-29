@@ -203,6 +203,7 @@ def _epias_seri(**kwargs):
         id="elektrik/ptf",
         epias_ucu="ptf",
         epias_alani="price",
+        epias_bilesenler=None,
         monthly_agg="mean",
         start_date=None,
         olcek=1.0,
@@ -421,3 +422,138 @@ def test_seri_cek_orta_dilim_bos_donerse_hangi_dilim_oldugunu_belirtir():
     mesaj = str(hata.value)
     assert "boş" in mesaj
     assert ikinci_dilim_baslangic.isoformat() in mesaj
+
+
+# --- bilesen_noktalari_ayikla / seri_cek bileşenli seri (Faz 3c) ---
+
+
+def _uretim_kaydi(tarih, saat, **degerler):
+    kayit = {
+        "date": f"{tarih}T{saat}:00:00+03:00", "hour": f"{saat}:00",
+        "total": 0.0, "naturalGas": 0.0, "dammedHydro": 0.0, "lignite": 0.0,
+        "river": 0.0, "importCoal": 0.0, "wind": 0.0, "sun": 0.0,
+        "fueloil": 0.0, "geothermal": 0.0, "asphaltiteCoal": 0.0,
+        "blackCoal": 0.0, "biomass": 0.0, "naphta": 0.0, "lng": 0.0,
+        "importExport": 0.0, "wasteheat": 0.0,
+    }
+    kayit.update(degerler)
+    return kayit
+
+
+GRUPLAR = {
+    "Kömür": ("importCoal", "lignite"),
+    "Hidroelektrik": ("dammedHydro", "river"),
+    "Rüzgar": ("wind",),
+}
+
+
+def test_bilesen_noktalari_ayikla_gruplari_toplar():
+    from ingest.epias import bilesen_noktalari_ayikla
+
+    yanit = {"items": [
+        _uretim_kaydi("2026-08-01", "00", importCoal=100.0, lignite=50.0,
+                      dammedHydro=30.0, river=20.0, wind=10.0),
+    ]}
+    (nokta,) = bilesen_noktalari_ayikla(yanit, GRUPLAR)
+    assert nokta == {
+        "date": "2026-08-01", "Kömür": 150.0,
+        "Hidroelektrik": 50.0, "Rüzgar": 10.0,
+    }
+
+
+def test_bilesen_noktalari_ayikla_import_export_hicbir_gruba_girmez():
+    """importExport üretim değil ticaret kalemidir; negatif de olabilir."""
+    from ingest.epias import bilesen_noktalari_ayikla
+
+    yanit = {"items": [
+        _uretim_kaydi("2026-08-01", "00", wind=10.0, importExport=-500.0),
+    ]}
+    (nokta,) = bilesen_noktalari_ayikla(yanit, GRUPLAR)
+    assert sum(v for k, v in nokta.items() if k != "date") == 10.0
+
+
+def test_bilesen_noktalari_ayikla_bilinmeyen_alanda_hata_verir():
+    from ingest.epias import bilesen_noktalari_ayikla
+
+    yanit = {"items": [_uretim_kaydi("2026-08-01", "00")]}
+    with pytest.raises(KeyError):
+        bilesen_noktalari_ayikla(yanit, {"X": ("yokBoyleAlan",)})
+
+
+def test_bilesen_noktalari_ayikla_bilinmeyen_alan_none_kontrolunden_once_hata_verir():
+    """`.get` değil `kayit[alan]` kullanılmalı: "alan yok" (KeyError) ile
+
+    "alan var ama null" (aşağıdaki atlama testi) ayrımı korunmalı — None
+    kontrolü, eksik anahtarı sessizce None'a çevirip KeyError'ı yutmamalı.
+    """
+    from ingest.epias import bilesen_noktalari_ayikla
+
+    yanit = {"items": [_uretim_kaydi("2026-08-01", "00", wind=10.0)]}
+    with pytest.raises(KeyError):
+        bilesen_noktalari_ayikla(yanit, {"X": ("yokBoyleAlan", "wind")})
+
+
+def test_bilesen_noktalari_ayikla_none_iceren_saati_atlar():
+    """EPİAŞ bir bileşen alanında `null` dönerse o saat 0 sayılmaz, atlanır.
+
+    None'ı 0 saymak kaynağın üretimini sessizce sıfır gösterip grup
+    toplamını eksik raporlar; bunun yerine saat tamamen dışlanır — aynı
+    yanıttaki TAM saatler etkilenmeden korunur.
+    """
+    from ingest.epias import bilesen_noktalari_ayikla
+
+    tam_saat = _uretim_kaydi("2026-08-01", "00", importCoal=100.0, wind=10.0)
+    eksik_saat = _uretim_kaydi("2026-08-01", "01", importCoal=None, wind=5.0)
+    yanit = {"items": [tam_saat, eksik_saat]}
+
+    noktalar = bilesen_noktalari_ayikla(yanit, GRUPLAR)
+
+    assert len(noktalar) == 1
+    assert noktalar[0]["Kömür"] == 100.0
+    assert noktalar[0]["Rüzgar"] == 10.0
+
+
+def test_seri_cek_bilesenli_seriyi_genis_df_olarak_dondurur():
+    from ingest.epias import seri_cek
+
+    kayitlar = [
+        _uretim_kaydi("2026-08-01", f"{s:02d}", importCoal=100.0, wind=10.0)
+        for s in range(24)
+    ]
+    oturum = SahteOturum(SahteYanit(200, {"items": kayitlar}))
+    seri = _epias_seri(
+        id="elektrik/uretim-kompozisyon", epias_ucu="uretim", epias_alani=None,
+        epias_bilesenler=GRUPLAR, monthly_agg="sum", olcek=0.001,
+        start_date="2026-08-01",
+    )
+
+    df = seri_cek(seri, "TGT-x", session=oturum, bugun=date(2026, 8, 2))
+
+    assert list(df.columns) == ["date", "Kömür", "Hidroelektrik", "Rüzgar"]
+    # 24 saat × 100 MWh = 2400 MWh → olcek 0.001 → 2.4 GWh
+    assert df["Kömür"].iloc[0] == pytest.approx(2.4)
+    assert df["Rüzgar"].iloc[0] == pytest.approx(0.24)
+
+
+def test_seri_cek_bilesenli_seride_eksik_saatli_gunu_atar():
+    """Faz 3b C1 kuralı bileşenli seride de geçerli."""
+    from ingest.epias import seri_cek
+
+    tam = [
+        _uretim_kaydi("2026-08-01", f"{s:02d}", importCoal=100.0)
+        for s in range(24)
+    ]
+    kesik = [
+        _uretim_kaydi("2026-08-02", f"{s:02d}", importCoal=100.0)
+        for s in range(12)
+    ]
+    oturum = SahteOturum(SahteYanit(200, {"items": tam + kesik}))
+    seri = _epias_seri(
+        id="elektrik/uretim-kompozisyon", epias_ucu="uretim", epias_alani=None,
+        epias_bilesenler=GRUPLAR, monthly_agg="sum", olcek=1.0,
+        start_date="2026-08-01",
+    )
+
+    df = seri_cek(seri, "TGT-x", session=oturum, bugun=date(2026, 8, 3))
+
+    assert list(df["date"]) == ["2026-08-01"]

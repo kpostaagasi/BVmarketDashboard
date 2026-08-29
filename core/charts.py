@@ -13,9 +13,30 @@ from __future__ import annotations
 import pandas as pd
 import plotly.graph_objects as go
 
-from core.theme import RENKLER, TR_AYLAR
+from core.theme import CIZGI_DESENLERI, RENKLER, TR_AYLAR
 
 _AGG_FONKSIYONLARI = {"mean": "mean", "last": "last", "sum": "sum"}
+
+
+def son_ay_tamamlanmamissa_dus(
+    aylik: pd.DataFrame, ham_son: pd.Timestamp
+) -> pd.DataFrame:
+    """Ay-başlangıcına indirgenmiş bir seride tamamlanmamış son ayı düşürür.
+
+    Kural: ham verinin son tarihi, indirgenmiş son ayın son gününden ÖNCEYSE
+    (`ham_son < aylik.index[-1] + MonthEnd(0)`) o ay henüz tamamlanmamıştır —
+    düşürülür. Ayın 1'i (`aylik.index[-1]`) ile ayın son günü (`+ MonthEnd(0)`)
+    farklı çapalardır; bu ikisini `ham_son`'la ters karşılaştırmak (ham_son'u
+    ay-başlangıcıyla kıyaslamak) ay tamamlanmış olsa bile hemen hemen her
+    zaman True verir — bu kural tek yerde uygulanır ki bir daha ayrışmasın.
+    Boş `aylik` için no-op.
+    """
+    if aylik.empty:
+        return aylik
+    son_ay_sonu = aylik.index[-1] + pd.offsets.MonthEnd(0)
+    if ham_son < son_ay_sonu:
+        return aylik.iloc[:-1]
+    return aylik
 
 
 def aylige_cevir(
@@ -36,10 +57,8 @@ def aylige_cevir(
         seri = df["value"].resample("MS").agg(_AGG_FONKSIYONLARI[agg])
     seri = seri.dropna().to_frame("value")
 
-    if agg == "sum" and freq != "monthly" and not seri.empty:
-        son_ay_sonu = seri.index[-1] + pd.offsets.MonthEnd(0)
-        if df.index.max() < son_ay_sonu:
-            seri = seri.iloc[:-1]
+    if agg == "sum" and freq != "monthly":
+        seri = son_ay_tamamlanmamissa_dus(seri, df.index.max())
 
     return seri
 
@@ -123,6 +142,66 @@ def mevsimsellik_figuru(
     _temayi_uygula(fig, birim)
     fig.update_layout(showlegend=len(fig.data) >= 2)
     return fig
+
+
+def paylara_cevir(df: pd.DataFrame) -> pd.DataFrame:
+    """Her satırı kendi toplamının yüzdesine çevirir.
+
+    Payda yalnızca sütunlardaki üretim gruplarıdır; `importExport` zaten
+    ingest tarafında dışlandığı için paylar %100'e toplanır. Toplamı sıfır
+    olan satır NaN üretir — sessizce 0 pay göstermek, veri yokluğunu
+    "hiç üretim yok"muş gibi gösterirdi.
+    """
+    toplam = df.sum(axis=1)
+    return df.div(toplam.where(toplam != 0), axis=0) * 100
+
+
+def kompozisyon_verisi_hazirla(
+    df: pd.DataFrame, gorunum_mutlak: bool, freq: str
+) -> pd.DataFrame:
+    """Geniş (bileşenli) günlük/haftalık seriyi kart için aylığa indirger.
+
+    Tamamlanmamış son ayı düşürme kuralı yalnızca MUTLAK (GWh) görünümde
+    uygulanır: bu bir ÖLÇEK düzeltmesidir (kısmi ayın TOPLAMI sahte bir
+    düşüş gösterir) — tıpkı `aylige_cevir`'in `agg == "sum"` durumunda
+    yaptığı gibi. Pay % görünümü ölçekten BAĞIMSIZDIR: kısmi bir ayın
+    kaynak karışımı tamamen geçerli bir gözlemdir, bu yüzden orada kural
+    hiç uygulanmaz ve o ayın verisi korunur.
+
+    `aylige_cevir` ile aynı gerekçeyle: `freq == "monthly"` ise kural yine
+    uygulanmaz (kaynak zaten aylıksa "tamamlanmamış ay" kavramı yoktur).
+    """
+    aylik = df.resample("MS").sum(min_count=1).dropna(how="all")
+    if gorunum_mutlak and freq != "monthly":
+        aylik = son_ay_tamamlanmamissa_dus(aylik, df.index.max())
+    return aylik if gorunum_mutlak else paylara_cevir(aylik)
+
+
+def kompozisyon_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
+    """Grup başına bir çizgi.
+
+    Renk ve çizgi deseni sütun ADINA göre seçilir (`RENKLER["kategorik"]`,
+    `CIZGI_DESENLERI`) — pozisyona göre değil. Bilinmeyen bir sütun adı
+    gelirse `KeyError` doğal olarak fırlar: katalogla palet ayrışmışsa bunu
+    sessizce yutmak yerine görmemiz gerekir. Çizgi deseni, rengin tek başına
+    ayıramadığı bazı grup çiftleri için ikincil (erişilebilirlik) kodlamadır.
+    """
+    fig = go.Figure()
+    for sutun in df.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df[sutun],
+                name=sutun,
+                mode="lines",
+                line={
+                    "color": RENKLER["kategorik"][sutun],
+                    "dash": CIZGI_DESENLERI[sutun],
+                    "width": 2,
+                },
+            )
+        )
+    return _temayi_uygula(fig, birim)
 
 
 def seviye_figuru(df: pd.DataFrame, birim: str) -> go.Figure:

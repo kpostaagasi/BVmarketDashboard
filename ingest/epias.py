@@ -114,6 +114,42 @@ def noktalari_ayikla(yanit: dict, alan: str) -> list[tuple[str, float]]:
     return noktalar
 
 
+def bilesen_noktalari_ayikla(
+    yanit: dict, gruplar: dict[str, tuple[str, ...]]
+) -> list[dict]:
+    """Saatlik kayıtları grup toplamlarına indirger.
+
+    `importExport` bilerek hiçbir gruba girmez: üretim kaynağı değil,
+    ticaret kalemidir ve negatif olabilir (net ihracat). Paydaya karışırsa
+    paylar %100'ü aşar. `total` da alınmaz — grup toplamlarından türetilir.
+
+    Bilinmeyen alan adı sessizce sıfır sayılmaz; KeyError yükselir, çünkü
+    EPİAŞ bir alanı yeniden adlandırırsa o grup sessizce boşalır ve grafik
+    yanlış çizilir. `kayit[alan]` (`.get` değil) kasıtlı: bu, "alan hiç yok"
+    (KeyError) ile "alan var ama değeri null" (aşağıdaki None kontrolü)
+    ayrımını korur.
+
+    Bir kaydın gruplara giren alanlarından HERHANGİ BİRİ `None` ise o SAAT
+    tamamen atlanır — `None`'ı 0 saymak o kaynağın üretimini sessizce sıfır
+    gösterir ve grup toplamını eksik raporlar (kardeş `noktalari_ayikla` ile
+    aynı "veri uydurma" karşıtı davranış). Atlanan saat, aşağı akışta zaten
+    `seri_cek`'in eksik-saat filtresine (`SAAT_SAYISI_TAM_GUN`) düşer: o gün
+    24 saati tamamlayamaz ve günlük indirgemeden önce elenir.
+    """
+    noktalar = []
+    for kayit in yanit.get("items") or []:
+        degerler = {
+            alan: kayit[alan] for alanlar in gruplar.values() for alan in alanlar
+        }
+        if any(deger is None for deger in degerler.values()):
+            continue
+        nokta = {"date": kayit["date"][:10]}
+        for grup, alanlar in gruplar.items():
+            nokta[grup] = float(sum(degerler[alan] for alan in alanlar))
+        noktalar.append(nokta)
+    return noktalar
+
+
 def _olcekle(df: pd.DataFrame, olcek: float | None) -> pd.DataFrame:
     """None = ölçekleme yok. Katalog `olcek`i vermediyse seri olduğu gibi kalır."""
     if olcek is None:
@@ -187,7 +223,12 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
             raise RuntimeError(
                 f"EPİAŞ HTTP {yanit.status_code} ({seri.id})"
             )
-        dilim_noktalari = noktalari_ayikla(yanit.json(), seri.epias_alani)
+        if seri.epias_bilesenler:
+            dilim_noktalari = bilesen_noktalari_ayikla(
+                yanit.json(), seri.epias_bilesenler
+            )
+        else:
+            dilim_noktalari = noktalari_ayikla(yanit.json(), seri.epias_alani)
         if not dilim_noktalari:
             raise RuntimeError(
                 f"EPİAŞ dilimi boş döndü ({seri.id}, "
@@ -195,14 +236,22 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
             )
         tum_noktalar.extend(dilim_noktalari)
 
-    df = pd.DataFrame(tum_noktalar, columns=["date", "value"])
-    gun_basina_saat = df.groupby("date")["value"].transform("size")
+    if seri.epias_bilesenler:
+        df = pd.DataFrame(tum_noktalar)
+        gruplar = list(seri.epias_bilesenler)
+    else:
+        df = pd.DataFrame(tum_noktalar, columns=["date", "value"])
+        gruplar = ["value"]
+
+    # Eksik saatli günler düşer (Faz 3b C1): bir günün kesri, günlük değer
+    # gibi gösterilirse KPI ve YoY yönü yanlış çıkar.
+    gun_basina_saat = df.groupby("date")[gruplar[0]].transform("size")
     df = df[gun_basina_saat == SAAT_SAYISI_TAM_GUN]
 
-    if seri.monthly_agg == "sum":
-        gunluk = df.groupby("date", as_index=False)["value"].sum()
-    else:
-        gunluk = df.groupby("date", as_index=False)["value"].mean()
+    toplama = "sum" if seri.monthly_agg == "sum" else "mean"
+    gunluk = df.groupby("date", as_index=False)[gruplar].agg(toplama)
     gunluk = gunluk.sort_values("date").reset_index(drop=True)
-    gunluk = _olcekle(gunluk, seri.olcek)
+    for grup in gruplar:
+        gunluk[grup] = _olcekle(gunluk[[grup]].rename(columns={grup: "value"}),
+                                seri.olcek)["value"]
     return gunluk

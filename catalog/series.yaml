@@ -260,7 +260,7 @@
   charts: [level, seasonality]
 
 - id: elektrik/uretim
-  title: Toplam Elektrik Üretimi
+  title: Toplam Elektrik Arzı (net ithalat dahil)
   category: elektrik
   kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
   kaynak_tipi: epias
@@ -283,3 +283,24 @@
   freq: daily
   monthly_agg: mean
   charts: [level, seasonality]
+
+- id: elektrik/uretim-kompozisyon
+  title: Kaynak Bazlı Üretim
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: uretim
+  epias_bilesenler:
+    Kömür: [importCoal, lignite, blackCoal, asphaltiteCoal]
+    Hidroelektrik: [dammedHydro, river]
+    Doğalgaz: [naturalGas, lng]
+    Güneş: [sun]
+    Rüzgar: [wind]
+    Jeotermal: [geothermal]
+    Biyo/Atık: [biomass, wasteheat]
+    Diğer: [fueloil, naphta]
+  unit: "GWh"
+  freq: daily
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [composition]

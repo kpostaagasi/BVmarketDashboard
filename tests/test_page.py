@@ -70,6 +70,21 @@ def test_pano_bilinmeyen_id_hata_verir():
         pano_serileri(kategori, [seri_getir("enflasyon/tufe-genel")])
 
 
+def test_pano_acik_listede_genis_seri_hata_verir():
+    """KPI kartı tek sayı gösterir; `pano`da açıkça bileşenli seri istemek
+
+    yazım hatası gibi ele alınmalı — sessizce kaybolmamalı (I3)."""
+    import pytest
+
+    from core.catalog import Kategori, KatalogHatasi, seri_getir
+    from core.page import pano_serileri
+
+    genis = seri_getir("elektrik/uretim-kompozisyon")
+    kategori = Kategori(slug="k", title="K", pano=(genis.id,))
+    with pytest.raises(KatalogHatasi):
+        pano_serileri(kategori, [genis])
+
+
 def test_kategori_takvim_sutun_sirasi_bos_sutunu_disliyor():
     """Kategori takvimi de global takvim gibi tamamen boş sütunu gizlemeli.
 
