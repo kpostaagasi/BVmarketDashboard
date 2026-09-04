@@ -42,7 +42,7 @@ KAYNAK_ALANLARI = {
     },
     "osd": {
         "zorunlu": ("osd_firma",),
-        "istege_bagli": ("start_date",),
+        "istege_bagli": ("start_date", "osd_eski_adlar"),
     },
 }
 
@@ -88,6 +88,7 @@ class Seri:
     epias_alani: str | None = None
     epias_bilesenler: dict[str, tuple[str, ...]] | None = None
     osd_firma: str | None = None
+    osd_eski_adlar: tuple[str, ...] | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
     yayin_notu: str | None = None
@@ -182,6 +183,9 @@ def serileri_yukle() -> tuple[Seri, ...]:
                 else None
             ),
             osd_firma=ham.get("osd_firma"),
+            osd_eski_adlar=(
+                tuple(ham["osd_eski_adlar"]) if "osd_eski_adlar" in ham else None
+            ),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),

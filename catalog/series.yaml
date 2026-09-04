@@ -405,11 +405,14 @@
   charts: [level, seasonality]
 
 - id: otomotiv/hyundai
-  title: Hyundai Assan Üretim
+  title: Hyundai Motor Türkiye Üretim
   category: otomotiv
   kaynak: { name: OSD, url: "https://www.osd.org.tr" }
   kaynak_tipi: osd
   osd_firma: HYUNDAI MOTOR TÜRKİYE
+  # OSD 2025.12 bültenine kadar bu firmayı "HYUNDAI ASSAN" adıyla listeliyordu;
+  # eski adla yazılmış 2022–2024 noktaları burası olmadan sessizce kaybolur.
+  osd_eski_adlar: [HYUNDAI ASSAN]
   unit: "adet"
   freq: monthly
   monthly_agg: sum

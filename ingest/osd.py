@@ -198,6 +198,16 @@ def seri_cek(seri, onbellek: dict | None = None, session=None,
     `onbellek` verilirse indeks ve ayrıştırılmış bülten noktaları koşu
     boyunca paylaşılır: 13 seri aynı beş PDF'i okuduğu için yoksa 65
     indirme olurdu.
+
+    Firma OSD bültenlerinde zaman içinde ad değiştirebilir (ör. HYUNDAI
+    ASSAN -> HYUNDAI MOTOR TÜRKİYE); `seri.osd_eski_adlar` verilirse eski
+    adlarla yazılmış noktalar da toplanır. Ayrıca her çekilen bülten AYRI
+    AYRI kontrol edilir: firma (hangi adıyla olursa olsun) o bültende hiç
+    yoksa RuntimeError yükselir — beş bültenden birinde kısmi kayıp olması
+    "hiç eşleşme yok" durumuna göre çok daha sık ve sessizce geçebilir,
+    bu yüzden toplam kontrolü yeterli değildir. Firmanın gerçekten henüz
+    üretime başlamadığı dönemler için kaçış yolu `start_date`: o tarihin
+    yılından ÖNCEKİ bültenler bu kontrolden muaftır.
     """
     bugun = bugun or date.today()
     onbellek = {} if onbellek is None else onbellek
@@ -206,18 +216,32 @@ def seri_cek(seri, onbellek: dict | None = None, session=None,
         onbellek["indeks"] = _indeks_cek(session)
     baglantilar = onbellek["indeks"]
 
-    tum_noktalar: list[tuple[str, str, float]] = []
+    isimler = {seri.osd_firma, *(getattr(seri, "osd_eski_adlar", None) or ())}
+    baslangic_yili = int(seri.start_date[:4]) if seri.start_date else None
+
+    kendi: dict[str, float] = {}
     for anahtar in cekilecek_bultenler(baglantilar, bugun):
         if anahtar not in onbellek:
             baytlar = _pdf_indir(baglantilar[anahtar], session)
             onbellek[anahtar] = _bulteni_ayristir(baytlar, anahtar)
-        tum_noktalar.extend(onbellek[anahtar])
 
-    kendi = {
-        tarih: deger
-        for ad, tarih, deger in tum_noktalar
-        if ad == seri.osd_firma
-    }
+        bu_bultendeki_noktalar = [
+            (ad, tarih, deger) for ad, tarih, deger in onbellek[anahtar]
+            if ad in isimler
+        ]
+        if not bu_bultendeki_noktalar:
+            bulten_yili = int(anahtar[:4])
+            if baslangic_yili is not None and bulten_yili < baslangic_yili:
+                continue  # start_date'ten önceki yıl — firma henüz yok, muaf
+            raise RuntimeError(
+                f"OSD bülteninde firma bulunamadı: {seri.osd_firma!r} "
+                f"({seri.id}) — bülten {anahtar} — katalogdaki ad(lar) "
+                "bültenle eşleşmiyor olabilir (ad değişmiş olabilir, "
+                "osd_eski_adlar'a eklemeyi düşünün)"
+            )
+        for _, tarih, deger in bu_bultendeki_noktalar:
+            kendi[tarih] = deger
+
     if not kendi:
         raise RuntimeError(
             f"OSD bültenlerinde firma bulunamadı: {seri.osd_firma!r} "

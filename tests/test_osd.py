@@ -240,3 +240,85 @@ def test_seri_cek_bilinmeyen_firmada_yukselir(monkeypatch):
                            start_date=None)
     with pytest.raises(RuntimeError, match="YOK BÖYLE FİRMA"):
         osd.seri_cek(seri, onbellek={}, bugun=date(2026, 9, 4))
+
+
+def test_seri_cek_eski_adla_eslesen_noktalari_da_toplar(monkeypatch):
+    """Firma OSD'de ad değiştirmiş olabilir (ör. HYUNDAI ASSAN -> HYUNDAI MOTOR
+    TÜRKİYE); osd_eski_adlar verilirse eski adla yazılmış noktalar da
+    toplanmalı, yoksa o dönem sessizce kaybolur."""
+    from types import SimpleNamespace
+
+    from ingest import osd
+
+    def sahte_ayristir(baytlar, anahtar):
+        if anahtar == "2025.12":
+            return [("HYUNDAI ASSAN", "2025-01-01", 100.0)]
+        return [("HYUNDAI MOTOR TÜRKİYE", "2026-01-01", 200.0)]
+
+    monkeypatch.setattr(
+        osd, "_indeks_cek",
+        lambda session=None: {"2025.12": "u1", "2026.07": "u2"},
+    )
+    monkeypatch.setattr(osd, "_pdf_indir", lambda url, session=None: b"x")
+    monkeypatch.setattr(osd, "_bulteni_ayristir", sahte_ayristir)
+
+    seri = SimpleNamespace(
+        id="otomotiv/hyundai", osd_firma="HYUNDAI MOTOR TÜRKİYE",
+        osd_eski_adlar=("HYUNDAI ASSAN",), start_date=None,
+    )
+    df = osd.seri_cek(seri, onbellek={}, bugun=date(2026, 9, 4))
+    assert set(df["date"]) == {"2025-01-01", "2026-01-01"}
+
+
+def test_seri_cek_bir_bultende_firma_yoksa_o_bulteni_belirterek_yukselir(monkeypatch):
+    """Kısmi kayıp — bazı bültenlerde firma var, birinde yoksa — artık sessiz
+    geçmemeli; hata mesajı hangi bültende bulunamadığını söylemeli."""
+    from types import SimpleNamespace
+
+    from ingest import osd
+
+    def sahte_ayristir(baytlar, anahtar):
+        if anahtar == "2025.12":
+            return [("BASKA FIRMA", "2025-01-01", 1.0)]  # KARSAN burada yok
+        return [("KARSAN", "2026-01-01", 200.0)]
+
+    monkeypatch.setattr(
+        osd, "_indeks_cek",
+        lambda session=None: {"2025.12": "u1", "2026.07": "u2"},
+    )
+    monkeypatch.setattr(osd, "_pdf_indir", lambda url, session=None: b"x")
+    monkeypatch.setattr(osd, "_bulteni_ayristir", sahte_ayristir)
+
+    seri = SimpleNamespace(
+        id="otomotiv/karsan", osd_firma="KARSAN",
+        osd_eski_adlar=None, start_date=None,
+    )
+    with pytest.raises(RuntimeError, match="2025.12"):
+        osd.seri_cek(seri, onbellek={}, bugun=date(2026, 9, 4))
+
+
+def test_seri_cek_baslangic_tarihinden_onceki_bultenler_kontrolden_muaf(monkeypatch):
+    """`start_date` verilen bir seri için ondan önceki yılların bültenlerinde
+    firma aranmaz — henüz üretime başlamamış bir firma için beklenen durum."""
+    from types import SimpleNamespace
+
+    from ingest import osd
+
+    def sahte_ayristir(baytlar, anahtar):
+        if anahtar == "2025.12":
+            return [("BASKA FIRMA", "2025-01-01", 1.0)]  # YENİ FİRMA henüz yok
+        return [("YENİ FİRMA", "2026-01-01", 50.0)]
+
+    monkeypatch.setattr(
+        osd, "_indeks_cek",
+        lambda session=None: {"2025.12": "u1", "2026.07": "u2"},
+    )
+    monkeypatch.setattr(osd, "_pdf_indir", lambda url, session=None: b"x")
+    monkeypatch.setattr(osd, "_bulteni_ayristir", sahte_ayristir)
+
+    seri = SimpleNamespace(
+        id="otomotiv/yeni-firma", osd_firma="YENİ FİRMA",
+        osd_eski_adlar=None, start_date="2026-01-01",
+    )
+    df = osd.seri_cek(seri, onbellek={}, bugun=date(2026, 9, 4))
+    assert list(df["date"]) == ["2026-01-01"]
