@@ -78,6 +78,17 @@
   evds_frequency: "5"
   charts: [seasonality, level]
 
+- id: ekonomi-makro/otomobil-satin-alma-niyeti
+  title: Otomobil Satın Alma Niyeti
+  category: ekonomi-makro
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TG2.Y17
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
 - id: ekonomi-makro/yabanci-hisse
   title: Yabancı Yatırımcı Hisse Senedi Net Alım-Satım
   category: ekonomi-makro
