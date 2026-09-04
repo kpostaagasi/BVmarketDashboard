@@ -3,6 +3,7 @@ from datetime import date
 import pytest
 
 from ingest.osd import (
+    ASGARI_FIRMA_SAYISI,
     ay_toplamlari,
     bulten_baglantilari,
     cekilecek_bultenler,
@@ -68,11 +69,23 @@ def test_cekilecek_bultenler_gecmis_yil_siniri_uygular():
 
 
 def test_cekilecek_bultenler_ocakta_tekrar_secmez():
-    """Ocak'ta güncel bülten önceki yılın Aralık'ıdır; iki kez seçilmemeli."""
+    """Ocak'ta en güncel bülten önceki yılın Aralık'ıdır (2025.12); bu, yıl
+    başına bir kez seçilir ve Aralık listesiyle çakışıp tekrar üretmez."""
     ocak = {"2024.12": "u3", "2025.12": "u4"}
     secilen = cekilecek_bultenler(ocak, date(2026, 1, 10))
-    assert secilen == sorted(set(secilen))
-    assert len(secilen) == len(set(secilen))
+    assert secilen == ["2024.12", "2025.12"]
+
+
+def test_cekilecek_bultenler_aralik_olmayan_tek_bulten_de_secilir():
+    """Bir yılın indeks satırı Aralık değilse (ör. yalnızca `.11` varsa) o
+    yıl yine seçilmeli; yalnızca `.endswith(".12")`'ye güvenmek o yılı
+    tamamen düşürür ve hata vermez."""
+    baglantilar = {
+        "2022.12": "u1", "2023.12": "u2", "2024.11": "u3",
+        "2025.12": "u4", "2026.07": "u5",
+    }
+    secilen = cekilecek_bultenler(baglantilar, date(2026, 9, 4))
+    assert secilen == ["2022.12", "2023.12", "2024.11", "2025.12", "2026.07"]
 
 
 # --- Ad ve sayı ayrıştırma ---
@@ -169,21 +182,62 @@ def test_ay_toplamlari_toplam_sutununu_okur():
     assert ay_toplamlari(tablo) == {"FORD OTOSAN": 36548.0}
 
 
+# dogrula testleri ASGARI_FIRMA_SAYISI (13) eşiğini geçmek için 13 firmalık
+# tam bir TOPLAM sözlüğü/nokta listesi kullanır — aksi halde yeni sayı
+# kontrolü, testin asıl kontrol ettiği duruma ulaşılmadan devreye girer.
+_13_FIRMA = [f"FIRMA{i:02d}" for i in range(1, 12)] + ["FORD OTOSAN", "TOFAŞ"]
+
+
+def _tam_toplamlar(**gecersiz):
+    d = {ad: 1000.0 for ad in _13_FIRMA}
+    d.update(gecersiz)
+    return d
+
+
+def _tam_noktalar(ay_tarihi, haric=(), **gecersiz):
+    degerler = {ad: 1000.0 for ad in _13_FIRMA}
+    degerler.update(gecersiz)
+    return [
+        (ad, ay_tarihi, deger) for ad, deger in degerler.items()
+        if ad not in haric
+    ]
+
+
 def test_dogrula_tutan_toplamda_sessiz():
-    noktalar = [("FORD OTOSAN", "2026-07-01", 36548.0)]
-    dogrula(noktalar, {"FORD OTOSAN": 36548.0}, "2026-07-01")
+    ay = "2026-07-01"
+    dogrula(_tam_noktalar(ay), _tam_toplamlar(), ay)
 
 
 def test_dogrula_tutmayan_toplamda_yukselir():
     """Şablon değişirse sessizce eksik veri üretmek yerine kırılmalı."""
-    noktalar = [("FORD OTOSAN", "2026-07-01", 30000.0)]
+    ay = "2026-07-01"
+    noktalar = _tam_noktalar(ay, **{"FORD OTOSAN": 30000.0})
     with pytest.raises(RuntimeError, match="FORD OTOSAN"):
-        dogrula(noktalar, {"FORD OTOSAN": 36548.0}, "2026-07-01")
+        dogrula(noktalar, _tam_toplamlar(), ay)
 
 
 def test_dogrula_eksik_firmada_yukselir():
+    ay = "2026-07-01"
+    noktalar = _tam_noktalar(ay, haric=("TOFAŞ",))
     with pytest.raises(RuntimeError, match="TOFAŞ"):
-        dogrula([], {"TOFAŞ": 100.0}, "2026-07-01")
+        dogrula(noktalar, _tam_toplamlar(), ay)
+
+
+def test_dogrula_bos_toplamlarda_yukselir():
+    """OSD 2. sayfa yapısı değişip `toplamlar` boş dönerse (ör. sütun
+    kayması sonucu `sayi_parse` hepsi için None dönerse), dilimin tek
+    güvenlik ağı sessizce no-op'a düşmemeli."""
+    with pytest.raises(RuntimeError, match=str(ASGARI_FIRMA_SAYISI)):
+        dogrula([("FORD OTOSAN", "2026-07-01", 100.0)], {}, "2026-07-01")
+
+
+def test_dogrula_eksik_firma_sayisinda_yukselir():
+    """Beklenenden az firma (ör. 5) bulunması da şablon değişikliği
+    sinyalidir — yalnızca tamamen boş sözlük değil."""
+    ay = "2026-07-01"
+    az_toplamlar = {ad: 1000.0 for ad in _13_FIRMA[:5]}
+    with pytest.raises(RuntimeError, match=str(ASGARI_FIRMA_SAYISI)):
+        dogrula(_tam_noktalar(ay), az_toplamlar, ay)
 
 
 # --- Ağ kabuğu: seri_cek ---
@@ -295,6 +349,31 @@ def test_seri_cek_bir_bultende_firma_yoksa_o_bulteni_belirterek_yukselir(monkeyp
     )
     with pytest.raises(RuntimeError, match="2025.12"):
         osd.seri_cek(seri, onbellek={}, bugun=date(2026, 9, 4))
+
+
+def test_seri_cek_ayni_bultende_alias_carpismasi_toplanir(monkeypatch):
+    """Aynı bültende hem eski hem yeni ad aynı ay için nokta üretirse biri
+    diğerini sessizce ezmemeli — TOPLANMALI (100 + 5000 = 5100, 5000 değil)."""
+    from types import SimpleNamespace
+
+    from ingest import osd
+
+    def sahte_ayristir(baytlar, anahtar):
+        return [
+            ("ESKİ AD", "2026-01-01", 100.0),
+            ("YENİ AD", "2026-01-01", 5000.0),
+        ]
+
+    monkeypatch.setattr(osd, "_indeks_cek", lambda session=None: {"2026.07": "u"})
+    monkeypatch.setattr(osd, "_pdf_indir", lambda url, session=None: b"x")
+    monkeypatch.setattr(osd, "_bulteni_ayristir", sahte_ayristir)
+
+    seri = SimpleNamespace(
+        id="otomotiv/test", osd_firma="YENİ AD",
+        osd_eski_adlar=("ESKİ AD",), start_date=None,
+    )
+    df = osd.seri_cek(seri, onbellek={}, bugun=date(2026, 9, 4))
+    assert df["value"].iloc[0] == 5100.0
 
 
 def test_seri_cek_baslangic_tarihinden_onceki_bultenler_kontrolden_muaf(monkeypatch):

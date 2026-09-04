@@ -57,21 +57,23 @@ def bulten_baglantilari(html: str) -> dict[str, str]:
 
 
 def cekilecek_bultenler(baglantilar: dict[str, str], bugun: date) -> list[str]:
-    """Her yılın Aralık bülteni + en güncel bülten.
+    """Yıl başına en güncel bülteni seçer.
 
-    Bir bülten o yılın tüm aylarını taşıdığı için yıl başına bir dosya yeter.
-    Ocak'ta en güncel bülten zaten önceki yılın Aralık'ıdır; küme kullanımı
-    tekrarı önler.
+    Bir bülten o yılın tüm aylarını taşıdığı için yıl başına bir dosya
+    yeter. Önceki sürüm yalnızca `.12` (Aralık) bültenlerini seçiyordu;
+    indeks bir yıl için Aralık yerine başka bir ay sunarsa (ör. `.11`) o
+    yıl sessizce tamamen düşüyordu. Burada varsayım yok: her yıl için
+    indeksteki EN GÜNCEL bülten seçilir (ay ne olursa olsun). Bu, eski
+    `max()` özel durumunu da yutar — cari yılın en güncel bülteni zaten
+    o yılın seçimi olur.
     """
     en_eski_yil = bugun.year - VARSAYILAN_GECMIS_YIL
-    secilen = {
-        a for a in baglantilar
-        if a.endswith(".12") and int(a[:4]) >= en_eski_yil
-    }
-    guncel = max(baglantilar)
-    if int(guncel[:4]) >= en_eski_yil:
-        secilen.add(guncel)
-    return sorted(secilen)
+    en_iyi: dict[int, str] = {}
+    for a in baglantilar:
+        y = int(a[:4])
+        if y >= en_eski_yil:
+            en_iyi[y] = max(en_iyi.get(y, ""), a)
+    return sorted(en_iyi.values())
 
 
 def firma_adini_normalize(ham: str) -> str:
@@ -136,12 +138,26 @@ def ay_toplamlari(s2_tablosu: list) -> dict[str, float]:
     return toplamlar
 
 
+# Bülten 13 firma içerir. `toplamlar` bundan az firma taşıyorsa (ör. OSD
+# 2. sayfaya bir sütun eklerse/araya sayfa sokarsa `sayi_parse` tüm satırlar
+# için None döner ve `ay_toplamlari` neredeyse boş kalır) bu, döngünün hiç
+# dönmediği (ya da az döndüğü) anlamına gelir — dilimin TEK güvenlik ağı
+# sessizce no-op'a düşer. Bu yüzden döngüden önce sayı ayrıca kontrol edilir.
+ASGARI_FIRMA_SAYISI = 13
+
+
 def dogrula(
     noktalar: list[tuple[str, str, float]],
     toplamlar: dict[str, float],
     ay_tarihi: str,
 ) -> None:
     """6–9. sayfa toplamını 2. sayfanın TOPLAM sütunuyla karşılaştırır."""
+    if len(toplamlar) < ASGARI_FIRMA_SAYISI:
+        raise RuntimeError(
+            f"OSD öz-doğrulama: 2. sayfada yalnızca {len(toplamlar)} firma "
+            f"bulundu, beklenen en az {ASGARI_FIRMA_SAYISI} — sayfa yapısı "
+            "değişmiş olabilir (sütun kayması, araya sayfa eklenmesi vb.)"
+        )
     ay_noktalari = {ad: deger for ad, tarih, deger in noktalar if tarih == ay_tarihi}
     for ad, beklenen in toplamlar.items():
         bulunan = ay_noktalari.get(ad)
@@ -239,8 +255,15 @@ def seri_cek(seri, onbellek: dict | None = None, session=None,
                 "bültenle eşleşmiyor olabilir (ad değişmiş olabilir, "
                 "osd_eski_adlar'a eklemeyi düşünün)"
             )
+        # Aynı bültende hem eski hem yeni ad AYNI ay için nokta üretebilir
+        # (alias çakışması); üzerine yazmak yerine TOPLANIR, aksi halde
+        # biri sessizce kaybolur. Farklı bültenler arasında ise en son
+        # işlenen bültenin değeri geçerli olur (revizyonları yakalamak
+        # için istenen davranış budur).
+        bu_bulten: dict[str, float] = defaultdict(float)
         for _, tarih, deger in bu_bultendeki_noktalar:
-            kendi[tarih] = deger
+            bu_bulten[tarih] += deger
+        kendi.update(bu_bulten)
 
     if not kendi:
         raise RuntimeError(
