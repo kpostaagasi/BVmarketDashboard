@@ -18,7 +18,7 @@ GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "level", "composition"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
-GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias"}
+GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias", "osd"}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 
 # Hangi kaynak tipi hangi alanı taşıyabilir. Bir alan burada listelenmemişse o
@@ -39,6 +39,10 @@ KAYNAK_ALANLARI = {
     "epias": {
         "zorunlu": ("epias_ucu",),
         "istege_bagli": ("epias_alani", "epias_bilesenler", "start_date", "olcek"),
+    },
+    "osd": {
+        "zorunlu": ("osd_firma",),
+        "istege_bagli": ("start_date",),
     },
 }
 
@@ -83,6 +87,7 @@ class Seri:
     epias_ucu: str | None = None
     epias_alani: str | None = None
     epias_bilesenler: dict[str, tuple[str, ...]] | None = None
+    osd_firma: str | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
     yayin_notu: str | None = None
@@ -176,6 +181,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
                 if "epias_bilesenler" in ham
                 else None
             ),
+            osd_firma=ham.get("osd_firma"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),

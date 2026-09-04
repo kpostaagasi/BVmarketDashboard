@@ -562,3 +562,29 @@ def test_otomobil_satin_alma_niyeti_serisi_tanimli():
     assert seri.evds_frequency == "5"
     assert seri.freq == "monthly"
     assert seri.category == "ekonomi-makro"
+
+
+def test_osd_gecerli_kaynak_tipi():
+    from core.catalog import GECERLI_KAYNAK_TIPLERI, KAYNAK_ALANLARI
+
+    assert "osd" in GECERLI_KAYNAK_TIPLERI
+    assert "osd" in KAYNAK_ALANLARI
+
+
+def test_osd_serisi_firma_ister():
+    with pytest.raises(KatalogHatasi, match="osd_firma"):
+        _dogrula_ham(
+            _ham_seri(kaynak_tipi="osd", evds_code=None, evds_frequency=None)
+        )
+
+
+def test_osd_serisi_evds_alani_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="evds_code"):
+        _dogrula_ham(
+            _ham_seri(kaynak_tipi="osd", osd_firma="FORD OTOSAN", evds_frequency=None)
+        )
+
+
+def test_evds_serisi_osd_firma_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="osd_firma"):
+        _dogrula_ham(_ham_seri(osd_firma="FORD OTOSAN"))
