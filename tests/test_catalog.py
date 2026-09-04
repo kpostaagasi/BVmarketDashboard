@@ -28,7 +28,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 26
+    assert len(serileri_yukle()) == 27
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -427,7 +427,7 @@ def test_gercek_katalog_alan_sahipligini_gecer():
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 26
+        assert len(serileri_yukle()) == 27
     finally:
         serileri_yukle.cache_clear()
 
@@ -550,3 +550,15 @@ def test_uretim_serisi_basligi_net_ithalati_belirtir():
     from core.catalog import seri_getir
 
     assert "ithalat" in seri_getir("elektrik/uretim").title.lower()
+
+
+def test_otomobil_satin_alma_niyeti_serisi_tanimli():
+    """TP.TG2.Y17, mevcut tüketici güven serisiyle (TP.TG2.Y01) aynı
+    TÜİK/TCMB tüketici eğilim anketinden gelir — aynı kategoriye girer."""
+    from core.catalog import seri_getir
+
+    seri = seri_getir("ekonomi-makro/otomobil-satin-alma-niyeti")
+    assert seri.evds_code == "TP.TG2.Y17"
+    assert seri.evds_frequency == "5"
+    assert seri.freq == "monthly"
+    assert seri.category == "ekonomi-makro"
