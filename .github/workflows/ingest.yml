@@ -21,7 +21,7 @@ jobs:
           cache: pip
 
       - name: Bağımlılıkları kur
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-ingest.txt
 
       - name: Verileri çek
         env:
