@@ -24,3 +24,9 @@
   note: >-
     Üretim ve PTF saatlik yayımlanır; üretim günlük toplama, PTF günlük
     ortalamaya indirgenmiştir.
+- slug: otomotiv
+  title: Otomotiv
+  pano: [otomotiv/ford-otosan, otomotiv/tofas, otomotiv/turk-traktor, otomotiv/karsan]
+  note: >-
+    Üretim adetleri OSD aylık üretim bültenlerinden alınır; bülten genelde
+    takip eden ayın 12–18'i arasında yayımlanır.

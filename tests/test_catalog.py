@@ -24,11 +24,12 @@ def test_kategori_sirasi():
         "insaat",
         "kredi-karti",
         "elektrik",
+        "otomotiv",
     ]
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 27
+    assert len(serileri_yukle()) == 40
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -103,7 +104,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo", "epias"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -422,12 +423,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 26 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut 39 seriyi reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 27
+        assert len(serileri_yukle()) == 40
     finally:
         serileri_yukle.cache_clear()
 
@@ -562,3 +563,48 @@ def test_otomobil_satin_alma_niyeti_serisi_tanimli():
     assert seri.evds_frequency == "5"
     assert seri.freq == "monthly"
     assert seri.category == "ekonomi-makro"
+
+
+def test_osd_gecerli_kaynak_tipi():
+    from core.catalog import GECERLI_KAYNAK_TIPLERI, KAYNAK_ALANLARI
+
+    assert "osd" in GECERLI_KAYNAK_TIPLERI
+    assert "osd" in KAYNAK_ALANLARI
+
+
+def test_osd_serisi_firma_ister():
+    with pytest.raises(KatalogHatasi, match="osd_firma"):
+        _dogrula_ham(
+            _ham_seri(kaynak_tipi="osd", evds_code=None, evds_frequency=None)
+        )
+
+
+def test_osd_serisi_evds_alani_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="evds_code"):
+        _dogrula_ham(
+            _ham_seri(kaynak_tipi="osd", osd_firma="FORD OTOSAN", evds_frequency=None)
+        )
+
+
+def test_evds_serisi_osd_firma_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="osd_firma"):
+        _dogrula_ham(_ham_seri(osd_firma="FORD OTOSAN"))
+
+
+def test_otomotiv_kategorisi_on_uc_seri_icerir():
+    from core.catalog import seri_listele
+
+    seriler = seri_listele("otomotiv")
+    assert len(seriler) == 13
+    assert all(s.kaynak_tipi == "osd" for s in seriler)
+    assert all(s.osd_firma for s in seriler)
+
+
+def test_otomotiv_panosu_portfoy_firmalarini_gosterir():
+    from core.catalog import kategorileri_yukle
+
+    (kategori,) = [k for k in kategorileri_yukle() if k.slug == "otomotiv"]
+    assert kategori.pano == (
+        "otomotiv/ford-otosan", "otomotiv/tofas",
+        "otomotiv/turk-traktor", "otomotiv/karsan",
+    )

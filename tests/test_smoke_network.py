@@ -143,3 +143,18 @@ def test_yahoo_serisi_nokta_donduruyor():
     df = seri_cek(seri_getir("emtia-enerji/brent"))
     assert not df.empty
     assert list(df.columns) == ["date", "value"]
+
+
+def test_osd_indeksi_bulten_baglantisi_donduruyor():
+    """İndeks yapısı değişirse ingest kırılmadan önce burada görülür."""
+    import requests
+
+    from ingest.osd import INDEKS_URL, ZAMAN_ASIMI, bulten_baglantilari
+
+    yanit = requests.get(INDEKS_URL, timeout=ZAMAN_ASIMI)
+    assert yanit.status_code == 200
+
+    baglantilar = bulten_baglantilari(yanit.text)
+    assert baglantilar, "hiç bülten bağlantısı yok"
+    assert all(u.endswith(".pdf") for u in baglantilar.values())
+    assert all(u.startswith("https://www.osd.org.tr/") for u in baglantilar.values())
