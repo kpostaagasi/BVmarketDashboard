@@ -315,3 +315,146 @@
   monthly_agg: sum
   olcek: 0.001
   charts: [composition]
+
+- id: otomotiv/ford-otosan
+  title: Ford Otosan Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: FORD OTOSAN
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/tofas
+  title: Tofaş Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: TOFAŞ
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/turk-traktor
+  title: Türk Traktör Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: TÜRK TRAKTÖR
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/karsan
+  title: Karsan Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: KARSAN
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/otokar
+  title: Otokar Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/anadolu-isuzu
+  title: Anadolu Isuzu Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/oyak-renault
+  title: Oyak Renault Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: OYAK RENAULT
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/toyota
+  title: Toyota Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: TOYOTA
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/hyundai
+  title: Hyundai Assan Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: HYUNDAI MOTOR TÜRKİYE
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/mercedes-benz
+  title: Mercedes-Benz Türk Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: M. BENZ TÜRK
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/man
+  title: MAN Türkiye Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: MAN TÜRKİYE
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/temsa
+  title: Temsa Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: TEMSA
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: otomotiv/hattat-traktor
+  title: Hattat Traktör Üretim
+  category: otomotiv
+  kaynak: { name: OSD, url: "https://www.osd.org.tr" }
+  kaynak_tipi: osd
+  osd_firma: HATTAT TRAKTÖR
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [level, seasonality]

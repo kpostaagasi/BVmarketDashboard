@@ -184,3 +184,59 @@ def test_dogrula_tutmayan_toplamda_yukselir():
 def test_dogrula_eksik_firmada_yukselir():
     with pytest.raises(RuntimeError, match="TOFAŞ"):
         dogrula([], {"TOFAŞ": 100.0}, "2026-07-01")
+
+
+# --- Ağ kabuğu: seri_cek ---
+
+def test_seri_cek_onbellegi_paylasir(monkeypatch):
+    """13 seri aynı beş PDF'i paylaşır; ikinci seri hiç indirmemeli."""
+    from types import SimpleNamespace
+
+    from ingest import osd
+
+    indirilenler = []
+
+    def sahte_indir(url, session=None):
+        indirilenler.append(url)
+        return b"sahte-pdf"
+
+    def sahte_ayristir(baytlar, anahtar):
+        return [("FORD OTOSAN", "2026-01-01", 100.0),
+                ("TOFAŞ", "2026-01-01", 50.0)]
+
+    monkeypatch.setattr(osd, "_indeks_cek", lambda session=None: {"2026.07": "u"})
+    monkeypatch.setattr(osd, "_pdf_indir", sahte_indir)
+    monkeypatch.setattr(osd, "_bulteni_ayristir", sahte_ayristir)
+
+    onbellek: dict = {}
+    ford = SimpleNamespace(id="otomotiv/ford-otosan", osd_firma="FORD OTOSAN",
+                           start_date=None)
+    tofas = SimpleNamespace(id="otomotiv/tofas", osd_firma="TOFAŞ",
+                            start_date=None)
+
+    df1 = osd.seri_cek(ford, onbellek=onbellek, bugun=date(2026, 9, 4))
+    df2 = osd.seri_cek(tofas, onbellek=onbellek, bugun=date(2026, 9, 4))
+
+    assert len(indirilenler) == 1  # ikinci seri önbellekten
+    assert list(df1.columns) == ["date", "value"]
+    assert df1["value"].iloc[0] == 100.0
+    assert df2["value"].iloc[0] == 50.0
+
+
+def test_seri_cek_bilinmeyen_firmada_yukselir(monkeypatch):
+    """Katalogdaki ad bültende yoksa sessizce boş seri yazılmamalı."""
+    from types import SimpleNamespace
+
+    from ingest import osd
+
+    monkeypatch.setattr(osd, "_indeks_cek", lambda session=None: {"2026.07": "u"})
+    monkeypatch.setattr(osd, "_pdf_indir", lambda url, session=None: b"x")
+    monkeypatch.setattr(
+        osd, "_bulteni_ayristir",
+        lambda baytlar, anahtar: [("FORD OTOSAN", "2026-01-01", 100.0)],
+    )
+
+    seri = SimpleNamespace(id="otomotiv/yok", osd_firma="YOK BÖYLE FİRMA",
+                           start_date=None)
+    with pytest.raises(RuntimeError, match="YOK BÖYLE FİRMA"):
+        osd.seri_cek(seri, onbellek={}, bugun=date(2026, 9, 4))

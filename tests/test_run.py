@@ -140,3 +140,27 @@ def test_main_epias_serileri_tek_onbellek_paylasir(monkeypatch):
     assert len(gorulen_onbellekler) >= 3  # üç epias serisi var
     assert all(o is not None for o in gorulen_onbellekler)
     assert all(o is gorulen_onbellekler[0] for o in gorulen_onbellekler)
+
+
+def test_cek_osd_serisini_osd_modulune_yonlendirir(monkeypatch):
+    import dataclasses
+
+    from core.catalog import seri_getir
+    from ingest import run
+
+    cagrildi = {}
+
+    def sahte_seri_cek(seri, onbellek=None, session=None):
+        cagrildi["id"] = seri.id
+        cagrildi["onbellek"] = onbellek
+        return "DF"
+
+    monkeypatch.setattr(run.osd, "seri_cek", sahte_seri_cek)
+    seri = dataclasses.replace(
+        seri_getir("enflasyon/tufe-genel"),
+        kaynak_tipi="osd", osd_firma="FORD OTOSAN",
+        evds_code=None, evds_frequency=None,
+    )
+    onbellek: dict = {}
+    assert run._cek(seri, "ANAHTAR", None, None, None, onbellek) == "DF"
+    assert cagrildi["onbellek"] is onbellek

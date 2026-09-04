@@ -15,11 +15,12 @@ import requests
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import epias, evds, yahoo
+from ingest import epias, evds, osd, yahoo
 
 
 def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
-         epias_onbellek: dict | None = None):
+         epias_onbellek: dict | None = None,
+         osd_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir."""
     if seri.kaynak_tipi == "evds":
         return evds.seri_cek(seri, api_key, session=oturum)
@@ -27,6 +28,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         return yahoo.seri_cek(seri, session=oturum)
     if seri.kaynak_tipi == "epias":
         return epias.seri_cek(seri, tgt, session=oturum, onbellek=epias_onbellek)
+    if seri.kaynak_tipi == "osd":
+        return osd.seri_cek(seri, onbellek=osd_onbellek, session=oturum)
     raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
 
 
@@ -74,6 +77,8 @@ def main() -> int:
     # Aynı EPİAŞ ucunu paylaşan seriler (uretim + uretim-kompozisyon) yanıtı
     # bir kez çeksin diye koşu başına tek önbellek (bkz. epias.seri_cek).
     epias_onbellek: dict = {}
+    # 13 OSD serisi aynı beş bülteni paylaşır (bkz. osd.seri_cek).
+    osd_onbellek: dict = {}
 
     with requests.Session() as oturum:
         epias_seriler = [s for s in seriler if s.kaynak_tipi == "epias"]
@@ -96,7 +101,7 @@ def main() -> int:
             if seri.kaynak_tipi == "epias" and tgt is None:
                 continue  # giriş başarısız — hatalar listesine zaten eklendi
             try:
-                df = _cek(seri, api_key, tgt, oturum, epias_onbellek)
+                df = _cek(seri, api_key, tgt, oturum, epias_onbellek, osd_onbellek)
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")
                 print(f"  ✓ {seri.id} — {adet} nokta")

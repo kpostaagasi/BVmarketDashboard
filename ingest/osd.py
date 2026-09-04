@@ -16,9 +16,14 @@ veri üretmektense ingest'in kırılması istenir.
 
 from __future__ import annotations
 
+import io
 import re
 from collections import defaultdict
 from datetime import date
+
+import pandas as pd
+import pdfplumber
+import requests
 
 TABAN = "https://www.osd.org.tr"
 INDEKS_URL = f"{TABAN}/osd-yayinlari/otomotiv-sanayii-uretim-bultenleri"
@@ -150,3 +155,76 @@ def dogrula(
                 f"OSD öz-doğrulama: {ad} {ay_tarihi} — 6–9. sayfa toplamı "
                 f"{bulunan:,.0f}, 2. sayfa TOPLAM {beklenen:,.0f}"
             )
+
+
+ZAMAN_ASIMI = 60
+_SAYFA_FIRMA_AY = (5, 6, 7, 8)  # 6–9. sayfalar (0-tabanlı)
+_SAYFA_AY_TOPLAM = 1            # 2. sayfa
+
+
+def _indeks_cek(session=None) -> dict[str, str]:
+    http = session or requests
+    yanit = http.get(INDEKS_URL, timeout=ZAMAN_ASIMI)
+    if yanit.status_code != 200:
+        raise RuntimeError(f"OSD indeksi HTTP {yanit.status_code}")
+    return bulten_baglantilari(yanit.text)
+
+
+def _pdf_indir(url: str, session=None) -> bytes:
+    http = session or requests
+    yanit = http.get(url, timeout=ZAMAN_ASIMI)
+    if yanit.status_code != 200:
+        raise RuntimeError(f"OSD bülteni HTTP {yanit.status_code} ({url})")
+    return yanit.content
+
+
+def _bulteni_ayristir(baytlar: bytes, anahtar: str) -> list[tuple[str, str, float]]:
+    """Bir bültenin firma×ay noktalarını çıkarır ve öz-doğrulamayı koşar."""
+    yil, ay = int(anahtar[:4]), int(anahtar[5:7])
+    with pdfplumber.open(io.BytesIO(baytlar)) as pdf:
+        tablolar = [
+            t for i in _SAYFA_FIRMA_AY for t in pdf.pages[i].extract_tables()
+        ]
+        noktalar = firma_aylik_noktalari(tablolar, yil)
+        toplamlar = ay_toplamlari(pdf.pages[_SAYFA_AY_TOPLAM].extract_tables()[0])
+    dogrula(noktalar, toplamlar, f"{yil}-{ay:02d}-01")
+    return noktalar
+
+
+def seri_cek(seri, onbellek: dict | None = None, session=None,
+             bugun: date | None = None) -> pd.DataFrame:
+    """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı).
+
+    `onbellek` verilirse indeks ve ayrıştırılmış bülten noktaları koşu
+    boyunca paylaşılır: 13 seri aynı beş PDF'i okuduğu için yoksa 65
+    indirme olurdu.
+    """
+    bugun = bugun or date.today()
+    onbellek = {} if onbellek is None else onbellek
+
+    if "indeks" not in onbellek:
+        onbellek["indeks"] = _indeks_cek(session)
+    baglantilar = onbellek["indeks"]
+
+    tum_noktalar: list[tuple[str, str, float]] = []
+    for anahtar in cekilecek_bultenler(baglantilar, bugun):
+        if anahtar not in onbellek:
+            baytlar = _pdf_indir(baglantilar[anahtar], session)
+            onbellek[anahtar] = _bulteni_ayristir(baytlar, anahtar)
+        tum_noktalar.extend(onbellek[anahtar])
+
+    kendi = {
+        tarih: deger
+        for ad, tarih, deger in tum_noktalar
+        if ad == seri.osd_firma
+    }
+    if not kendi:
+        raise RuntimeError(
+            f"OSD bültenlerinde firma bulunamadı: {seri.osd_firma!r} "
+            f"({seri.id}) — katalogdaki ad bültenle eşleşmiyor olabilir"
+        )
+
+    df = pd.DataFrame(sorted(kendi.items()), columns=["date", "value"])
+    if seri.start_date:
+        df = df[df["date"] >= seri.start_date]
+    return df.reset_index(drop=True)
