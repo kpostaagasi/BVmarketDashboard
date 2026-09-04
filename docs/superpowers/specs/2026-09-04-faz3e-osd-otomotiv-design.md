@@ -37,10 +37,14 @@ Canlı bültene karşı ölçüldü (Temmuz 2026 bülteni, 15 sayfa) — uydurma
    sayfada, aynı 26×14 tablo şeklinde, aynı başlık düzeninde.
 4. **URL'ler türetilemez.** İndirme yolu yükleme tarihini gömüyor
    (`/saved-files/PDF/2026/08/17/Otomotiv_Sanayii_Uretim_Bulteni-2026.07.pdf`),
-   dolayısıyla indeks sayfası kazınmak zorunda.
+   dolayısıyla indeks sayfası kazınmak zorunda. HTML'de yollar ters bölü
+   içeriyor (`/saved-files\PDF\2026\08\17\...`) ve düz bölüye çevrilmeli.
 5. **Eski PDF'lerde font kodlaması bozuk.** Aralık 2024 bülteninde başlıklar
    Türkçe karakterlerde `\x00` sızdırıyor (`"T\x00pler"`). Sayısal hücreler
    temiz. Firma adı normalizasyonu zorunlu.
+6. **Dosya adı tutarsız.** 2022 alt çizgi (`Bulteni_2022.12.pdf`), 2023 ve
+   sonrası tire (`Bulteni-2023.12.pdf`) kullanıyor. Desen ikisini de kabul
+   etmeli.
 
 ### 13 firma (bültendeki ham adlarıyla)
 
@@ -54,14 +58,22 @@ Canlı bültene karşı ölçüldü (Temmuz 2026 bülteni, 15 sayfa) — uydurma
 
 İki yol vardı:
 
-| Yol | Kaynak | 5 yıl için PDF sayısı |
+| Yol | Kaynak | 2022-01→bugün için PDF sayısı |
 |---|---|---|
-| 2. sayfa (tek ay, TOPLAM hazır) | her ay bir bülten | **60** |
-| **6–9. sayfa (firma × ay)** | bir bülten o yılın tamamı | **6** |
+| 2. sayfa (tek ay, TOPLAM hazır) | her ay bir bülten | **~56** |
+| **6–9. sayfa (firma × ay)** | bir bülten o yılın tamamı | **5** |
 
 İkincisi seçildi. Kural: **her yılın Aralık bülteni** o yılın 12 ayını taşır;
-**en güncel bülten** cari yılı taşır. 2021–2025 için beş Aralık bülteni + cari
-yıl için güncel bülten = altı PDF.
+**en güncel bülten** cari yılı taşır.
+
+İndeks sayfası yıl başına tam olarak bir dosya sunuyor ve doğrulandı:
+`2022.12` (alt çizgili adlandırma), `2023.12`, `2024.12`, `2025.12` (tireli)
+ve `2026.07` (güncel) — **beş PDF, 2022-01'den cari aya**. 2022 bülteni de
+modern formatta (15 sayfa, s2 15×19, s6 26×14, `TOPLAM Total` sütunu yerinde).
+
+**2021 ve öncesi kapsam dışı:** o yıllar `Üretim Bülteni _YYYY.pdf` biçiminde
+farklı adlandırmayla ve doğrulanmamış iç formatla duruyor. Dahil etmek ayrı
+bir doğrulama ve ikinci bir ayrıştırma yolu gerektirirdi.
 
 Bu, deponun mevcut **"her koşuda tam pencereyi yeniden çek"** ilkesini korur:
 revizyonlar yakalanır, CSV deterministik olarak yeniden üretilir. Artımlı
@@ -115,9 +127,9 @@ def dogrula(pdf, noktalar) -> None                     # s2 TOPLAM ile karşıla
 def seri_cek(seri, onbellek=None, session=None, bugun=None) -> pd.DataFrame
 ```
 
-**PDF önbelleği:** 13 seri aynı altı PDF'i paylaşır. Koşu başına tek `dict`
+**PDF önbelleği:** 13 seri aynı beş PDF'i paylaşır. Koşu başına tek `dict`
 paylaşılır (Faz 3c'deki EPİAŞ dilim önbelleği kalıbı birebir); yoksa 78
-indirme olurdu. Önbellek isteğe bağlıdır; verilmezse davranış değişmez.
+indirme olurdu (13×5). Önbellek isteğe bağlıdır; verilmezse davranış değişmez.
 
 ### Katalog
 
@@ -143,7 +155,7 @@ Kategori panosu: portföy ilgisi olan dört firma —
    bülten bağlantısı bulunduğu ve URL'in `.pdf` ile bittiği doğrulanır.
 3. Gerçek veri bir kez çekilir. Kabul ölçütleri:
    - 13 seri de nokta üretir
-   - Tarih aralığı ~2021-01 → cari ay
+   - Tarih aralığı 2022-01 → cari ay
    - Tarihler tekil ve artan
    - Ford Otosan aylık üretimi ~20.000–45.000 adet bandında
    - Türk Traktör ~1.000–5.000 bandında
