@@ -21,10 +21,11 @@ GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias", "osd"}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 
-# Hangi kaynak tipi hangi alanı taşıyabilir. Bir alan burada listelenmemişse o
-# kaynak için YASAKTIR: sessizce yok sayılan bir alan (ör. yalnızca epias'ın
-# onurlandırdığı `olcek`) grafiği fark edilmeden yanlış ölçekte çizdirir.
-# Yeni bir kaynak tipi eklemek, üç mevcut tipe ayrı ayrı red kuralı yazmak
+# Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
+# listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
+# (ör. yalnızca yahoo'nun onurlandırdığı `yahoo_symbol`) seriyi yanlış
+# kaynaktan çektirir ya da fark edilmeden yok sayılır.
+# Yeni bir kaynak tipi eklemek, mevcut tiplere ayrı ayrı red kuralı yazmak
 # değil, buraya bir satır eklemektir.
 KAYNAK_ALANLARI = {
     "evds": {
@@ -38,7 +39,7 @@ KAYNAK_ALANLARI = {
     },
     "epias": {
         "zorunlu": ("epias_ucu",),
-        "istege_bagli": ("epias_alani", "epias_bilesenler", "start_date", "olcek"),
+        "istege_bagli": ("epias_alani", "epias_bilesenler", "start_date"),
     },
     "osd": {
         "zorunlu": ("osd_firma",),
@@ -46,10 +47,20 @@ KAYNAK_ALANLARI = {
     },
 }
 
-TIPE_OZGU_ALANLAR = frozenset(
-    alan
-    for tanim in KAYNAK_ALANLARI.values()
-    for alan in tanim["zorunlu"] + tanim["istege_bagli"]
+# Tipe değil, kataloğa ait alanlar: kaynak tipi ne olursa olsun
+# onurlandırılırlar (`olcek` → `ingest.run.olcekle`, `gecikme_gunu` →
+# `core.takvim`), dolayısıyla hiçbir tip için yasak değildir. Faz 3f'te
+# `olcek` buraya taşındı: EVDS serilerinin bir kısmı "Bin TL"/"Bin USD"
+# cinsinden gelir ve ölçeklenmeden KPI kartında okunamaz.
+ORTAK_ALANLAR = frozenset({"olcek", "gecikme_gunu"})
+
+TIPE_OZGU_ALANLAR = (
+    frozenset(
+        alan
+        for tanim in KAYNAK_ALANLARI.values()
+        for alan in tanim["zorunlu"] + tanim["istege_bagli"]
+    )
+    - ORTAK_ALANLAR
 )
 
 
@@ -93,6 +104,7 @@ class Seri:
     start_date: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
+    gecikme_gunu: int | None = None
 
 
 def _alan_verilmis(seri: Seri, alan: str) -> bool:
@@ -190,6 +202,9 @@ def serileri_yukle() -> tuple[Seri, ...]:
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
             olcek=float(ham["olcek"]) if "olcek" in ham else None,
+            gecikme_gunu=(
+                int(ham["gecikme_gunu"]) if "gecikme_gunu" in ham else None
+            ),
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)
@@ -255,6 +270,13 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
     if seri.olcek is not None and seri.olcek <= 0:
         raise KatalogHatasi(
             f"{seri.id}: olcek pozitif olmalı (verilen: {seri.olcek})"
+        )
+    if seri.gecikme_gunu is not None and seri.gecikme_gunu <= 0:
+        # 0 "gecikme yok" demek değil, alanı gereksiz yazmak demek: eşik
+        # zaten tipik gecikmeyi içeriyor. Negatif değer eşiği daraltarak
+        # sahte "gecikmiş" üretir.
+        raise KatalogHatasi(
+            f"{seri.id}: gecikme_gunu pozitif olmalı (verilen: {seri.gecikme_gunu})"
         )
     if seri.kaynak_tipi == "evds" and seri.evds_frequency not in GECERLI_EVDS_FREKANSLARI:
         raise KatalogHatasi(

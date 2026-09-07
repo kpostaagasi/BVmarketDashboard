@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from core.catalog import seri_getir, seri_listele
-from ingest.run import _cek
+from ingest.run import _cek, olcekle
 
 
 def sahte_df():
@@ -42,6 +42,41 @@ def test_cek_bilinmeyen_kaynak_tipinde_hata():
     seri = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), kaynak_tipi="bloomberg")
     with pytest.raises(ValueError, match="Bilinmeyen kaynak tipi"):
         _cek(seri, "gizli", None, None)
+
+
+# --- Faz 3f: ölçekleme tek noktada, orchestrator'da ---
+
+
+def test_cek_evds_serisinde_olcegi_uygular(monkeypatch):
+    """EVDS "Bin TL" döner; katalog `olcek`i olmadan KPI okunamaz."""
+    monkeypatch.setattr(
+        "ingest.run.evds.seri_cek",
+        lambda seri, api_key, session=None, bugun=None: pd.DataFrame(
+            {"date": ["2026-01-01"], "value": [26_351_644_811.0]}
+        ),
+    )
+    seri = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), olcek=0.000001)
+    df = _cek(seri, "gizli", None, None)
+    assert df["value"].iloc[0] == pytest.approx(26_351.644811)
+
+
+def test_cek_olcek_yoksa_degeri_bozmaz(monkeypatch):
+    monkeypatch.setattr(
+        "ingest.run.evds.seri_cek",
+        lambda seri, api_key, session=None, bugun=None: sahte_df(),
+    )
+    df = _cek(seri_getir("enflasyon/tufe-genel"), "gizli", None, None)
+    assert df["value"].iloc[0] == pytest.approx(1.0)
+
+
+def test_olcekle_tarih_disindaki_tum_sutunlari_olcekler():
+    """Bileşenli (geniş) seri: sütun-başına çağrı gerekmez, `date` korunur."""
+    df = pd.DataFrame({"date": ["2026-08-01"], "Kömür": [2400.0], "Rüzgar": [240.0]})
+    sonuc = olcekle(df, 0.001)
+    assert sonuc["Kömür"].iloc[0] == pytest.approx(2.4)
+    assert sonuc["Rüzgar"].iloc[0] == pytest.approx(0.24)
+    assert sonuc["date"].iloc[0] == "2026-08-01"
+    assert df["Kömür"].iloc[0] == 2400.0  # girdi mutasyona uğramaz
 
 
 def test_cek_epias_serisini_epias_modulune_yonlendirir(monkeypatch):

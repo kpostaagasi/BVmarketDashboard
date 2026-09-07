@@ -150,22 +150,6 @@ def bilesen_noktalari_ayikla(
     return noktalar
 
 
-def _olcekle(
-    df: pd.DataFrame, olcek: float | None, sutunlar: tuple[str, ...] = ("value",)
-) -> pd.DataFrame:
-    """None = ölçekleme yok. Katalog `olcek`i vermediyse seri olduğu gibi kalır.
-
-    `sutunlar` bileşenli (geniş) seriler için: tek çağrıda tüm grup
-    sütunları ölçeklenir, sütun-başına rename dolambacı gerekmez.
-    """
-    if olcek is None:
-        return df
-    df = df.copy()
-    for sutun in sutunlar:
-        df[sutun] = df[sutun] * olcek
-    return df
-
-
 def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
              bugun: date | None = None,
              onbellek: dict | None = None) -> pd.DataFrame:
@@ -174,7 +158,7 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
     Pencere `pencereleri_bol` ile EPİAŞ'ın kabul ettiği azami dilimlere
     bölünür ve her dilim ayrı bir istekle çekilir (bkz. AZAMI_PENCERE_GUN);
     tüm dilimlerin ham noktaları birleştirildikten SONRA tek seferde
-    günlüğe indirgenir ve ölçeklenir — dilim başına değil. Dilimler tarih
+    günlüğe indirgenir — dilim başına değil. Dilimler tarih
     sınırında ayrıldığı için (bir gün asla iki dilime bölünmez) bu, tek
     istekli eski davranışla birebir aynı sonucu verir; sadece istek sayısı
     artar. Bir dilim HTTP 200 ile boş `items` dönerse (regresyon: tek
@@ -198,10 +182,11 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
     Saatlik veri günlüğe indirgenir: `seri.monthly_agg == "sum"` ise günlük
     TOPLAM (üretim gibi akış büyüklükleri için — ortalama alınırsa değer
     24'te birine düşer), aksi halde günlük ORTALAMA (PTF gibi fiyat/seviye
-    büyüklükleri için). Ardından `seri.olcek` ile çarpılır (ör. üretim MWh
-    döner, GWh olarak gösterilir: olcek=0.001); ölçekleme indirgemeden SONRA
-    uygulanır, aksi halde toplama öncesi ölçeklenmiş saatlik değerlerin
-    toplamı yine doğru sonucu verirdi ama ortalamada anlamı değişirdi.
+    büyüklükleri için). Katalog `olcek`i BURADA uygulanmaz — indirgenmiş
+    çerçeve ham birimiyle döner ve ölçekleme orchestrator'da
+    (`ingest.run.olcekle`) tek noktadan yapılır. Sıra korunur: indirgeme
+    bu fonksiyonda bittiği için orchestrator'ın uyguladığı ölçek yine
+    indirgemeden SONRA devreye girer.
     """
     bugun = bugun or date.today()
     if seri.start_date:
@@ -270,5 +255,4 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
     toplama = "sum" if seri.monthly_agg == "sum" else "mean"
     gunluk = df.groupby("date", as_index=False)[gruplar].agg(toplama)
     gunluk = gunluk.sort_values("date").reset_index(drop=True)
-    gunluk = _olcekle(gunluk, seri.olcek, tuple(gruplar))
     return gunluk

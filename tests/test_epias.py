@@ -263,10 +263,13 @@ def test_seri_cek_sum_serisi_gunluk_toplam_alir():
     assert df.iloc[0]["value"] == pytest.approx(48000.0)
 
 
-def test_seri_cek_olceklendirmeyi_indirgemeden_sonra_uygular():
-    # Üretim MWh döner, GWh olarak gösterilecek: olcek=0.001.
-    # Ölçekleme günlük TOPLAMDAN sonra uygulanmalı (48000 * 0.001 = 48.0),
-    # tek tek saatlik değerlere değil.
+def test_seri_cek_olcek_uygulamaz_ham_deger_doner():
+    """Faz 3f: ölçekleme tek noktada — `ingest.run.olcekle`.
+
+    Adaptör `olcek` taşıyan bir seride de ham (indirgenmiş) değeri
+    döndürmeli; burada da ölçeklerse orchestrator'ın ölçeği üzerine biner
+    ve seri iki kez küçülür.
+    """
     oturum = SahteOturum(SahteYanit(200, yanit(
         _gun("2026-08-01", "total", 2000.0)
     )))
@@ -274,7 +277,7 @@ def test_seri_cek_olceklendirmeyi_indirgemeden_sonra_uygular():
                         epias_alani="total", monthly_agg="sum", olcek=0.001,
                         start_date="2026-07-25")
     df = seri_cek(seri, "TGT-abc", session=oturum, bugun=date(2026, 8, 1))
-    assert df.iloc[0]["value"] == pytest.approx(48.0)
+    assert df.iloc[0]["value"] == pytest.approx(48000.0)
 
 
 # --- C1: eksik saatli günler günlük indirgemeden önce düşülmeli ---
@@ -523,16 +526,16 @@ def test_seri_cek_bilesenli_seriyi_genis_df_olarak_dondurur():
     oturum = SahteOturum(SahteYanit(200, {"items": kayitlar}))
     seri = _epias_seri(
         id="elektrik/uretim-kompozisyon", epias_ucu="uretim", epias_alani=None,
-        epias_bilesenler=GRUPLAR, monthly_agg="sum", olcek=0.001,
+        epias_bilesenler=GRUPLAR, monthly_agg="sum",
         start_date="2026-08-01",
     )
 
     df = seri_cek(seri, "TGT-x", session=oturum, bugun=date(2026, 8, 2))
 
     assert list(df.columns) == ["date", "Kömür", "Hidroelektrik", "Rüzgar"]
-    # 24 saat × 100 MWh = 2400 MWh → olcek 0.001 → 2.4 GWh
-    assert df["Kömür"].iloc[0] == pytest.approx(2.4)
-    assert df["Rüzgar"].iloc[0] == pytest.approx(0.24)
+    # 24 saat × 100 MWh = 2400 MWh (ölçekleme orchestrator'da)
+    assert df["Kömür"].iloc[0] == pytest.approx(2400.0)
+    assert df["Rüzgar"].iloc[0] == pytest.approx(240.0)
 
 
 def test_seri_cek_bilesenli_seride_eksik_saatli_gunu_atar():
@@ -550,7 +553,7 @@ def test_seri_cek_bilesenli_seride_eksik_saatli_gunu_atar():
     oturum = SahteOturum(SahteYanit(200, {"items": tam + kesik}))
     seri = _epias_seri(
         id="elektrik/uretim-kompozisyon", epias_ucu="uretim", epias_alani=None,
-        epias_bilesenler=GRUPLAR, monthly_agg="sum", olcek=1.0,
+        epias_bilesenler=GRUPLAR, monthly_agg="sum",
         start_date="2026-08-01",
     )
 
@@ -601,14 +604,3 @@ def test_seri_cek_onbellek_verilmezse_davranis_degismez():
     assert len(oturum.cagrilar) == 1
     assert not df.empty
 
-
-def test_olcekle_sutun_listesiyle_coklu_sutunu_olcekler():
-    import pandas as pd
-
-    from ingest.epias import _olcekle
-
-    df = pd.DataFrame({"A": [10.0], "B": [20.0], "date": ["2026-08-01"]})
-    sonuc = _olcekle(df, 0.1, sutunlar=("A", "B"))
-    assert sonuc["A"].iloc[0] == pytest.approx(1.0)
-    assert sonuc["B"].iloc[0] == pytest.approx(2.0)
-    assert df["A"].iloc[0] == 10.0  # girdi mutasyona uğramaz

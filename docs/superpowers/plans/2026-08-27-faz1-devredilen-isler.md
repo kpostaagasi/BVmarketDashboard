@@ -49,7 +49,7 @@ Whole-branch review'da bulundu, ertelendi.
 |---|---|---|
 | 1 | `ingest/evds.py`'ye retry/backoff | Tek 5xx, all-or-nothing commit politikası yüzünden günün tamamını götürüyor. `requests.adapters.Retry` ile ucuz. |
 | 2 | `seriyi_yaz`'ı `core/data.py`'ye taşımak | Okuma tek kapıdan geçiyor ama yazma `ingest/run.py`'de; parquet geçişinde iki dosya değişecek. |
-| 3 | KPI seçimini katalog bayrağına bağlamak | Şu an `seriler[:4]` — `series.yaml` sırası değişirse sayfanın KPI'ları sessizce değişir. `kpi: true` alanı açık hale getirir. |
+| 3 | ~~KPI seçimini katalog bayrağına bağlamak~~ ✅ **Kapandı (Faz 3f, 2026-09-07)** | `Kategori.pano` faz3b'de geldi, faz3f'te on bir kategorinin tamamına yazıldı; `test_her_kategori_panosunu_acik_tanimlar` boş bırakılmasını engelliyor. Konumsal `seriler[:4]` yolu artık hiçbir kategoride kullanılmıyor. |
 | 4 | Kaynak URL şema kontrolü | `seri.kaynak.url` `unsafe_allow_html` içinde `href`'e giriyor. Bugün güven sınırı sağlam (girdi repo'ya commit'lenmiş YAML), ama `_dogrula`'ya şema kontrolü kalıcı kapatır. |
 | 5 | Seri bazında ondalık basamak | `_tr_sayi` 2 basamağa sabit; USD/TRY `42,12` görünüyor, TCMB 4 basamak yayımlıyor. Katalogda `decimals` alanı. |
 | 6 | `ingest.yml`'ye `concurrency` grubu | Elle tetikleme cron ile çakışırsa push yarışı olabilir; `git push`'un pull/rebase geri dönüşü yok. |
@@ -64,6 +64,26 @@ Whole-branch review'da bulundu, ertelendi.
 | 17 | `emtia-metaller` sayfası ~1,4 MB JSON gönderiyor | 7 seri × (3.770 noktalı seviye grafiği + mevsimsellik + 3.770 satırlık veri tablosu). `ekonomi-makro` ~0,6 MB. Plotly kaldırıyor ama README'nin uyardığı ~30 sn soğuk başlangıcın üstüne biniyor. Faz 3 aynı sayfaya daha fazla günlük seri koyarsa izlenmeli. |
 | 15 | `run.py`'nin secret hata mesajı boş değeri ayırt etmiyor | "EVDS_API_KEY tanımlı değil" diyor ama secret var ve boş olduğunda da aynı mesaj çıkıyor. İlk Actions koşusunda bu bir hata ayıklama turuna mal oldu (`gh secret set` etkileşimsiz kabukta boş stdin okuyup boş secret yazmıştı). "tanımlı değil veya boş" demek yeterli. |
 | 14 | `ingest` tarafı Streamlit'i import ediyor | `ingest/run.py` → `core.data.seri_yolu` → `import streamlit`. İlk gerçek çekimde görüldü: `python -m ingest.run` çıktısına "No runtime found, using MemoryCacheStorageManager" uyarısı düşüyor. Zararsız ama ingest'in Streamlit'e bağımlı olmaması gerekir — `seri_yolu`'nu Streamlit import etmeyen bir modüle taşımak (2 numaralı işle birlikte) çözer. |
+
+## Faz 3f'te kapanan / açılan işler (2026-09-07)
+
+**Kapandı:** 3 numaralı iş (yukarıda).
+
+**Hâlâ açık:** 1 (retry/backoff), 2 (`seriyi_yaz` → `core/data.py`), 4 (kaynak
+URL şema kontrolü), 5 (seri bazında ondalık basamak), 6 (`ingest.yml`
+concurrency), 7–14, 16 (`Kategori.note` yanlış varlığa asılı), 17
+(`emtia-metaller` sayfa yükü).
+
+16 numaralı iş faz3f'te **daha da geciktirilmemeli**: `dis-ticaret`,
+`para-banka` ve `kredi-karti` kategorilerine de not yazıldı ve bu notlar
+kategorinin *tüm* serileri için doğru (hepsi aynı birim/kaynak ailesinden).
+Ama emtia kategorilerine vadeli olmayan bir seri (ör. Dünya Bankası spot)
+eklendiği gün kategori notu yanlış beyana dönüşür — o eklemeden önce
+`Seri.not` alanına taşınmalı.
+
+**Faz 3f'te eklenen yeni alan:** `Seri.gecikme_gunu` — Veri Takvimi eşiğini
+seri bazında genişletir. Yalnızca kaynağı ~42 gün gecikmeli iki seride var;
+her seriye yayılırsa eşik anlamsızlaşır (test bunu fark ettirir).
 
 ## Faz 2 tamamlandı (2026-08-27)
 

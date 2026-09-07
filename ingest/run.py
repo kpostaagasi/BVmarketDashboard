@@ -18,19 +18,43 @@ from core.data import seri_yolu
 from ingest import epias, evds, osd, yahoo
 
 
+def olcekle(df, olcek: float | None):
+    """Katalog `olcek`ini uygular. **Tek ölçekleme noktası burasıdır.**
+
+    `None` = ölçekleme yok; katalog `olcek` vermediyse seri olduğu gibi
+    kalır. `date` dışındaki tüm sütunlar çarpılır, böylece bileşenli
+    (geniş) seriler de tek çağrıda kapsanır ve sütun-başına dolambaç
+    gerekmez.
+
+    Ölçekleme adaptörden SONRA uygulanır: saatlik veriyi günlüğe indirgeyen
+    adaptörler (EPİAŞ) indirgemeyi kendi içinde bitirir, dolayısıyla buraya
+    gelen çerçeve zaten indirgenmiştir. Bir adaptör kendi içinde de
+    ölçeklerse çift ölçekleme olur — ölçeklemeyi adaptöre geri koymayın.
+    """
+    if olcek is None:
+        return df
+    df = df.copy()
+    for sutun in df.columns:
+        if sutun != "date":
+            df[sutun] = df[sutun] * olcek
+    return df
+
+
 def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          epias_onbellek: dict | None = None,
          osd_onbellek: dict | None = None):
-    """Seriyi kaynak tipine göre doğru istemciye yönlendirir."""
+    """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
-        return evds.seri_cek(seri, api_key, session=oturum)
-    if seri.kaynak_tipi == "yahoo":
-        return yahoo.seri_cek(seri, session=oturum)
-    if seri.kaynak_tipi == "epias":
-        return epias.seri_cek(seri, tgt, session=oturum, onbellek=epias_onbellek)
-    if seri.kaynak_tipi == "osd":
-        return osd.seri_cek(seri, onbellek=osd_onbellek, session=oturum)
-    raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
+        df = evds.seri_cek(seri, api_key, session=oturum)
+    elif seri.kaynak_tipi == "yahoo":
+        df = yahoo.seri_cek(seri, session=oturum)
+    elif seri.kaynak_tipi == "epias":
+        df = epias.seri_cek(seri, tgt, session=oturum, onbellek=epias_onbellek)
+    elif seri.kaynak_tipi == "osd":
+        df = osd.seri_cek(seri, onbellek=osd_onbellek, session=oturum)
+    else:
+        raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
+    return olcekle(df, seri.olcek)
 
 
 def seriyi_yaz(seri: Seri, df) -> int:

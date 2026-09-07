@@ -6,9 +6,13 @@ core/page.py'dedir.
 Tazelik, dönem etiketinden değil DÖNEM SONUNDAN ölçülür (bkz. `donem_sonu`).
 
 Eşikler SEZGİSELDİR: bir periyot artı tipik yayın gecikmesi. Tek yerde
-tutulurlar ki gürültü görüldüğünde ayarlanabilsinler. Seri bazında geçersiz
-kılma bilinçli olarak eklenmedi — hangi serinin gürültü çıkaracağı henüz
-bilinmiyor.
+tutulurlar ki gürültü görüldüğünde ayarlanabilsinler. Faz 3f'te seri bazında
+geçersiz kılma eklendi (`Seri.gecikme_gunu`): hangi serinin gürültü çıkardığı
+artık biliniyor. TÜİK sanayi üretim endeksi ve TCMB ödemeler dengesi dönem
+sonundan ~42 gün sonra yayımlanıyor, yani aylık eşiğin (50) altında hiç
+kalmıyorlar ve kalıcı sahte alarm üretiyorlardı — kalıcı alarm, "kırmızı satır
+bir şeyin bozulduğu anlamına gelir" sözleşmesini yok eder. `gecikme_gunu` o
+serinin eşiğine eklenir; kaynağın normal takvimi kadar sabır tanınır.
 
 Bu sayfanın asıl işi ileriye bakan bir yayın takvimi değil, geriye bakan bir
 tazelik monitörü olmaktır: bir seri geciktiğinde ya kaynak geç kalmıştır ya da
@@ -60,8 +64,8 @@ def donem_sonu(etiket: date, freq: str) -> date:
     return etiket
 
 
-def durum_hesapla(freq: str, bekleme_gunu: int) -> str:
-    esik = ESIKLER[freq]
+def durum_hesapla(freq: str, bekleme_gunu: int, gecikme_gunu: int = 0) -> str:
+    esik = ESIKLER[freq] + gecikme_gunu
     if bekleme_gunu <= esik:
         return GUNCEL
     if bekleme_gunu <= esik * 2:
@@ -81,7 +85,7 @@ def satir_uret(seri: Seri, son_donem: date | None, bugun: date) -> TakvimSatiri:
         seri=seri,
         son_donem=son_donem,
         bekleme_gunu=bekleme,
-        durum=durum_hesapla(seri.freq, bekleme),
+        durum=durum_hesapla(seri.freq, bekleme, seri.gecikme_gunu or 0),
     )
 
 

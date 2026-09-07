@@ -18,18 +18,21 @@ def test_kategori_sirasi():
     kategoriler = kategorileri_yukle()
     assert [k.slug for k in kategoriler] == [
         "ekonomi-makro",
-        "emtia-enerji",
-        "emtia-metaller",
         "enflasyon",
+        "sanayi",
+        "dis-ticaret",
+        "para-banka",
         "insaat",
         "kredi-karti",
+        "emtia-enerji",
+        "emtia-metaller",
         "elektrik",
         "otomotiv",
     ]
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 40
+    assert len(serileri_yukle()) == 69
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -52,6 +55,10 @@ def test_kategoriye_gore_filtreleme():
         "insaat/konut-fiyat-endeksi",
         "insaat/konut-satis-toplam",
         "insaat/konut-satis-ipotekli",
+        "insaat/konut-satis-ilk-el",
+        "insaat/konut-satis-ikinci-el",
+        "insaat/konut-fiyat-istanbul",
+        "insaat/kira-endeksi",
     ]
 
 
@@ -176,14 +183,28 @@ def test_bilinmeyen_kaynak_tipi_reddedilir():
         _dogrula(seri, _sluglar(), set())
 
 
-def test_metaller_kpi_sirasi():
-    ilk_dort = [s.id for s in seri_listele("emtia-metaller")][:4]
-    assert ilk_dort == [
-        "emtia-metaller/altin",
-        "emtia-metaller/gumus",
-        "emtia-metaller/bakir",
-        "emtia-metaller/hrc-celik",
-    ]
+def test_her_kategori_panosunu_acik_tanimlar():
+    """Devredilen iş #3: KPI seçimi artık konumsal değil.
+
+    `pano` boş bırakılırsa `kpi_satiri` katalogdaki ilk dördü gösterir;
+    o zaman `series.yaml`'daki sıra değişince sayfanın KPI'ları sessizce
+    değişir. Her kategori panosunu açıkça yazar.
+    """
+    for kategori in kategorileri_yukle():
+        assert kategori.pano, kategori.slug
+
+
+def test_pano_idleri_kendi_kategorisinde_ve_tek_degerli():
+    """Pano id'si var olmalı, kategorisine ait olmalı, geniş seri olmamalı.
+
+    (`pano_serileri` bunları çalışma anında da reddediyor; bu test hatayı
+    sayfayı açmadan yakalar.)
+    """
+    for kategori in kategorileri_yukle():
+        kategorinin_idleri = {s.id: s for s in seri_listele(kategori.slug)}
+        for seri_id in kategori.pano:
+            assert seri_id in kategorinin_idleri, seri_id
+            assert not kategorinin_idleri[seri_id].epias_bilesenler, seri_id
 
 
 def test_kategori_notu_okunur():
@@ -263,11 +284,11 @@ def test_olcek_verilmemisse_ingest_olceklemez():
     """Sözleşmenin diğer yarısı: None ölçeklememek demek, sıfırlamak değil."""
     import pandas as pd
 
-    from ingest.epias import _olcekle
+    from ingest.run import olcekle
 
     df = pd.DataFrame({"value": [10.0, 20.0]})
-    assert list(_olcekle(df, None)["value"]) == [10.0, 20.0]
-    assert list(_olcekle(df, 0.001)["value"]) == [0.01, 0.02]
+    assert list(olcekle(df, None)["value"]) == [10.0, 20.0]
+    assert list(olcekle(df, 0.001)["value"]) == [0.01, 0.02]
 
 
 def test_olcek_yaml_dan_float_olarak_okunur(tmp_path, monkeypatch):
@@ -375,10 +396,13 @@ def test_kaynak_alanlari_tablosu_her_kaynak_tipini_kapsar():
     assert set(KAYNAK_ALANLARI) == GECERLI_KAYNAK_TIPLERI
 
 
-def test_evds_serisi_olcek_tasiyamaz():
-    """olcek'i yalnızca epias onurlandırıyor; sessizce yok saymak yerine reddet."""
-    with pytest.raises(KatalogHatasi, match="olcek"):
-        _dogrula_ham(_ham_seri(olcek=0.001))
+def test_evds_serisi_olcek_tasiyabilir():
+    """Faz 3f: `olcek` tipe değil kataloğa ait — her kaynak onurlandırır.
+
+    EVDS kredi/mevduat serilerini "Bin TL" cinsinden döndürüyor; ölçek
+    olmadan KPI kartında 26.351.644.811 gibi okunamaz bir sayı çıkar.
+    """
+    _dogrula_ham(_ham_seri(olcek=0.000001))
 
 
 def test_evds_serisi_epias_alani_tasiyamaz():
@@ -423,12 +447,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 39 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut 69 seriyi reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 40
+        assert len(serileri_yukle()) == 69
     finally:
         serileri_yukle.cache_clear()
 
@@ -449,10 +473,38 @@ def test_bos_string_yahoo_sembolunu_karsilamaz():
         )
 
 
-def test_evds_serisi_acik_yazilmis_olcek_1_de_tasiyamaz():
-    """Etkisiz bir değer bile olsa, onurlandırılmayan alan katalogda durmamalı."""
-    with pytest.raises(KatalogHatasi, match="olcek"):
-        _dogrula_ham(_ham_seri(olcek=1.0))
+def test_ortak_alan_tipe_ozgu_yasaklari_gevsetmez():
+    """`olcek` ortak alana çıktı; bu, tip tablosunu delik bırakmamalı.
+
+    Aynı red kuralı yolundan geçen tipe özgü bir alan (yahoo serisinde
+    `evds_code`) hâlâ reddedilmeli — aksi halde ORTAK_ALANLAR çıkarması
+    tabloyu tümden etkisizleştirmiş olurdu.
+    """
+    from core.catalog import ORTAK_ALANLAR, TIPE_OZGU_ALANLAR
+
+    assert "olcek" in ORTAK_ALANLAR
+    assert "olcek" not in TIPE_OZGU_ALANLAR
+    with pytest.raises(KatalogHatasi, match="evds_code"):
+        _dogrula_ham(
+            _ham_seri(kaynak_tipi="yahoo", yahoo_symbol="BZ=F", evds_frequency=None)
+        )
+
+
+def test_gecikme_gunu_sifir_veya_negatif_reddedilir():
+    """0 alanı gereksiz yazmak, negatif eşiği daraltıp sahte alarm üretmek."""
+    for gecersiz in (0, -5):
+        with pytest.raises(KatalogHatasi, match="gecikme_gunu"):
+            _dogrula_ham(_ham_seri(gecikme_gunu=gecersiz))
+
+
+def test_gecikme_gunu_katalogda_yalnizca_gecikmeli_serilerde():
+    """Faz 3f: yalnızca kaynağı ~42 gün gecikmeli iki seri taşır.
+
+    Alanın her seriye yayılması eşiği anlamsızlaştırır; bu test yayılmayı
+    fark ettirir.
+    """
+    tasiyanlar = {s.id for s in seri_listele() if s.gecikme_gunu is not None}
+    assert tasiyanlar == {"sanayi/uretim-endeksi", "dis-ticaret/cari-denge"}
 
 
 def test_olcek_sifir_veya_negatif_reddedilir():

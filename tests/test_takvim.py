@@ -50,6 +50,33 @@ def test_aylik_esikleri():
     assert durum_hesapla("monthly", 101) == GECIKMIS
 
 
+def test_gecikme_gunu_esigi_genisletir():
+    """Kaynağın normal yayın gecikmesi sahte alarm üretmemeli.
+
+    TÜİK sanayi üretim endeksi dönem sonundan ~42 gün sonra yayımlıyor;
+    bir sonraki dönem gelene kadar 69 gün geçiyor. `gecikme_gunu: 25`
+    olmadan bu seri kalıcı olarak "bekleniyor" bandındaydı.
+    """
+    assert durum_hesapla("monthly", 69) == BEKLENIYOR
+    assert durum_hesapla("monthly", 69, 25) == GUNCEL
+    assert durum_hesapla("monthly", 76, 25) == BEKLENIYOR
+
+
+def test_gecikme_gunu_gercek_gecikmeyi_gizlemez():
+    """Sabır sınırsız değil: iki katın üstü hâlâ gecikmiş."""
+    assert durum_hesapla("monthly", 151, 25) == GECIKMIS
+
+
+def test_satir_uret_serinin_gecikme_gunune_uyar():
+    gecikmeli = dataclasses.replace(seri("monthly"), gecikme_gunu=25)
+    satir = satir_uret(gecikmeli, date(2026, 6, 1), date(2026, 9, 7))
+    assert satir.bekleme_gunu == 69
+    assert satir.durum == GUNCEL
+    assert satir_uret(seri("monthly"), date(2026, 6, 1), date(2026, 9, 7)).durum == (
+        BEKLENIYOR
+    )
+
+
 def test_satir_uret_beklemeyi_donem_sonundan_olcer():
     """Aylık etiket ayın 1'i; bekleme dönemin bittiği günden sayılmalı.
 

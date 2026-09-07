@@ -1,23 +1,101 @@
 - slug: ekonomi-makro
   title: Ekonomi & Makro
+  pano:
+    [
+      ekonomi-makro/usd-try,
+      ekonomi-makro/politika-faizi,
+      ekonomi-makro/issizlik-orani,
+      ekonomi-makro/butce-dengesi,
+    ]
+- slug: enflasyon
+  title: Enflasyon Verileri
+  pano:
+    [
+      enflasyon/tufe-genel,
+      enflasyon/cekirdek-c,
+      enflasyon/ufe,
+      enflasyon/beklenti-12a,
+    ]
+- slug: sanayi
+  title: Sanayi & Reel Kesim
+  pano:
+    [
+      sanayi/uretim-endeksi,
+      sanayi/kapasite-kullanim,
+      sanayi/reel-kesim-guven,
+      sanayi/oncu-gostergeler,
+    ]
+  note: >-
+    Sanayi üretim endeksi mevsim ve takvim etkisinden arındırılmıştır ve
+    TÜİK tarafından bir ay gecikmeyle yayımlanır; KKO ile güven endeksi
+    cari aya kadar gelir.
+- slug: dis-ticaret
+  title: Dış Ticaret & Ödemeler Dengesi
+  pano:
+    [
+      dis-ticaret/ihracat,
+      dis-ticaret/ithalat,
+      dis-ticaret/cari-denge,
+    ]
+  note: >-
+    Üçü de aylık akım büyüklüğüdür, Milyon USD cinsinden gösterilir. Cari
+    dengede negatif değer açık demektir; ödemeler dengesi verisi dış
+    ticaret verisinden bir ay geriden gelir.
+- slug: para-banka
+  title: Para & Banka
+  pano:
+    [
+      para-banka/kredi-hacmi,
+      para-banka/mevduat,
+      para-banka/m3,
+      para-banka/rezervler,
+    ]
+  note: >-
+    Dördü de stok büyüklüğüdür (dönem sonu bakiyesi); aylık indirgemede
+    dönemin son değeri alınır, toplanmaz. Rezervler haftalık (Cuma)
+    yayımlanır.
+- slug: insaat
+  title: İnşaat
+  pano:
+    [
+      insaat/konut-satis-toplam,
+      insaat/konut-satis-ipotekli,
+      insaat/konut-fiyat-endeksi,
+      insaat/kira-endeksi,
+    ]
+- slug: kredi-karti
+  title: Kredi Kartı Harcamaları
+  pano:
+    [
+      kredi-karti/harcama-toplam,
+      kredi-karti/market,
+      kredi-karti/akaryakit,
+      kredi-karti/giyim,
+    ]
+  note: >-
+    Haftalık (Cuma) akım verisidir; sektör serileri toplamın alt
+    kalemleridir, nominal TL olduğu için seviye karşılaştırmaları enflasyon
+    içerir.
 - slug: emtia-enerji
   title: Emtia · Enerji
+  pano: [emtia-enerji/brent, emtia-enerji/wti, emtia-enerji/dogalgaz]
   note: >-
     Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade
     değişimlerinde grafikte görülen sıçrama piyasa hareketi değil
     kontrat roll'üdür.
 - slug: emtia-metaller
   title: Emtia · Metaller
+  pano:
+    [
+      emtia-metaller/altin,
+      emtia-metaller/gumus,
+      emtia-metaller/bakir,
+      emtia-metaller/hrc-celik,
+    ]
   note: >-
     Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade
     değişimlerinde grafikte görülen sıçrama piyasa hareketi değil
     kontrat roll'üdür.
-- slug: enflasyon
-  title: Enflasyon Verileri
-- slug: insaat
-  title: İnşaat
-- slug: kredi-karti
-  title: Kredi Kartı Harcamaları
 - slug: elektrik
   title: Elektrik
   pano: [elektrik/uretim, elektrik/ptf]
