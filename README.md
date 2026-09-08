@@ -10,6 +10,7 @@ istatistikli grafik sayfaları olarak sunma.
 app.py                    # st.navigation — sol menü katalogdan üretilir
 catalog/series.yaml       # tek doğruluk kaynağı: 108 seri tanımı
 catalog/categories.yaml   # menü ağacı: 15 kategori + her birinin KPI panosu
+catalog/hisseler.yaml     # 8 BIST tickerı: kendi verisi + bağlam serileri
 core/                     # catalog, data, stats, charts, components, page, takvim
 ingest/                   # evds.py + yahoo.py + epias.py + osd.py + tim.py + bddk.py + tefas.py + eurocontrol.py + run.py (orchestrator)
 data/<kategori>/<seri>.csv
@@ -63,6 +64,24 @@ noktadan uygular, `core/takvim.py` gecikmeyi tazelik eşiğine ekler).
 
 Sonra `python -m ingest.run --only <yeni-id>` ile veriyi üretin.
 
+## Yeni hisse sayfası ekleme
+
+`catalog/hisseler.yaml`'a bir kayıt ekleyin; kod değişikliği gerekmez:
+
+```yaml
+- kod: FROTO                    # BIST kodu, 4–6 büyük harf
+  title: Ford Otosan
+  sektor: Otomotiv
+  kendi: [otomotiv/ford-otosan]          # şirketin kendi verisi (zorunlu)
+  baglam: [ihracat/otomotiv, ekonomi-makro/usd-try]   # sektör/girdi vekilleri
+  note: >-
+    Sayfada gösterilen açıklama.
+```
+
+`kendi` ve `baglam` sayfada ayrı başlıklar altında çizilir: KPI satırı
+yalnızca `kendi`den beslenir. Aynı seri iki listede olamaz ve bilinmeyen
+seri id'si `KatalogHatasi` verir.
+
 ## Deploy
 
 Streamlit Community Cloud, private repo. Erişim viewer allowlist'i ile
@@ -83,7 +102,7 @@ repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 | 1 | Streamlit iskeleti + EVDS dilimi (13 seri, 4 kategori) | ✅ |
 | 2 | Emtia (10 seri, 2 kategori): Brent, WTI, doğalgaz, altın, gümüş, bakır, HRC çelik, platin, paladyum, alüminyum | ✅ |
 | 3 | Veri Takvimi (3a), Elektrik/EPİAŞ (3b), üretim kompozisyonu (3c), OSD otomotiv (3e), EVDS genişletme (3f), TİM sektörel ihracat (3g), BDDK bankacılık (3h), TEFAS fonlar (3i), EUROCONTROL havacılık (3j) | ✅ |
-| 4 | Hisse sayfaları | Planlandı |
+| 4 | Hisse sayfaları (8 ticker: FROTO, TOASO, TTRAK, KARSN, OTKAR, ASUZU, THYAO, PGSUS) | ✅ |
 | 5 | Arama, favoriler, AI raporları | Planlandı |
 
 Tasarım detayları: `docs/superpowers/specs/2026-08-27-streamlit-dashboard-design.md`

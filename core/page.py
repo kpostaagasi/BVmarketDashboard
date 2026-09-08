@@ -11,7 +11,15 @@ from typing import Callable
 import pandas as pd
 import streamlit as st
 
-from core.catalog import Kategori, KatalogHatasi, SIKLIK_ETIKETLERI, Seri, seri_listele
+from core.catalog import (
+    Hisse,
+    Kategori,
+    KatalogHatasi,
+    SIKLIK_ETIKETLERI,
+    Seri,
+    seri_getir,
+    seri_listele,
+)
 from core.components import grafik_karti, kompozisyon_karti, kpi_satiri
 from core.stats import GORUNUMLER, VARSAYILAN
 from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
@@ -95,13 +103,7 @@ def _kategoriyi_ciz(kategori: Kategori) -> None:
         )
     st.divider()
 
-    sutunlar = st.columns(2)
-    for sira, seri in enumerate(seriler):
-        with sutunlar[sira % 2]:
-            if "composition" in seri.charts:
-                kompozisyon_karti(seri)
-            else:
-                grafik_karti(seri, gorunum)
+    _izgara_ciz(seriler, gorunum)
 
 
 def kategori_sayfasi_yap(kategori: Kategori) -> Callable[[], None]:
@@ -109,6 +111,86 @@ def kategori_sayfasi_yap(kategori: Kategori) -> Callable[[], None]:
         _kategoriyi_ciz(kategori)
 
     sayfa.__name__ = f"sayfa_{kategori.slug.replace('-', '_')}"
+    return sayfa
+
+
+def _izgara_ciz(seriler: list[Seri], gorunum: str, sutun_sayisi: int = 2) -> None:
+    """Grafik ızgarası — kategori sayfasıyla aynı ritim.
+
+    `sutun_sayisi` yalnızca hisse sayfasının şirket bloğu için 1 olur: tek
+    serili bir bloğu iki sütuna koymak ızgaranın yarısını boş bırakıyordu.
+    Tam genişlik kart aynı zamanda doğru hiyerarşi: sayfanın baş aktörü
+    şirketin kendi verisi, bağlam serileri yanında değil altında durur.
+    """
+    sutunlar = st.columns(sutun_sayisi)
+    for sira, seri in enumerate(seriler):
+        with sutunlar[sira % sutun_sayisi]:
+            if "composition" in seri.charts:
+                kompozisyon_karti(seri)
+            else:
+                grafik_karti(seri, gorunum)
+
+
+def _hisseyi_ciz(hisse: Hisse) -> None:
+    """Ticker sayfası: şirketin kendi verisi, sonra sektör/girdi bağlamı.
+
+    İki bölüm AYRI başlıklar altında çizilir. Aynı ızgaraya karıştırmak
+    sayfayı makro grafik yığınına çevirirdi; portföy yöneticisinin ilk
+    sorusu "şirketin kendi verisi ne diyor" olduğu için o blok üstte ve
+    KPI satırı yalnızca ondan besleniyor.
+    """
+    kendi = [seri_getir(i) for i in hisse.kendi]
+    baglam = [seri_getir(i) for i in hisse.baglam]
+    tumu = kendi + baglam
+
+    st.title(hisse.title)
+    kaynaklar = sorted({s.kaynak.name for s in tumu})
+    st.caption(
+        f"`{hisse.kod}` · {hisse.sektor} · {len(tumu)} seri · "
+        f"Kaynak: {', '.join(kaynaklar)}"
+    )
+    if hisse.note:
+        st.caption(hisse.note)
+
+    gorunum = st.segmented_control(
+        "Görünüm",
+        GORUNUMLER,
+        default=VARSAYILAN,
+        key=f"gorunum_hisse_{hisse.kod}",
+        label_visibility="collapsed",
+    )
+    gorunum = gorunum or VARSAYILAN
+
+    kpi_satiri(kendi)
+
+    with st.expander("Veri Takvimi", expanded=False):
+        takvim_df = tablo_df([s for s in takvim() if s.seri.id in set(hisse.kendi + hisse.baglam)])
+        st.dataframe(
+            takvim_df,
+            width="stretch",
+            hide_index=True,
+            column_config=TAKVIM_SUTUN_AYARI,
+            column_order=takvim_sutun_sirasi(takvim_df),
+        )
+    st.divider()
+
+    st.subheader("Şirketin kendi verisi")
+    _izgara_ciz(kendi, gorunum, sutun_sayisi=1 if len(kendi) == 1 else 2)
+
+    if baglam:
+        st.subheader("Sektör ve girdi bağlamı")
+        st.caption(
+            "Bu seriler şirkete ait değil; talep ve maliyet kanallarının "
+            "vekilidir."
+        )
+        _izgara_ciz(baglam, gorunum)
+
+
+def hisse_sayfasi_yap(hisse: Hisse) -> Callable[[], None]:
+    def sayfa() -> None:
+        _hisseyi_ciz(hisse)
+
+    sayfa.__name__ = f"sayfa_hisse_{hisse.kod.lower()}"
     return sayfa
 
 

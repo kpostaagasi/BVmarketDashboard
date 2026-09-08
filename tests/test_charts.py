@@ -398,3 +398,14 @@ def test_kompozisyon_verisi_hazirla_aylik_freqde_dusurulmez():
     df = pd.DataFrame({"A": [10.0, 10.0], "B": [30.0, 30.0]}, index=idx)
     sonuc = kompozisyon_verisi_hazirla(df, gorunum_mutlak=True, freq="monthly")
     assert list(sonuc.index) == list(idx)
+
+
+def test_seviye_figuru_x_ekseni_dilden_bagimsiz_bicim_kullanir():
+    """Plotly varsayılanı "Jan 2022" derdi; kart içinde mevsimsellik grafiği
+    Türkçe ay adları kullanıyor ve ikisi yan yana duruyor.
+    """
+    df = pd.DataFrame(
+        {"value": [1.0, 2.0]}, index=pd.to_datetime(["2026-01-01", "2026-02-01"])
+    )
+    fig = seviye_figuru(df, "adet")
+    assert fig.layout.xaxis.tickformat == "%m.%Y"

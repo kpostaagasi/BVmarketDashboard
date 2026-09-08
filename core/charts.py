@@ -233,5 +233,10 @@ def seviye_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
         )
     )
     _temayi_uygula(fig, birim)
+    # Plotly'nin varsayılan ay adları İngilizce ("Jan 2022") — mevsimsellik
+    # grafiği Türkçe ay adları kullanıyor, ikisi aynı kartta yan yana
+    # duruyor. Sayısal biçim (01.2022) dilden bağımsız ve Türkçe tarih
+    # yazımına uygun; plotly.js için Türkçe locale paketi gerekmiyor.
+    fig.update_xaxes(tickformat="%m.%Y")
     fig.update_layout(showlegend=False)
     return fig

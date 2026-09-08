@@ -74,11 +74,18 @@ def _kpi_uygun_seriler(seriler: list[Seri]) -> list[Seri]:
     return [s for s in seriler if not s.epias_bilesenler]
 
 
-def kpi_satiri(seriler: list[Seri]) -> None:
-    gosterilecek = _kpi_uygun_seriler(seriler)[:4]
+def kpi_satiri(seriler: list[Seri], sutun_sayisi: int = 4) -> None:
+    """En çok dört KPI; ızgara SABİT dört sütun.
+
+    Sütun sayısını gösterilecek seri sayısına bağlamak tek KPI'lı sayfada
+    (hisse sayfaları) kartı tüm satıra yayıyordu — dev sayı, küçük etiket:
+    kategori sayfalarındaki ritimden kopan bir "hero metrik" görüntüsü.
+    Sabit ızgara kart genişliğini sayfalar arası aynı tutar.
+    """
+    gosterilecek = _kpi_uygun_seriler(seriler)[:sutun_sayisi]
     if not gosterilecek:
         return
-    sutunlar = st.columns(len(gosterilecek))
+    sutunlar = st.columns(sutun_sayisi)
     for sutun, seri in zip(sutunlar, gosterilecek):
         with sutun, st.container(border=True):
             st.caption(seri.title)

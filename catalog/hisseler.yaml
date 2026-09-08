@@ -1,0 +1,86 @@
+# Hisse (ticker) sayfaları: mevcut serileri şirket ekseninde toplar.
+#
+# İki liste bilinçli olarak ayrıdır ve sayfada ayrı başlıklar altında çizilir:
+#   kendi   — ŞİRKETİN kendi yayımlanan verisi (üretim adedi, uçuş sayısı)
+#   baglam  — sektör ve girdi bağlamı (sektör ihracatı, kur, hammadde)
+# Ayrım olmadan portföy yöneticisi hangi grafiğin şirkete ait olduğunu
+# ayırt edemez; sayfanın var oluş nedeni bu ayrım.
+#
+# Yeni ticker eklemek kod değişikliği gerektirmez: buraya bir kayıt eklenir.
+
+- kod: FROTO
+  title: Ford Otosan
+  sektor: Otomotiv
+  kendi: [otomotiv/ford-otosan]
+  baglam:
+    [ihracat/otomotiv, ekonomi-makro/usd-try, emtia-metaller/hrc-celik]
+  note: >-
+    Üretim adedi OSD bültenindendir (ihracat ve iç pazar satışı ayrışmaz).
+    HRC çelik ve kur, maliyet tarafının iki ana girdisidir.
+
+- kod: TOASO
+  title: Tofaş
+  sektor: Otomotiv
+  kendi: [otomotiv/tofas]
+  baglam:
+    [
+      ihracat/otomotiv,
+      ekonomi-makro/usd-try,
+      ekonomi-makro/otomobil-satin-alma-niyeti,
+    ]
+  note: >-
+    Satın alma niyeti iç pazar talebinin öncü göstergesi; üretim adedi OSD
+    bültenindendir.
+
+- kod: TTRAK
+  title: Türk Traktör
+  sektor: Otomotiv
+  kendi: [otomotiv/turk-traktor]
+  baglam: [ihracat/tarim, ekonomi-makro/usd-try, ekonomi-makro/mevduat-faizi-tl]
+  note: >-
+    Traktör talebi tarım gelirine ve kredi maliyetine duyarlıdır; tarım
+    ihracatı ve mevduat faizi bu iki kanalın vekilidir.
+
+- kod: KARSN
+  title: Karsan
+  sektor: Otomotiv
+  kendi: [otomotiv/karsan]
+  baglam:
+    [ihracat/otomotiv, ekonomi-makro/usd-try, emtia-metaller/hrc-celik]
+
+- kod: OTKAR
+  title: Otokar
+  sektor: Otomotiv
+  kendi: [otomotiv/otokar]
+  baglam:
+    [
+      ihracat/savunma-havacilik,
+      ekonomi-makro/usd-try,
+      emtia-metaller/hrc-celik,
+    ]
+  note: >-
+    Savunma ve havacılık ihracatı, zırhlı araç tarafının sektör vekilidir.
+
+- kod: ASUZU
+  title: Anadolu Isuzu
+  sektor: Otomotiv
+  kendi: [otomotiv/anadolu-isuzu]
+  baglam: [ihracat/otomotiv, ekonomi-makro/usd-try]
+
+- kod: THYAO
+  title: Türk Hava Yolları
+  sektor: Havacılık
+  kendi: [havacilik/thy, havacilik/istanbul-havalimani]
+  baglam: [emtia-enerji/brent, ekonomi-makro/usd-try]
+  note: >-
+    Uçuş sayısı EUROCONTROL'ün günlük IFR verisidir (yolcu ya da doluluk
+    değil); şirketin tüm ağını sayar. Brent, yakıt maliyetinin vekili.
+
+- kod: PGSUS
+  title: Pegasus
+  sektor: Havacılık
+  kendi: [havacilik/pegasus, havacilik/sabiha-gokcen]
+  baglam: [emtia-enerji/brent, ekonomi-makro/usd-try]
+  note: >-
+    Uçuş sayısı EUROCONTROL'ün günlük IFR verisidir; Sabiha Gökçen şirketin
+    ana üssü olduğu için havalimanı trafiği yakın vekildir.

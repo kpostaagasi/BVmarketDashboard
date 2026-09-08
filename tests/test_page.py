@@ -97,3 +97,29 @@ def test_kategori_takvim_sutun_sirasi_bos_sutunu_disliyor():
     sira = takvim_sutun_sirasi(df)
     assert "Yayın notu" not in sira
     assert set(sira) == set(SUTUNLAR) - {"Yayın notu"}
+
+
+def test_hisse_sayfasi_uretecinin_adi_kodu_tasir():
+    """st.Page fonksiyon adını gösterdiği için ad çakışmamalı."""
+    from core.catalog import hisseleri_yukle
+    from core.page import hisse_sayfasi_yap
+
+    adlar = [hisse_sayfasi_yap(h).__name__ for h in hisseleri_yukle()]
+    assert len(set(adlar)) == len(adlar)
+    assert "sayfa_hisse_froto" in adlar
+
+
+def test_izgara_ciz_tek_sutunda_bolme_hatasi_vermez():
+    """Şirket bloğu tek serili olduğunda sütun sayısı 1'e düşüyor."""
+    import core.page as page
+
+    cizilen = []
+    orijinal = page.grafik_karti
+    page.grafik_karti = lambda seri, gorunum: cizilen.append(seri.id)
+    try:
+        from core.catalog import seri_getir
+
+        page._izgara_ciz([seri_getir("otomotiv/ford-otosan")], "Varsayılan", 1)
+    finally:
+        page.grafik_karti = orijinal
+    assert cizilen == ["otomotiv/ford-otosan"]

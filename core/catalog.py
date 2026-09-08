@@ -5,6 +5,8 @@ Metadata burada yaşar; veri dosyaları yalnızca `date,value` içerir.
 
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -86,6 +88,23 @@ TIPE_OZGU_ALANLAR = (
     )
     - ORTAK_ALANLAR
 )
+
+
+@dataclass(frozen=True)
+class Hisse:
+    """Bir BIST tickerının sayfası: kendi verisi + bağlam serileri.
+
+    `kendi` şirketin yayımlanan verisi (üretim adedi, uçuş sayısı),
+    `baglam` sektör/girdi serileri (sektör ihracatı, kur, hammadde).
+    Ayrım sayfada görünür: iki liste iki ayrı başlık altında çizilir.
+    """
+
+    kod: str
+    title: str
+    sektor: str
+    kendi: tuple[str, ...]
+    baglam: tuple[str, ...] = ()
+    note: str | None = None
 
 
 class KatalogHatasi(Exception):
@@ -198,6 +217,56 @@ def kategorileri_yukle() -> tuple[Kategori, ...]:
             )
         )
     return tuple(kategoriler)
+
+
+@lru_cache(maxsize=1)
+def hisseleri_yukle() -> tuple[Hisse, ...]:
+    """Ticker tanımlarını okur ve seri referanslarını doğrular.
+
+    Bilinmeyen bir seri id'si sessizce yutulmaz: `pano_serileri` ile aynı
+    gerekçe — yazım hatası, kartın sayfada sessizce kaybolmasından ucuza
+    yakalanmalı. `kendi` boş olamaz: şirketin kendi verisi olmayan bir
+    ticker sayfası yalnızca makro grafik yığınıdır, sayfanın var oluş
+    nedeni ortadan kalkar.
+    """
+    id_kumesi = {s.id for s in serileri_yukle()}
+    hisseler: list[Hisse] = []
+    gorulen: set[str] = set()
+    for ham in _yaml_oku("hisseler.yaml"):
+        kod = str(ham["kod"])
+        if kod in gorulen:
+            raise KatalogHatasi(f"Hisse kodu tekrar ediyor: {kod}")
+        if not re.fullmatch(r"[A-Z]{4,6}", kod):
+            raise KatalogHatasi(
+                f"{kod}: hisse kodu 4–6 büyük harf olmalı (BIST kodu)"
+            )
+        gorulen.add(kod)
+        kendi = tuple(ham.get("kendi", ()))
+        baglam = tuple(ham.get("baglam", ()))
+        if not kendi:
+            raise KatalogHatasi(f"{kod}: en az bir 'kendi' serisi olmalı")
+        eksik = [i for i in kendi + baglam if i not in id_kumesi]
+        if eksik:
+            raise KatalogHatasi(
+                f"{kod}: katalogda olmayan seri: {', '.join(eksik)}"
+            )
+        cakisan = sorted(set(kendi) & set(baglam))
+        if cakisan:
+            raise KatalogHatasi(
+                f"{kod}: aynı seri hem kendi hem baglam listesinde: "
+                f"{', '.join(cakisan)} — sayfada iki kez çizilirdi"
+            )
+        hisseler.append(
+            Hisse(
+                kod=kod,
+                title=ham["title"],
+                sektor=ham["sektor"],
+                kendi=kendi,
+                baglam=baglam,
+                note=ham.get("note"),
+            )
+        )
+    return tuple(hisseler)
 
 
 @lru_cache(maxsize=1)
