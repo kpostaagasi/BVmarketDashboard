@@ -1152,3 +1152,87 @@
   unit: "Adet"
   freq: monthly
   charts: [seasonality, level]
+
+- id: havacilik/turkiye
+  title: Türkiye Günlük Uçuş Sayısı
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: ulke
+  ec_varlik: "Türkiye"
+  unit: "Uçuş"
+  freq: daily
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/thy
+  title: THY Grubu Günlük Uçuş Sayısı
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havayolu
+  ec_varlik: "Turkish Airlines Group"
+  unit: "Uçuş"
+  freq: daily
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/pegasus
+  title: Pegasus Günlük Uçuş Sayısı
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havayolu
+  ec_varlik: "Pegasus"
+  unit: "Uçuş"
+  freq: daily
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/sunexpress
+  title: SunExpress Günlük Uçuş Sayısı
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havayolu
+  ec_varlik: "SunExpress"
+  unit: "Uçuş"
+  freq: daily
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/istanbul-havalimani
+  title: İstanbul Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Istanbul"
+  unit: "Uçuş"
+  freq: daily
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/sabiha-gokcen
+  title: Sabiha Gökçen Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Istanbul Sabiha Gokcen"
+  unit: "Uçuş"
+  freq: daily
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/antalya
+  title: Antalya Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Antalya"
+  unit: "Uçuş"
+  freq: daily
+  monthly_agg: sum
+  charts: [seasonality, level]

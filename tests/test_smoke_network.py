@@ -224,3 +224,22 @@ def test_tefas_ucu_gun_anlik_goruntusu_donduruyor():
     toplam = toplulastir(satirlar)
     assert toplam["fon-sayisi"] > 1000  # ölçüm: ~2.030 fon
     assert toplam["buyukluk"] > 1e12  # ölçüm: ~9,3 trilyon TL
+
+
+def test_eurocontrol_dosyalari_beklenen_varliklari_donduruyor():
+    """Üç dosyanın sütun sözleşmesi ve varlık adları burada çivilenir.
+
+    Katalogdaki `ec_varlik` değerleri kaynağın yazımına birebir bağlı
+    ("Turkish Airlines Group", "Istanbul Sabiha Gokcen"); kaynak adlandırmayı
+    değiştirirse ingest boş seri yazmadan önce burada görülür.
+    """
+    from datetime import date as _date
+
+    from ingest.eurocontrol import seri_cek
+    from core.catalog import seri_getir
+
+    for seri_id in ("havacilik/turkiye", "havacilik/thy", "havacilik/sabiha-gokcen"):
+        df = seri_cek(seri_getir(seri_id))
+        assert len(df) > 200, seri_id
+        assert df["value"].min() > 0, seri_id
+        assert df["date"].is_monotonic_increasing, seri_id

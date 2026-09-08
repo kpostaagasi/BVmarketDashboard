@@ -18,30 +18,41 @@ from core.theme import CIZGI_DESENLERI, RENKLER, TR_AYLAR
 _AGG_FONKSIYONLARI = {"mean": "mean", "last": "last", "sum": "sum"}
 
 
-def uc_aylar_tamamlanmamissa_dus(
-    aylik: pd.DataFrame, ham_ilk: pd.Timestamp, ham_son: pd.Timestamp
+# Kapsama penceresi: bir ayın "başı" ve "sonu" sayılan gün sayısı, serinin
+# frekansına göre. Günlük seride ayın son gününde nokta beklenir; haftalık
+# seride son nokta ayın son yedi gününden biri olabilir.
+_KAPSAMA_GUNU = {"daily": 1, "weekly": 7}
+
+
+def kismi_aylari_dus(
+    aylik: pd.DataFrame, ham_indeks: pd.DatetimeIndex, freq: str
 ) -> pd.DataFrame:
-    """Ay-başlangıcına indirgenmiş seride tamamlanmamış UÇ ayları düşürür.
+    """Ay-başlangıcına indirgenmiş `sum` serisinden KISMİ ayları düşürür.
 
-    Son ay: ham verinin son tarihi o ayın son gününden önceyse ay bitmemiştir
-    (`ham_son < index[-1] + MonthEnd(0)`) — düşer. Ayın 1'i ile ayın son günü
-    farklı çapalardır; ham_son'u ay-başlangıcıyla kıyaslamak ay tamamlanmış
-    olsa bile hemen her zaman True verir (Faz 3c final incelemesinin Critical
-    bulgusu buydu) — kural tek yerde uygulanır ki bir daha ayrışmasın.
+    Bir ay ancak hem başı hem sonu ham veriyle kapsanıyorsa tamdır: ayın
+    ilk `adım` günü içinde ve son `adım` günü içinde en az bir ham nokta
+    olmalı (`adım` günlük seride 1, haftalık seride 7). Kısmi ay `sum`
+    serisinde sahte bir dip üretir.
 
-    İlk ay: ham veri ayın 1'inden SONRA başlıyorsa ilk ay da kısmidir ve
-    `sum` serilerinde sahte bir dip üretir (2021-08 dört günlüktü, grafiğin
-    sol ucunda 7 kat çöküş görünüyordu). Simetri: iki uç da aynı kurala tabi.
+    Kural yalnızca UÇ aylara değil, İÇ aylara da uygulanır: EUROCONTROL
+    serilerinde 2025 verisi cari günün bir yıl öncesinde bitiyor, yani
+    seride 2025-09 (8 günlük) kısmi bir İÇ ay olarak duruyordu ve
+    mevsimsellik grafiğinde uçurum gibi görünüyordu. Uçlara özel eski kural
+    (Faz 3c'nin `uc_aylar_tamamlanmamissa_dus`) bunu yakalamıyordu; kural
+    genelleştirildi, uç davranışı aynı kaldı.
 
-    Boş `aylik` için no-op.
+    Boş `aylik` ya da bilinmeyen frekans için no-op.
     """
-    if aylik.empty:
+    if aylik.empty or freq not in _KAPSAMA_GUNU:
         return aylik
-    if ham_son < aylik.index[-1] + pd.offsets.MonthEnd(0):
-        aylik = aylik.iloc[:-1]
-    if not aylik.empty and ham_ilk > aylik.index[0]:
-        aylik = aylik.iloc[1:]
-    return aylik
+    adim = pd.Timedelta(days=_KAPSAMA_GUNU[freq] - 1)
+    tutulan = []
+    for ay_basi in aylik.index:
+        ay_sonu = ay_basi + pd.offsets.MonthEnd(0)
+        bas_var = ((ham_indeks >= ay_basi) & (ham_indeks <= ay_basi + adim)).any()
+        son_var = ((ham_indeks >= ay_sonu - adim) & (ham_indeks <= ay_sonu)).any()
+        tutulan.append(bool(bas_var and son_var))
+    return aylik[tutulan]
 
 
 def aylige_cevir(
@@ -51,7 +62,7 @@ def aylige_cevir(
 
     `sum` için boş aylar 0.0 değil NaN üretir (min_count=1), yoksa
     `.dropna()` onları temizleyemez. Ayrıca haftalık/günlük `sum`
-    serilerinde henüz tamamlanmamış son ay, sahte bir düşüş gibi
+    serilerinde KISMİ aylar (uçtaki ya da içteki) sahte bir düşüş gibi
     görünmemesi için atılır — aylık serilerde bu sorun yoktur.
     """
     if agg not in _AGG_FONKSIYONLARI:
@@ -63,7 +74,7 @@ def aylige_cevir(
     seri = seri.dropna().to_frame("value")
 
     if agg == "sum" and freq != "monthly":
-        seri = uc_aylar_tamamlanmamissa_dus(seri, df.index.min(), df.index.max())
+        seri = kismi_aylari_dus(seri, df.index, freq)
 
     return seri
 
@@ -166,7 +177,7 @@ def kompozisyon_verisi_hazirla(
 ) -> pd.DataFrame:
     """Geniş (bileşenli) günlük/haftalık seriyi kart için aylığa indirger.
 
-    Tamamlanmamış uç ayları (ilk ve son) düşürme kuralı yalnızca MUTLAK
+    Kısmi ayları (uçtaki ya da içteki) düşürme kuralı yalnızca MUTLAK
     (GWh) görünümde
     uygulanır: bu bir ÖLÇEK düzeltmesidir (kısmi ayın TOPLAMI sahte bir
     düşüş gösterir) — tıpkı `aylige_cevir`'in `agg == "sum"` durumunda
@@ -179,7 +190,7 @@ def kompozisyon_verisi_hazirla(
     """
     aylik = df.resample("MS").sum(min_count=1).dropna(how="all")
     if gorunum_mutlak and freq != "monthly":
-        aylik = uc_aylar_tamamlanmamissa_dus(aylik, df.index.min(), df.index.max())
+        aylik = kismi_aylari_dus(aylik, df.index, freq)
     return aylik if gorunum_mutlak else paylara_cevir(aylik)
 
 

@@ -25,6 +25,7 @@ def test_kategori_sirasi():
         "bankacilik",
         "para-banka",
         "fonlar",
+        "havacilik",
         "insaat",
         "kredi-karti",
         "emtia-enerji",
@@ -35,7 +36,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 101
+    assert len(serileri_yukle()) == 108
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -114,7 +115,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -473,12 +474,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 101 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut 108 seriyi reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 101
+        assert len(serileri_yukle()) == 108
     finally:
         serileri_yukle.cache_clear()
 
@@ -708,3 +709,16 @@ def test_tefas_serisi_gecersiz_olcut_reddedilir():
 def test_evds_serisi_tefas_alani_tasiyamaz():
     with pytest.raises(KatalogHatasi, match="tefas_"):
         _dogrula_ham(_ham_seri(tefas_tip="YAT"))
+
+
+def test_eurocontrol_serisi_gecersiz_kaynak_reddedilir():
+    with pytest.raises(KatalogHatasi, match="ec_kaynak"):
+        _dogrula_ham(_ham_seri(
+            kaynak_tipi="eurocontrol", ec_kaynak="ulkeler", ec_varlik="Türkiye",
+            evds_code=None, evds_frequency=None,
+        ))
+
+
+def test_evds_serisi_ec_alani_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="ec_"):
+        _dogrula_ham(_ham_seri(ec_varlik="Türkiye"))

@@ -18,12 +18,16 @@ GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "level", "composition"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
-GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas"}
+GECERLI_KAYNAK_TIPLERI = {
+    "evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol",
+}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
 # fon tipi ve hangi toplulaştırmanın istendiği.
 GECERLI_TEFAS_TIPLERI = {"YAT", "EMK"}
 GECERLI_TEFAS_OLCUTLERI = {"buyukluk", "hesap", "fon-sayisi", "ortalama-buyukluk"}
+# EUROCONTROL'ün üç dosyası: ülke, hava yolu, havalimanı.
+GECERLI_EC_KAYNAKLARI = {"ulke", "havayolu", "havalimani"}
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
 # listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
@@ -59,6 +63,10 @@ KAYNAK_ALANLARI = {
     },
     "tefas": {
         "zorunlu": ("tefas_tip", "tefas_olcut"),
+        "istege_bagli": ("start_date",),
+    },
+    "eurocontrol": {
+        "zorunlu": ("ec_kaynak", "ec_varlik"),
         "istege_bagli": ("start_date",),
     },
 }
@@ -125,6 +133,8 @@ class Seri:
     bddk_kumulatif: bool | None = None
     tefas_tip: str | None = None
     tefas_olcut: str | None = None
+    ec_kaynak: str | None = None
+    ec_varlik: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -232,6 +242,8 @@ def serileri_yukle() -> tuple[Seri, ...]:
             bddk_kumulatif=ham.get("bddk_kumulatif"),
             tefas_tip=ham.get("tefas_tip"),
             tefas_olcut=ham.get("tefas_olcut"),
+            ec_kaynak=ham.get("ec_kaynak"),
+            ec_varlik=ham.get("ec_varlik"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -299,6 +311,11 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(
             f"{seri.id}: epias kaynağı monthly_agg='last' alamaz "
             "(yalnızca 'sum' ya da 'mean' desteklenir)"
+        )
+    if seri.kaynak_tipi == "eurocontrol" and seri.ec_kaynak not in GECERLI_EC_KAYNAKLARI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz ec_kaynak '{seri.ec_kaynak}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_EC_KAYNAKLARI))})"
         )
     if seri.kaynak_tipi == "tefas":
         # Yazım hatası adaptörün derinliklerinde KeyError'a dönüşmesin.

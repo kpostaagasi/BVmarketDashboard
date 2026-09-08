@@ -98,6 +98,22 @@
     satırları toplanır. TEFAS ucu 5 yıldan eski tarih kabul etmediği için
     seriler beş yıl geriye gider. "Hesap sayısı" fon bazındadır — aynı
     yatırımcı iki fondaysa iki kez sayılır, yani yatırımcı sayısı değildir.
+- slug: havacilik
+  title: Havacılık
+  pano:
+    [
+      havacilik/turkiye,
+      havacilik/thy,
+      havacilik/pegasus,
+      havacilik/istanbul-havalimani,
+    ]
+  note: >-
+    Kaynak EUROCONTROL "Daily Traffic Variation" panosu: günlük IFR uçuş
+    sayısı (yolcu değil, uçuş). Dosyalar yalnızca cari yılı taşır; seriler
+    her satırın "önceki yıl referansı" sütunuyla bir yıl geriye uzatılır,
+    bu yüzden geçmiş iki yılla sınırlıdır. Havayolu serileri şirketin TÜM
+    ağını sayar (yurt dışı bacaklar dahil), havalimanı serileri o
+    havalimanına iniş/kalkışları.
 - slug: insaat
   title: İnşaat
   pano:

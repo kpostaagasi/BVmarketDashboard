@@ -233,55 +233,77 @@ def _aylik(*aylar):
     )
 
 
-def test_uc_aylar_tam_ise_dusurulmez():
-    from core.charts import uc_aylar_tamamlanmamissa_dus
+def test_kismi_aylari_dus_tam_aylari_korur():
+    from core.charts import kismi_aylari_dus
 
     aylik = _aylik("2026-07-01", "2026-08-01")
-    sonuc = uc_aylar_tamamlanmamissa_dus(
-        aylik, pd.Timestamp("2026-07-01"), pd.Timestamp("2026-08-31")
-    )
-    assert len(sonuc) == 2
+    ham = pd.date_range("2026-07-01", "2026-08-31", freq="D")
+    assert len(kismi_aylari_dus(aylik, ham, "daily")) == 2
 
 
-def test_uc_aylar_eksik_son_ayi_dusurur():
-    from core.charts import uc_aylar_tamamlanmamissa_dus
+def test_kismi_aylari_dus_eksik_son_ayi_dusurur():
+    from core.charts import kismi_aylari_dus
 
     aylik = _aylik("2026-07-01", "2026-08-01")
-    sonuc = uc_aylar_tamamlanmamissa_dus(
-        aylik, pd.Timestamp("2026-07-01"), pd.Timestamp("2026-08-15")
-    )
-    assert list(sonuc.index) == [pd.Timestamp("2026-07-01")]
+    ham = pd.date_range("2026-07-01", "2026-08-15", freq="D")
+    assert list(kismi_aylari_dus(aylik, ham, "daily").index) == [
+        pd.Timestamp("2026-07-01")
+    ]
 
 
-def test_uc_aylar_eksik_ilk_ayi_dusurur():
+def test_kismi_aylari_dus_eksik_ilk_ayi_dusurur():
     """Veri ayın ortasında başlıyorsa ilk ay sahte bir dip üretir (M5)."""
-    from core.charts import uc_aylar_tamamlanmamissa_dus
+    from core.charts import kismi_aylari_dus
 
     aylik = _aylik("2026-06-01", "2026-07-01", "2026-08-01")
-    sonuc = uc_aylar_tamamlanmamissa_dus(
-        aylik, pd.Timestamp("2026-06-28"), pd.Timestamp("2026-08-31")
-    )
-    assert list(sonuc.index) == [
+    ham = pd.date_range("2026-06-28", "2026-08-31", freq="D")
+    assert list(kismi_aylari_dus(aylik, ham, "daily").index) == [
         pd.Timestamp("2026-07-01"), pd.Timestamp("2026-08-01")
     ]
 
 
-def test_uc_aylar_iki_uc_da_eksikse_ikisi_de_duser():
-    from core.charts import uc_aylar_tamamlanmamissa_dus
+def test_kismi_aylari_dus_icteki_kismi_ayi_da_dusurur():
+    """EUROCONTROL: önceki yıl verisi cari günde bitiyor, yani seride İÇ
+    kısmi ay var (2025-09, 8 gün). Uçlara özel eski kural bunu kaçırıyordu.
+    """
+    from core.charts import kismi_aylari_dus
+
+    aylik = _aylik("2025-08-01", "2025-09-01", "2026-01-01")
+    ham = pd.DatetimeIndex(
+        list(pd.date_range("2025-08-01", "2025-09-08", freq="D"))
+        + list(pd.date_range("2026-01-01", "2026-01-31", freq="D"))
+    )
+    assert list(kismi_aylari_dus(aylik, ham, "daily").index) == [
+        pd.Timestamp("2025-08-01"), pd.Timestamp("2026-01-01")
+    ]
+
+
+def test_kismi_aylari_dus_haftalik_seride_son_haftayi_tam_sayar():
+    """Haftalık seride ayın son noktası son yedi güne düşer; ay tamdır."""
+    from core.charts import kismi_aylari_dus
+
+    aylik = _aylik("2026-07-01")
+    ham = pd.date_range("2026-07-03", "2026-07-31", freq="7D")
+    assert len(kismi_aylari_dus(aylik, ham, "daily")) == 0
+    assert len(kismi_aylari_dus(aylik, ham, "weekly")) == 1
+
+
+def test_kismi_aylari_dus_iki_uc_da_eksikse_ikisi_de_duser():
+    from core.charts import kismi_aylari_dus
 
     aylik = _aylik("2026-06-01", "2026-07-01", "2026-08-01")
-    sonuc = uc_aylar_tamamlanmamissa_dus(
-        aylik, pd.Timestamp("2026-06-28"), pd.Timestamp("2026-08-15")
-    )
-    assert list(sonuc.index) == [pd.Timestamp("2026-07-01")]
+    ham = pd.date_range("2026-06-28", "2026-08-15", freq="D")
+    assert list(kismi_aylari_dus(aylik, ham, "daily").index) == [
+        pd.Timestamp("2026-07-01")
+    ]
 
 
-def test_uc_aylar_bos_df_hata_vermez():
-    from core.charts import uc_aylar_tamamlanmamissa_dus
+def test_kismi_aylari_dus_bos_df_hata_vermez():
+    from core.charts import kismi_aylari_dus
 
     aylik = pd.DataFrame({"value": []}, index=pd.DatetimeIndex([]))
-    sonuc = uc_aylar_tamamlanmamissa_dus(
-        aylik, pd.Timestamp("2026-08-01"), pd.Timestamp("2026-08-15")
+    sonuc = kismi_aylari_dus(
+        aylik, pd.date_range("2026-08-01", "2026-08-15", freq="D"), "daily"
     )
     assert sonuc.empty
 
