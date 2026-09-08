@@ -158,3 +158,29 @@ def test_osd_indeksi_bulten_baglantisi_donduruyor():
     assert baglantilar, "hiç bülten bağlantısı yok"
     assert all(u.endswith(".pdf") for u in baglantilar.values())
     assert all(u.startswith("https://www.osd.org.tr/") for u in baglantilar.values())
+
+
+def test_tim_bulteni_beklenen_sablonu_donduruyor():
+    """URL deseni deterministik; şablon kayması burada görülür.
+
+    2019/12 sabit bir dosyadır (xlsx yayının ilk dosyası) — cari ay
+    yayımlanmamış olabileceği için smoke testi ona bağlanmaz.
+    """
+    import requests
+
+    from ingest.tim import (
+        ZAMAN_ASIMI,
+        bulten_url,
+        dogrula,
+        sayfayi_ayikla,
+        sifir_aylari_at,
+    )
+
+    yanit = requests.get(bulten_url(2019, 12), timeout=ZAMAN_ASIMI)
+    assert yanit.status_code == 200
+    assert yanit.content[:2] == b"PK"  # xlsx bir zip'tir
+
+    noktalar = sifir_aylari_at(sayfayi_ayikla(yanit.content))
+    dogrula(noktalar, "2019.12")
+    assert "Otomotiv Endüstrisi" in noktalar
+    assert len(noktalar["TOPLAM"]) == 12

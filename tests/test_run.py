@@ -133,6 +133,10 @@ def test_main_epias_giris_basarisizsa_diger_kaynaklar_calismaya_devam_eder(
     monkeypatch.setattr(run.epias, "seri_cek", patlayan_epias_cek)
     monkeypatch.setattr(run.evds, "seri_cek", lambda seri, api_key, session=None, bugun=None: sahte_df())
     monkeypatch.setattr(run.yahoo, "seri_cek", lambda seri, session=None: sahte_df())
+    # osd/tim stub'lanmazsa bu test gerçek ağa çıkar: `-m 'not network'`
+    # koşusu OSD PDF'lerini ve TİM XLSX'lerini indirmeye başlar.
+    monkeypatch.setattr(run.osd, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
+    monkeypatch.setattr(run.tim, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
     monkeypatch.setattr(run, "seriyi_yaz", sahte_seriyi_yaz)
 
     kod = run.main()
@@ -169,6 +173,8 @@ def test_main_epias_serileri_tek_onbellek_paylasir(monkeypatch):
     monkeypatch.setattr(run.epias, "seri_cek", sahte_epias_cek)
     monkeypatch.setattr(run.evds, "seri_cek", lambda seri, api_key, session=None, bugun=None: sahte_df())
     monkeypatch.setattr(run.yahoo, "seri_cek", lambda seri, session=None: sahte_df())
+    monkeypatch.setattr(run.osd, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
+    monkeypatch.setattr(run.tim, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
     monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
 
     assert run.main() == 0
@@ -199,3 +205,31 @@ def test_cek_osd_serisini_osd_modulune_yonlendirir(monkeypatch):
     onbellek: dict = {}
     assert run._cek(seri, "ANAHTAR", None, None, None, onbellek) == "DF"
     assert cagrildi["onbellek"] is onbellek
+
+
+def test_cek_tim_serisini_tim_modulune_yonlendirir(monkeypatch):
+    """13 TİM serisi koşu başına tek önbellek paylaşmalı (8 dosya, 104 değil)."""
+    import dataclasses
+
+    from core.catalog import seri_getir
+    from ingest import run
+
+    cagrildi = {}
+
+    def sahte_seri_cek(seri, onbellek=None, session=None):
+        cagrildi["id"] = seri.id
+        cagrildi["onbellek"] = onbellek
+        return pd.DataFrame({"date": ["2026-01-01"], "value": [1000.0]})
+
+    monkeypatch.setattr(run.tim, "seri_cek", sahte_seri_cek)
+    seri = dataclasses.replace(
+        seri_getir("enflasyon/tufe-genel"),
+        kaynak_tipi="tim", tim_sektor="Çelik", olcek=0.001,
+        evds_code=None, evds_frequency=None,
+    )
+    onbellek: dict = {}
+    df = run._cek(seri, "ANAHTAR", None, None, None, None, onbellek)
+    assert cagrildi["id"] == "enflasyon/tufe-genel"
+    assert cagrildi["onbellek"] is onbellek
+    # Bin USD → Milyon USD çevrimi orchestrator'da (faz 3f)
+    assert df["value"].iloc[0] == pytest.approx(1.0)

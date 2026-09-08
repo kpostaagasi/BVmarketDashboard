@@ -18,7 +18,7 @@ GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "level", "composition"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
-GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias", "osd"}
+GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias", "osd", "tim"}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
@@ -44,6 +44,10 @@ KAYNAK_ALANLARI = {
     "osd": {
         "zorunlu": ("osd_firma",),
         "istege_bagli": ("start_date", "osd_eski_adlar"),
+    },
+    "tim": {
+        "zorunlu": ("tim_sektor",),
+        "istege_bagli": ("start_date", "tim_eski_adlar"),
     },
 }
 
@@ -100,6 +104,8 @@ class Seri:
     epias_bilesenler: dict[str, tuple[str, ...]] | None = None
     osd_firma: str | None = None
     osd_eski_adlar: tuple[str, ...] | None = None
+    tim_sektor: str | None = None
+    tim_eski_adlar: tuple[str, ...] | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
     yayin_notu: str | None = None
@@ -197,6 +203,10 @@ def serileri_yukle() -> tuple[Seri, ...]:
             osd_firma=ham.get("osd_firma"),
             osd_eski_adlar=(
                 tuple(ham["osd_eski_adlar"]) if "osd_eski_adlar" in ham else None
+            ),
+            tim_sektor=ham.get("tim_sektor"),
+            tim_eski_adlar=(
+                tuple(ham["tim_eski_adlar"]) if "tim_eski_adlar" in ham else None
             ),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),

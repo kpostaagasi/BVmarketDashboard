@@ -41,6 +41,21 @@
     Üçü de aylık akım büyüklüğüdür, Milyon USD cinsinden gösterilir. Cari
     dengede negatif değer açık demektir; ödemeler dengesi verisi dış
     ticaret verisinden bir ay geriden gelir.
+- slug: ihracat
+  title: İhracat (Sektörel)
+  pano:
+    [
+      ihracat/toplam,
+      ihracat/otomotiv,
+      ihracat/hazir-giyim,
+      ihracat/celik,
+    ]
+  note: >-
+    Kaynak TİM'dir ve takip eden ayın 1–2'sinde yayımlanır — panodaki en
+    hızlı makro sinyal. TİM ihracatçı birlikleri kayıtlarını sayar, TÜİK
+    gümrük beyanlarının tamamını: TİM toplamı `dis-ticaret/ihracat`
+    serisinden yapısal olarak düşüktür (Temmuz 2026: 22.029 karşı 25.623
+    milyon USD), ikisi seviye olarak karşılaştırılmamalıdır.
 - slug: para-banka
   title: Para & Banka
   pano:

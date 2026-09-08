@@ -21,6 +21,7 @@ def test_kategori_sirasi():
         "enflasyon",
         "sanayi",
         "dis-ticaret",
+        "ihracat",
         "para-banka",
         "insaat",
         "kredi-karti",
@@ -32,7 +33,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 69
+    assert len(serileri_yukle()) == 82
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -111,7 +112,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -405,6 +406,29 @@ def test_evds_serisi_olcek_tasiyabilir():
     _dogrula_ham(_ham_seri(olcek=0.000001))
 
 
+
+def test_tim_serisi_sektor_ve_eski_adlar_tasiyabilir():
+    _dogrula_ham(
+        _ham_seri(
+            kaynak_tipi="tim", tim_sektor="Otomotiv Endüstrisi",
+            tim_eski_adlar=("Otomotiv",), evds_code=None, evds_frequency=None,
+            olcek=0.001,
+        )
+    )
+
+
+def test_tim_serisi_sektor_zorunlu():
+    with pytest.raises(KatalogHatasi, match="tim_sektor"):
+        _dogrula_ham(
+            _ham_seri(kaynak_tipi="tim", evds_code=None, evds_frequency=None)
+        )
+
+
+def test_evds_serisi_tim_alani_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="tim_sektor"):
+        _dogrula_ham(_ham_seri(tim_sektor="Çelik"))
+
+
 def test_evds_serisi_epias_alani_tasiyamaz():
     with pytest.raises(KatalogHatasi, match="epias_ucu"):
         _dogrula_ham(_ham_seri(epias_ucu="ptf"))
@@ -447,12 +471,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 69 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut 82 seriyi reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 69
+        assert len(serileri_yukle()) == 82
     finally:
         serileri_yukle.cache_clear()
 

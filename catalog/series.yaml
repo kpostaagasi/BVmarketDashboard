@@ -794,3 +794,147 @@
   evds_frequency: "2"
   monthly_agg: sum
   charts: [level, seasonality]
+
+- id: ihracat/toplam
+  title: İhracat Toplamı (TİM)
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: TOPLAM
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/otomotiv
+  title: Otomotiv Endüstrisi İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Otomotiv Endüstrisi
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/hazir-giyim
+  title: Hazırgiyim ve Konfeksiyon İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Hazırgiyim ve Konfeksiyon
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/kimyevi
+  title: Kimyevi Maddeler ve Mamulleri İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Kimyevi Maddeler ve Mamulleri
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/celik
+  title: Çelik İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Çelik
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/elektrik-elektronik
+  title: Elektrik ve Elektronik İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Elektrik ve Elektronik
+  tim_eski_adlar: [Elektrik Elektronik]
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/makine
+  title: Makine ve Aksamları İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Makine ve Aksamları
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/demir-disi-metaller
+  title: Demir ve Demir Dışı Metaller İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Demir ve Demir Dışı Metaller
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/savunma-havacilik
+  title: Savunma ve Havacılık Sanayii İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Savunma ve Havacılık Sanayii
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/tekstil
+  title: Tekstil ve Hammaddeleri İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Tekstil ve Hammaddeleri
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/mucevher
+  title: Mücevher İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Mücevher
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/tarim
+  title: Tarım İhracatı (Ana Grup)
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: I. TARIM
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: ihracat/madencilik
+  title: Madencilik Ürünleri İhracatı
+  category: ihracat
+  kaynak: { name: TİM, url: "https://tim.org.tr/tr/ihracat-rakamlari" }
+  kaynak_tipi: tim
+  tim_sektor: Madencilik Ürünleri
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]

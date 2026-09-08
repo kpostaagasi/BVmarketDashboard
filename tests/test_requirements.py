@@ -1,7 +1,7 @@
-"""requirements ayrımı: pdfplumber ingest'e ait, uygulamaya değil.
+"""requirements ayrımı: pdfplumber ve openpyxl ingest'e ait, uygulamaya değil.
 
-Streamlit Cloud `requirements.txt`'i kurar. PDF kütüphanesi oraya girerse
-uygulama gereksiz büyür ve çalışma zamanında hiç kullanılmaz.
+Streamlit Cloud `requirements.txt`'i kurar. PDF ve XLSX kütüphaneleri oraya
+girerse uygulama gereksiz büyür ve çalışma zamanında hiç kullanılmaz.
 """
 
 from pathlib import Path
@@ -23,6 +23,15 @@ def test_uygulama_requirements_pdfplumber_icermez():
 
 def test_ingest_requirements_pdfplumber_icerir():
     assert any("pdfplumber" in s for s in _satirlar("requirements-ingest.txt"))
+
+
+def test_uygulama_requirements_openpyxl_icermez():
+    assert not any("openpyxl" in s for s in _satirlar("requirements.txt"))
+
+
+def test_ingest_requirements_openpyxl_icerir():
+    """TİM sektörel bültenleri XLSX; okuyucu yalnızca ingest'te gerekli."""
+    assert any("openpyxl" in s for s in _satirlar("requirements-ingest.txt"))
 
 
 def test_ingest_requirements_uygulamayi_kapsar():
