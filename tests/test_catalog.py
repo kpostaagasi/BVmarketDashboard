@@ -36,7 +36,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 108
+    assert len(serileri_yukle()) == 111
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -474,12 +474,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 108 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut 111 seriyi reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 108
+        assert len(serileri_yukle()) == 111
     finally:
         serileri_yukle.cache_clear()
 

@@ -12,10 +12,26 @@ import os
 import sys
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
 from ingest import bddk, epias, eurocontrol, evds, osd, tefas, tim, yahoo
+
+# Koşu başına tek oturum tüm adaptörlere geçiyor; retry politikası bu yüzden
+# tek yerde tanımlanabiliyor (devredilen iş #1). Ölçüm: 111 serilik bir tam
+# koşuda EPİAŞ'tan okuma zaman aşımı ve EVDS'ten "Remote end closed
+# connection" geldi ve iki seri o gün için düştü; all-or-nothing commit
+# politikasıyla tek geçici hata günün tamamını götürüyordu.
+# POST'lar da yeniden denenir: hepsi salt-okuma sorgusu, yan etkisi yok.
+RETRY = Retry(
+    total=3,
+    backoff_factor=1.5,  # 0 → 1,5 → 3 sn
+    status_forcelist=(429, 500, 502, 503, 504),
+    allowed_methods=frozenset({"GET", "POST"}),
+    raise_on_status=False,
+)
 
 
 def olcekle(df, olcek: float | None):
@@ -128,6 +144,7 @@ def main() -> int:
     ec_onbellek: dict = {}
 
     with requests.Session() as oturum:
+        oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
         epias_seriler = [s for s in seriler if s.kaynak_tipi == "epias"]
         if epias_seriler:
             try:

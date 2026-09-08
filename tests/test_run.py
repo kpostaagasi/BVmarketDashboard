@@ -239,3 +239,32 @@ def test_cek_tim_serisini_tim_modulune_yonlendirir(monkeypatch):
     assert cagrildi["onbellek"] is onbellek
     # Bin USD → Milyon USD çevrimi orchestrator'da (faz 3f)
     assert df["value"].iloc[0] == pytest.approx(1.0)
+
+
+def test_oturum_retry_politikasi_tasir(monkeypatch):
+    """Geçici ağ hatası (okuma zaman aşımı, 5xx) tüm günü götürmemeli.
+
+    Ölçüm: 111 serilik tam koşuda EPİAŞ okuma zaman aşımı ve EVDS bağlantı
+    kesilmesi iki seriyi düşürmüştü; retry tek noktada, paylaşılan oturumda.
+    """
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setenv("EPIAS_USERNAME", "sahte")
+    monkeypatch.setenv("EPIAS_PASSWORD", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+
+    gorulen = {}
+
+    def sahte_evds(seri, api_key, session=None, bugun=None):
+        gorulen["adaptor"] = session.get_adapter("https://x/")
+        return sahte_df()
+
+    monkeypatch.setattr(run.evds, "seri_cek", sahte_evds)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+    assert run.main() == 0
+
+    retry = gorulen["adaptor"].max_retries
+    assert retry.total == 3
+    assert 429 in retry.status_forcelist
+    assert "POST" in retry.allowed_methods

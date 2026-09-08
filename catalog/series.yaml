@@ -1236,3 +1236,37 @@
   freq: daily
   monthly_agg: sum
   charts: [seasonality, level]
+
+- id: bankacilik/kredi-faiz-gelirleri
+  title: Kredilerden Alınan Faizler
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "102,1165"
+  bddk_kumulatif: true
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: bankacilik/mevduat-faiz-giderleri
+  title: Mevduata Verilen Faizler
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "159,113"
+  bddk_kumulatif: true
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: bankacilik/vadesiz-mevduat-payi
+  title: Vadesiz Mevduat / Toplam Mevduat
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "1745,551"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
