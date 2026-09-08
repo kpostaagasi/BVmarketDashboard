@@ -184,3 +184,23 @@ def test_tim_bulteni_beklenen_sablonu_donduruyor():
     dogrula(noktalar, "2019.12")
     assert "Otomotiv Endüstrisi" in noktalar
     assert len(noktalar["TOPLAM"]) == 12
+
+
+def test_bddk_gelismis_rapor_ucu_seri_donduruyor():
+    """Uç ve eksik TLS zinciri çözümü canlıda çalışıyor mu.
+
+    BDDK yalnızca kendi sertifikasını gönderiyor; `_ca_paketi` GlobalSign
+    ara sertifikasını certifi'ye ekliyor. `verify=False` yok — zincir
+    kırılırsa bu test kırılır.
+    """
+    from datetime import date as _date
+
+    from ingest.bddk import noktalari_ayikla, _rapor_cek
+
+    onbellek: dict = {}
+    govde = _rapor_cek("544", "10001", _date.today(), onbellek=onbellek)
+    noktalar = noktalari_ayikla(govde)
+    assert len(noktalar) >= 60  # 2019-01'den bu yana aylık
+    assert onbellek["bitis"][0] >= 2026
+    # NPL oranı yüzde; makul bant
+    assert all(0 < v < 20 for v in noktalar.values())

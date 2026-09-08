@@ -56,6 +56,21 @@
     gümrük beyanlarının tamamını: TİM toplamı `dis-ticaret/ihracat`
     serisinden yapısal olarak düşüktür (Temmuz 2026: 22.029 karşı 25.623
     milyon USD), ikisi seviye olarak karşılaştırılmamalıdır.
+- slug: bankacilik
+  title: Bankacılık
+  pano:
+    [
+      bankacilik/net-donem-kari,
+      bankacilik/net-faiz-geliri,
+      bankacilik/npl-orani,
+      bankacilik/sermaye-yeterliligi,
+    ]
+  note: >-
+    Kaynak BDDK Aylık Bülten'in "Gelişmiş Gösterim" ucu, taraf = Sektör
+    (banka bazlı veri bu bültende yok). Kar/zarar kalemleri BDDK'da
+    yılbaşından kümülatif yayımlanır; burada yıl içinde fark alınarak AYLIK
+    akıma çevrilmiştir. Rasyolar yayımlandığı gibidir (kümülatif kâra
+    dayandıkları için yıl içinde basamaklı hareket ederler).
 - slug: para-banka
   title: Para & Banka
   pano:

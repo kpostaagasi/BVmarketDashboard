@@ -8,10 +8,10 @@ istatistikli grafik sayfaları olarak sunma.
 
 ```
 app.py                    # st.navigation — sol menü katalogdan üretilir
-catalog/series.yaml       # tek doğruluk kaynağı: 82 seri tanımı
-catalog/categories.yaml   # menü ağacı: 12 kategori + her birinin KPI panosu
+catalog/series.yaml       # tek doğruluk kaynağı: 94 seri tanımı
+catalog/categories.yaml   # menü ağacı: 13 kategori + her birinin KPI panosu
 core/                     # catalog, data, stats, charts, components, page, takvim
-ingest/                   # evds.py + yahoo.py + epias.py + osd.py + tim.py + run.py (orchestrator)
+ingest/                   # evds.py + yahoo.py + epias.py + osd.py + tim.py + bddk.py + run.py (orchestrator)
 data/<kategori>/<seri>.csv
 .github/workflows/ingest.yml    # günlük cron: ingest → commit → push
 .github/workflows/test.yml      # her push/PR: pytest
@@ -40,7 +40,7 @@ Tek bir seriyi hata ayıklamak için: `python -m ingest.run --only enflasyon/tuf
   title: Görünen Ad
   category: <kategori>          # categories.yaml'da tanımlı olmalı
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds              # evds | yahoo | epias | osd | tim (zorunlu alan)
+  kaynak_tipi: evds              # evds | yahoo | epias | osd | tim | bddk (zorunlu alan)
   unit: "Birim"
   freq: monthly                 # daily | weekly | monthly
   evds_code: TP.XXX.YYY
@@ -52,7 +52,8 @@ Tek bir seriyi hata ayıklamak için: `python -m ingest.run --only enflasyon/tuf
 
 Yahoo Finance serisi için `kaynak_tipi: yahoo` ve `evds_code`/`evds_frequency`
 yerine `yahoo_symbol: "BZ=F"`; EPİAŞ için `epias_ucu`/`epias_alani`; OSD için
-`osd_firma`; TİM için `tim_sektor` (gerekirse `tim_eski_adlar`) kullanın.
+`osd_firma`; TİM için `tim_sektor` (gerekirse `tim_eski_adlar`); BDDK için
+`bddk_kalem` (gerekirse `bddk_taraf`, `bddk_kumulatif`) kullanın.
 Hangi kaynak tipinin hangi alanı taşıyabileceği
 `core/catalog.py::KAYNAK_ALANLARI` tablosunda; `olcek` ve `gecikme_gunu` her
 tip için geçerli ortak alanlardır (`ingest/run.py::olcekle` ölçeği tek
@@ -79,7 +80,7 @@ repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 |---|---|---|
 | 1 | Streamlit iskeleti + EVDS dilimi (13 seri, 4 kategori) | ✅ |
 | 2 | Emtia (10 seri, 2 kategori): Brent, WTI, doğalgaz, altın, gümüş, bakır, HRC çelik, platin, paladyum, alüminyum | ✅ |
-| 3 | Veri Takvimi (3a), Elektrik/EPİAŞ (3b), üretim kompozisyonu (3c), OSD otomotiv (3e), EVDS genişletme (3f), TİM sektörel ihracat (3g) | ✅ |
+| 3 | Veri Takvimi (3a), Elektrik/EPİAŞ (3b), üretim kompozisyonu (3c), OSD otomotiv (3e), EVDS genişletme (3f), TİM sektörel ihracat (3g), BDDK bankacılık (3h) | ✅ |
 | 4 | Hisse sayfaları | Planlandı |
 | 5 | Arama, favoriler, AI raporları | Planlandı |
 

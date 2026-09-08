@@ -22,6 +22,7 @@ def test_kategori_sirasi():
         "sanayi",
         "dis-ticaret",
         "ihracat",
+        "bankacilik",
         "para-banka",
         "insaat",
         "kredi-karti",
@@ -33,7 +34,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 82
+    assert len(serileri_yukle()) == 94
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -112,7 +113,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -471,12 +472,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 82 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut 94 seriyi reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 82
+        assert len(serileri_yukle()) == 94
     finally:
         serileri_yukle.cache_clear()
 

@@ -938,3 +938,135 @@
   freq: monthly
   olcek: 0.001
   charts: [seasonality, level]
+
+- id: bankacilik/net-donem-kari
+  title: Bankacılık Sektörü Net Dönem Karı
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "194,148"
+  bddk_kumulatif: true
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: bankacilik/net-faiz-geliri
+  title: Net Faiz (Kar Payı) Geliri
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "167,121"
+  bddk_kumulatif: true
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: bankacilik/hizmet-gelirleri
+  title: Bankacılık Hizmetleri Gelirleri
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "172,126"
+  bddk_kumulatif: true
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: bankacilik/faiz-disi-gelirler
+  title: Toplam Faiz Dışı Gelirler
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "175,128"
+  bddk_kumulatif: true
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: bankacilik/faiz-disi-giderler
+  title: Toplam Faiz Dışı Giderler
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "186,140"
+  bddk_kumulatif: true
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: bankacilik/personel-giderleri
+  title: Personel Giderleri
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "176,129"
+  bddk_kumulatif: true
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: bankacilik/npl-orani
+  title: Takipteki Alacaklar Oranı (NPL)
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "544"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: bankacilik/karsilik-orani
+  title: Takipteki Alacaklar Karşılık Oranı
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "545"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: bankacilik/sermaye-yeterliligi
+  title: Sermaye Yeterliliği Standart Rasyosu
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "1618,1590,1403,813,834,850,866,884,901,918,933,947"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: bankacilik/ozkaynak-karliligi
+  title: Özkaynak Karlılığı (ROE)
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "572"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: bankacilik/aktif-karliligi
+  title: Aktif Karlılığı (ROA)
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "570"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: bankacilik/kredi-mevduat-orani
+  title: Kredi / Mevduat Oranı
+  category: bankacilik
+  kaynak: { name: BDDK, url: "https://www.bddk.org.tr/BultenAylik" }
+  kaynak_tipi: bddk
+  bddk_kalem: "1749"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
