@@ -84,6 +84,20 @@
     Dördü de stok büyüklüğüdür (dönem sonu bakiyesi); aylık indirgemede
     dönemin son değeri alınır, toplanmaz. Rezervler haftalık (Cuma)
     yayımlanır.
+- slug: fonlar
+  title: Yatırım Fonları
+  pano:
+    [
+      fonlar/yatirim-fonu-buyukluk,
+      fonlar/yatirim-fonu-hesap,
+      fonlar/emeklilik-fonu-buyukluk,
+      fonlar/yatirim-fonu-sayisi,
+    ]
+  note: >-
+    Kaynak TEFAS. Değerler AY SONU STOKUDUR: ayın son yayın gününün tüm fon
+    satırları toplanır. TEFAS ucu 5 yıldan eski tarih kabul etmediği için
+    seriler beş yıl geriye gider. "Hesap sayısı" fon bazındadır — aynı
+    yatırımcı iki fondaysa iki kez sayılır, yani yatırımcı sayısı değildir.
 - slug: insaat
   title: İnşaat
   pano:

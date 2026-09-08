@@ -18,8 +18,12 @@ GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "level", "composition"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
-GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias", "osd", "tim", "bddk"}
+GECERLI_KAYNAK_TIPLERI = {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas"}
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
+# TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
+# fon tipi ve hangi toplulaştırmanın istendiği.
+GECERLI_TEFAS_TIPLERI = {"YAT", "EMK"}
+GECERLI_TEFAS_OLCUTLERI = {"buyukluk", "hesap", "fon-sayisi", "ortalama-buyukluk"}
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
 # listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
@@ -52,6 +56,10 @@ KAYNAK_ALANLARI = {
     "bddk": {
         "zorunlu": ("bddk_kalem",),
         "istege_bagli": ("bddk_taraf", "bddk_kumulatif", "start_date"),
+    },
+    "tefas": {
+        "zorunlu": ("tefas_tip", "tefas_olcut"),
+        "istege_bagli": ("start_date",),
     },
 }
 
@@ -115,6 +123,8 @@ class Seri:
     bddk_kalem: str | None = None
     bddk_taraf: str | None = None
     bddk_kumulatif: bool | None = None
+    tefas_tip: str | None = None
+    tefas_olcut: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -220,6 +230,8 @@ def serileri_yukle() -> tuple[Seri, ...]:
                 str(ham["bddk_taraf"]) if "bddk_taraf" in ham else None
             ),
             bddk_kumulatif=ham.get("bddk_kumulatif"),
+            tefas_tip=ham.get("tefas_tip"),
+            tefas_olcut=ham.get("tefas_olcut"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -288,6 +300,18 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             f"{seri.id}: epias kaynağı monthly_agg='last' alamaz "
             "(yalnızca 'sum' ya da 'mean' desteklenir)"
         )
+    if seri.kaynak_tipi == "tefas":
+        # Yazım hatası adaptörün derinliklerinde KeyError'a dönüşmesin.
+        if seri.tefas_tip not in GECERLI_TEFAS_TIPLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz tefas_tip '{seri.tefas_tip}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_TEFAS_TIPLERI))})"
+            )
+        if seri.tefas_olcut not in GECERLI_TEFAS_OLCUTLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz tefas_olcut '{seri.tefas_olcut}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_TEFAS_OLCUTLERI))})"
+            )
     # Alan varlığı tabloda; burada yalnızca değer geçerliliği kalıyor.
     if seri.olcek is not None and seri.olcek <= 0:
         raise KatalogHatasi(

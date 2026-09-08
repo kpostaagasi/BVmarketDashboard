@@ -1070,3 +1070,85 @@
   unit: "%"
   freq: monthly
   charts: [seasonality, level]
+
+- id: fonlar/yatirim-fonu-buyukluk
+  title: Yatırım Fonları Toplam Büyüklüğü
+  category: fonlar
+  kaynak: { name: TEFAS, url: "https://www.tefas.gov.tr/tr/fon-verileri" }
+  kaynak_tipi: tefas
+  tefas_tip: YAT
+  tefas_olcut: buyukluk
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 1e-09
+  charts: [seasonality, level]
+
+- id: fonlar/yatirim-fonu-hesap
+  title: Yatırım Fonu Hesap Sayısı
+  category: fonlar
+  kaynak: { name: TEFAS, url: "https://www.tefas.gov.tr/tr/fon-verileri" }
+  kaynak_tipi: tefas
+  tefas_tip: YAT
+  tefas_olcut: hesap
+  unit: "Milyon hesap"
+  freq: monthly
+  olcek: 1e-06
+  charts: [seasonality, level]
+
+- id: fonlar/yatirim-fonu-sayisi
+  title: Yatırım Fonu Sayısı
+  category: fonlar
+  kaynak: { name: TEFAS, url: "https://www.tefas.gov.tr/tr/fon-verileri" }
+  kaynak_tipi: tefas
+  tefas_tip: YAT
+  tefas_olcut: fon-sayisi
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: fonlar/yatirim-fonu-ortalama
+  title: Fon Başına Ortalama Büyüklük
+  category: fonlar
+  kaynak: { name: TEFAS, url: "https://www.tefas.gov.tr/tr/fon-verileri" }
+  kaynak_tipi: tefas
+  tefas_tip: YAT
+  tefas_olcut: ortalama-buyukluk
+  unit: "Milyon TL"
+  freq: monthly
+  olcek: 1e-06
+  charts: [seasonality, level]
+
+- id: fonlar/emeklilik-fonu-buyukluk
+  title: Emeklilik Fonları Toplam Büyüklüğü
+  category: fonlar
+  kaynak: { name: TEFAS, url: "https://www.tefas.gov.tr/tr/fon-verileri" }
+  kaynak_tipi: tefas
+  tefas_tip: EMK
+  tefas_olcut: buyukluk
+  unit: "Milyar TL"
+  freq: monthly
+  olcek: 1e-09
+  charts: [seasonality, level]
+
+- id: fonlar/emeklilik-fonu-hesap
+  title: Emeklilik Fonu Hesap Sayısı
+  category: fonlar
+  kaynak: { name: TEFAS, url: "https://www.tefas.gov.tr/tr/fon-verileri" }
+  kaynak_tipi: tefas
+  tefas_tip: EMK
+  tefas_olcut: hesap
+  unit: "Milyon hesap"
+  freq: monthly
+  olcek: 1e-06
+  charts: [seasonality, level]
+
+- id: fonlar/emeklilik-fonu-sayisi
+  title: Emeklilik Fonu Sayısı
+  category: fonlar
+  kaynak: { name: TEFAS, url: "https://www.tefas.gov.tr/tr/fon-verileri" }
+  kaynak_tipi: tefas
+  tefas_tip: EMK
+  tefas_olcut: fon-sayisi
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]

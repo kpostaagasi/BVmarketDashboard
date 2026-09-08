@@ -204,3 +204,23 @@ def test_bddk_gelismis_rapor_ucu_seri_donduruyor():
     assert onbellek["bitis"][0] >= 2026
     # NPL oranı yüzde; makul bant
     assert all(0 < v < 20 for v in noktalar.values())
+
+
+def test_tefas_ucu_gun_anlik_goruntusu_donduruyor():
+    """Eski BindHistoryInfo ucu kapatıldı; yeni uç ve alan adları burada
+
+    çivileniyor. Hız sınırı nedeniyle tek istek atılır."""
+    from datetime import date as _date, timedelta as _timedelta
+
+    from ingest.tefas import _gun_cek, toplulastir
+
+    # Son iki hafta içinde bir iş günü ara (tatil/hafta sonu None döner).
+    for geri in range(1, 15):
+        satirlar = _gun_cek("YAT", _date.today() - _timedelta(days=geri))
+        if satirlar:
+            break
+    assert satirlar, "iki hafta içinde yayın günü bulunamadı"
+    assert {"fonKodu", "portfoyBuyukluk", "kisiSayisi", "tarih"} <= set(satirlar[0])
+    toplam = toplulastir(satirlar)
+    assert toplam["fon-sayisi"] > 1000  # ölçüm: ~2.030 fon
+    assert toplam["buyukluk"] > 1e12  # ölçüm: ~9,3 trilyon TL

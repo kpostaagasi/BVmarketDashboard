@@ -15,7 +15,7 @@ import requests
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import bddk, epias, evds, osd, tim, yahoo
+from ingest import bddk, epias, evds, osd, tefas, tim, yahoo
 
 
 def olcekle(df, olcek: float | None):
@@ -44,7 +44,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          epias_onbellek: dict | None = None,
          osd_onbellek: dict | None = None,
          tim_onbellek: dict | None = None,
-         bddk_onbellek: dict | None = None):
+         bddk_onbellek: dict | None = None,
+         tefas_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
         df = evds.seri_cek(seri, api_key, session=oturum)
@@ -58,6 +59,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = tim.seri_cek(seri, onbellek=tim_onbellek, session=oturum)
     elif seri.kaynak_tipi == "bddk":
         df = bddk.seri_cek(seri, onbellek=bddk_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "tefas":
+        df = tefas.seri_cek(seri, onbellek=tefas_onbellek, session=oturum)
     else:
         raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
     return olcekle(df, seri.olcek)
@@ -115,6 +118,9 @@ def main() -> int:
     # BDDK serileri (kalem, taraf) çiftine göre önbelleklenir; aynı kalemi
     # iki tarafta göstermek istersek yanıt bir kez çekilir.
     bddk_onbellek: dict = {}
+    # TEFAS: ay sonu anlık görüntüsü (tip, ay) başına tek istek; dört ölçüt
+    # aynı yanıttan üretilir (bkz. tefas.seri_cek).
+    tefas_onbellek: dict = {}
 
     with requests.Session() as oturum:
         epias_seriler = [s for s in seriler if s.kaynak_tipi == "epias"]
@@ -140,6 +146,7 @@ def main() -> int:
                 df = _cek(
                     seri, api_key, tgt, oturum,
                     epias_onbellek, osd_onbellek, tim_onbellek, bddk_onbellek,
+                    tefas_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")

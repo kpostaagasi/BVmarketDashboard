@@ -24,6 +24,7 @@ def test_kategori_sirasi():
         "ihracat",
         "bankacilik",
         "para-banka",
+        "fonlar",
         "insaat",
         "kredi-karti",
         "emtia-enerji",
@@ -34,7 +35,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 94
+    assert len(serileri_yukle()) == 101
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -113,7 +114,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -472,12 +473,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 94 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut 101 seriyi reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 94
+        assert len(serileri_yukle()) == 101
     finally:
         serileri_yukle.cache_clear()
 
@@ -685,3 +686,25 @@ def test_otomotiv_panosu_portfoy_firmalarini_gosterir():
         "otomotiv/ford-otosan", "otomotiv/tofas",
         "otomotiv/turk-traktor", "otomotiv/karsan",
     )
+
+
+def test_tefas_serisi_gecersiz_tip_reddedilir():
+    """Yazım hatası adaptörde KeyError'a değil katalog hatasına dönüşmeli."""
+    with pytest.raises(KatalogHatasi, match="tefas_tip"):
+        _dogrula_ham(_ham_seri(
+            kaynak_tipi="tefas", tefas_tip="YATIRIM", tefas_olcut="buyukluk",
+            evds_code=None, evds_frequency=None,
+        ))
+
+
+def test_tefas_serisi_gecersiz_olcut_reddedilir():
+    with pytest.raises(KatalogHatasi, match="tefas_olcut"):
+        _dogrula_ham(_ham_seri(
+            kaynak_tipi="tefas", tefas_tip="YAT", tefas_olcut="aum",
+            evds_code=None, evds_frequency=None,
+        ))
+
+
+def test_evds_serisi_tefas_alani_tasiyamaz():
+    with pytest.raises(KatalogHatasi, match="tefas_"):
+        _dogrula_ham(_ham_seri(tefas_tip="YAT"))
