@@ -168,3 +168,18 @@
   note: >-
     Üretim adetleri OSD aylık üretim bültenlerinden alınır; bülten genelde
     takip eden ayın 12–18'i arasında yayımlanır.
+- slug: beklentiler
+  title: Beklentiler (Piyasa Anketi)
+  pano:
+    [
+      beklentiler/tufe-yilsonu,
+      beklentiler/politika-faizi-12a,
+      beklentiler/usdtry-12a,
+      beklentiler/gsyh-buyume,
+    ]
+  note: >-
+    Kaynak TCMB Piyasa Katılımcıları Anketi'nin "Uygun Ortalamalar" tablosu:
+    gerçekleşme değil KATILIMCI KONSENSÜSÜdür ve anketin yapıldığı ayı
+    etiketler. Mevsimsellik grafiği bilinçli olarak yok — beklenti serisinin
+    mevsimi değil, patikası okunur. Cari denge beklentisinde negatif değer
+    açık demektir.

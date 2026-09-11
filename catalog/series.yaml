@@ -1270,3 +1270,259 @@
   unit: "%"
   freq: monthly
   charts: [seasonality, level]
+
+# --- Reel efektif döviz kuru ve firma döviz pozisyonu (bie_rktufey,
+# bie_rkufey, bie_fdvy). REK temeli veriden doğrulandı: 2025 yıllık
+# ortalaması tam 100,00. FDVY milyon USD'dir ve net pozisyonda NEGATİF
+# değer açık demektir — ölçek uygulanmaz, işaret bilgi taşır.
+- id: ekonomi-makro/rek-tufe
+  title: Reel Efektif Döviz Kuru (TÜFE Bazlı)
+  category: ekonomi-makro
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  evds_code: TP.RK.T1.Y
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [seasonality, level]
+
+- id: ekonomi-makro/rek-ufe
+  title: Reel Efektif Döviz Kuru (Yİ-ÜFE Bazlı)
+  category: ekonomi-makro
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  evds_code: TP.RK.U01.Y
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [seasonality, level]
+
+- id: ekonomi-makro/firma-doviz-varlik
+  title: Reel Sektör Firmaları Döviz Varlıkları
+  category: ekonomi-makro
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Milyon USD"
+  freq: monthly
+  evds_code: TP.FDVY01
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [seasonality, level]
+
+- id: ekonomi-makro/firma-doviz-yukumluluk
+  title: Reel Sektör Firmaları Döviz Yükümlülükleri
+  category: ekonomi-makro
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Milyon USD"
+  freq: monthly
+  evds_code: TP.FDVY12
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [seasonality, level]
+
+- id: ekonomi-makro/firma-net-doviz
+  title: Reel Sektör Firmaları Net Döviz Pozisyonu
+  category: ekonomi-makro
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Milyon USD"
+  freq: monthly
+  evds_code: TP.FDVY37
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [level]
+
+# --- TÜİK dış ticaret endeksleri (BEC sınıflaması). Kod soneki ".2010"
+# olsa da temel yıl 2015'tir: 2015 değerleri ~102, doğrulandı. Birim değer
+# = fiyat etkisi, miktar = hacim etkisi; ikisi birlikte dış ticaret
+# haddini verir.
+- id: dis-ticaret/ihracat-birim-deger
+  title: İhracat Birim Değer Endeksi
+  category: dis-ticaret
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2015=100)"
+  freq: monthly
+  evds_code: TP.DT.IH.FIY.D01.2010
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: dis-ticaret/ihracat-miktar
+  title: İhracat Miktar Endeksi
+  category: dis-ticaret
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2015=100)"
+  freq: monthly
+  evds_code: TP.DT.IH.MIK.D01.2010
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: dis-ticaret/ithalat-birim-deger
+  title: İthalat Birim Değer Endeksi
+  category: dis-ticaret
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2015=100)"
+  freq: monthly
+  evds_code: TP.DT.IT.FIY.D01.2010
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: dis-ticaret/ithalat-miktar
+  title: İthalat Miktar Endeksi
+  category: dis-ticaret
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2015=100)"
+  freq: monthly
+  evds_code: TP.DT.IT.MIK.D01.2010
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+# --- Tarım ÜFE ve tarımsal girdi fiyat endeksi. Temel yıl 2020'dir
+# (2020 değerleri ~97-98, doğrulandı); TÜFE 2025=100 bazlı olduğu için
+# ikisinin SEVİYELERİ karşılaştırılmaz, yıllık değişimleri karşılaştırılır.
+- id: enflasyon/tarim-ufe
+  title: Tarım Ürünleri ÜFE (Genel)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2020=100)"
+  freq: monthly
+  evds_code: TP.TARIMUFE01
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/tarim-ufe-avcilik
+  title: Tarım ÜFE — Tarım ve Avcılık Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2020=100)"
+  freq: monthly
+  evds_code: TP.TARIMUFE02
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/tarim-ufe-ormancilik
+  title: Tarım ÜFE — Ormancılık Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2020=100)"
+  freq: monthly
+  evds_code: TP.TARIMUFE03
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/tarim-ufe-balikcilik
+  title: Tarım ÜFE — Balıkçılık
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2020=100)"
+  freq: monthly
+  evds_code: TP.TARIMUFE04
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/tarimsal-girdi
+  title: Tarımsal Girdi Fiyat Endeksi (Genel)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2020=100)"
+  freq: monthly
+  evds_code: TP.TARIMGFE.GK378650484
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/tarimsal-girdi-gubre
+  title: Tarımsal Girdi — Gübre ve Toprak Geliştiriciler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2020=100)"
+  freq: monthly
+  evds_code: TP.TARIMGFE.GK378650488
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/tarimsal-girdi-yem
+  title: Tarımsal Girdi — Hayvan Yemi
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2020=100)"
+  freq: monthly
+  evds_code: TP.TARIMGFE.GK378650497
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+# --- TCMB Piyasa Katılımcıları Anketi, "Uygun Ortalamalar" (bie_pkauo):
+# katılımcı konsensüsü. Anket AYIN başında yayımlanır, yani bu seriler
+# gerçekleşme değil BEKLENTİdir — enflasyon/beklenti-12a ile aynı aileden
+# gelir ama o TÜFE'ye özgü olduğu için enflasyon sayfasında kalır.
+- id: beklentiler/tufe-yilsonu
+  title: Cari Yıl Sonu TÜFE Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "%"
+  freq: monthly
+  evds_code: TP.PKAUO.S01.D.U
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [level]
+
+- id: beklentiler/politika-faizi-12a
+  title: 12 Ay Sonrası Politika Faizi Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "%"
+  freq: monthly
+  evds_code: TP.PKAUO.S04.D.U
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [level]
+
+- id: beklentiler/usdtry-12a
+  title: 12 Ay Sonrası USD/TRY Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "TL"
+  freq: monthly
+  evds_code: TP.PKAUO.S05.C.U
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [level]
+
+- id: beklentiler/gsyh-buyume
+  title: Cari Yıl GSYH Büyüme Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "%"
+  freq: monthly
+  evds_code: TP.PKAUO.S07.A.U
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [level]
+
+- id: beklentiler/cari-denge
+  title: Cari Yıl Cari İşlemler Dengesi Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Milyon USD"
+  freq: monthly
+  evds_code: TP.PKAUO.S06.A.U
+  evds_frequency: "5"
+  monthly_agg: last
+  charts: [level]
