@@ -123,3 +123,41 @@ def test_izgara_ciz_tek_sutunda_bolme_hatasi_vermez():
     finally:
         page.grafik_karti = orijinal
     assert cizilen == ["otomotiv/ford-otosan"]
+
+
+def test_arama_etiketi_kategori_ve_birim_tasir():
+    """Süzme st.multiselect'in etiket aramasıdır: aranan her şey etikette
+    geçmek zorunda. Kategori adı buradan çıkarsa "bankacılık" yazmak
+    hiçbir seriyi süzmez."""
+    from core.catalog import kategorileri_yukle, seri_getir
+    from core.page import arama_etiketi
+
+    basliklar = {k.slug: k.title for k in kategorileri_yukle()}
+    seri = seri_getir("enflasyon/tufe-genel")
+
+    etiket = arama_etiketi(seri, basliklar)
+    assert seri.title in etiket
+    assert basliklar["enflasyon"] in etiket
+    assert seri.unit in etiket
+
+
+def test_arama_etiketi_bilinmeyen_kategoride_patlar():
+    """Katalog hatası sessizce ham slug göstermemeli."""
+    import pytest
+
+    from core.catalog import seri_getir
+    from core.page import arama_etiketi
+
+    with pytest.raises(KeyError):
+        arama_etiketi(seri_getir("enflasyon/tufe-genel"), {})
+
+
+def test_her_serinin_arama_etiketi_uretilebiliyor():
+    """111 serinin tamamı aranabilir olmalı — tek bir kategori referansı
+    bile eksikse sayfa açılırken patlar, tek kart kaybolmakla kalmaz."""
+    from core.catalog import kategorileri_yukle, seri_listele
+    from core.page import arama_etiketi
+
+    basliklar = {k.slug: k.title for k in kategorileri_yukle()}
+    etiketler = [arama_etiketi(s, basliklar) for s in seri_listele()]
+    assert len(set(etiketler)) == len(etiketler)

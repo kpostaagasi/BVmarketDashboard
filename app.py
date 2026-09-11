@@ -8,6 +8,7 @@ import streamlit as st
 
 from core.catalog import hisseleri_yukle, kategorileri_yukle
 from core.page import (
+    arama_sayfasi,
     genel_bakis_yap,
     hisse_sayfasi_yap,
     kategori_sayfasi_yap,
@@ -47,6 +48,12 @@ takvim_sayfasi = st.Page(
     url_path="veri-takvimi",
 )
 
+arama = st.Page(
+    arama_sayfasi,
+    title="Ara",
+    url_path="ara",
+)
+
 # Hisse sayfaları katalogdan üretilir (catalog/hisseler.yaml); menüde kendi
 # grubunda durur, çünkü kategori sayfaları veri kaynağına göre, hisse
 # sayfaları şirkete göre kesiyor — aynı seriler iki eksende görünür.
@@ -61,7 +68,7 @@ hisse_sayfalari = [
 
 st.navigation(
     {
-        "Genel": [ana_sayfa, takvim_sayfasi],
+        "Genel": [ana_sayfa, arama, takvim_sayfasi],
         "Hisseler": hisse_sayfalari,
         "Veri Sayfaları": kategori_sayfalari,
     }

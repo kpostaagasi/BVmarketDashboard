@@ -17,6 +17,7 @@ from core.catalog import (
     KatalogHatasi,
     SIKLIK_ETIKETLERI,
     Seri,
+    kategorileri_yukle,
     seri_getir,
     seri_listele,
 )
@@ -129,6 +130,57 @@ def _izgara_ciz(seriler: list[Seri], gorunum: str, sutun_sayisi: int = 2) -> Non
                 kompozisyon_karti(seri)
             else:
                 grafik_karti(seri, gorunum)
+
+
+def arama_etiketi(seri: Seri, kategori_basliklari: dict[str, str]) -> str:
+    """Arama listesindeki tek satır: seri adı · kategori · birim.
+
+    Süzme işini `st.multiselect`in kendi yazarak-arama davranışı yapar;
+    ayrı bir arama indeksi ya da eşleştirme kodu YOKTUR. Dolayısıyla
+    aranabilir olması gereken her şey etikette geçmek zorunda: kategori
+    başlığı "bankacılık" yazınca kategoriyi süzsün diye, birim ise aynı
+    adı taşıyan iki seriyi ayırsın diye burada.
+
+    Bilinmeyen slug `KeyError` verir — kategori referansları zaten
+    `serileri_yukle` içinde doğrulanır, buraya düşmesi katalog hatasıdır.
+    """
+    return f"{seri.title} · {kategori_basliklari[seri.category]} · {seri.unit}"
+
+
+def arama_sayfasi() -> None:
+    """Seri arama: 111 seri 15 kategori sayfasına dağılmış, menüden bulmak zor.
+
+    Seçilenler tek ızgarada çizilir; böylece arama aynı zamanda kategori
+    sınırlarını aşan serbest karşılaştırma panosu olur. Seçenekler seri
+    id'si (string) tutulur, `Seri` nesnesi değil: kompozisyon serilerinin
+    `epias_bilesenler` sözlüğü onları hash'lenemez yapıyor.
+    """
+    indeks = {s.id: s for s in seri_listele()}
+    basliklar = {k.slug: k.title for k in kategorileri_yukle()}
+
+    st.title("Ara")
+    st.caption(f"{len(indeks)} seri · yazarak süzün, seçtikleriniz altta çizilir")
+
+    secim = st.multiselect(
+        "Seri",
+        list(indeks),
+        format_func=lambda seri_id: arama_etiketi(indeks[seri_id], basliklar),
+        key="arama_secim",
+        label_visibility="collapsed",
+        placeholder="Seri, kategori ya da birim yazın",
+    )
+    if not secim:
+        return
+
+    gorunum = st.segmented_control(
+        "Görünüm",
+        GORUNUMLER,
+        default=VARSAYILAN,
+        key="gorunum_arama",
+        label_visibility="collapsed",
+    )
+    st.divider()
+    _izgara_ciz([indeks[i] for i in secim], gorunum or VARSAYILAN)
 
 
 def _hisseyi_ciz(hisse: Hisse) -> None:
