@@ -13,9 +13,12 @@ import openpyxl
 import pytest
 
 from ingest.tim import (
+    IL_GENEL_TOPLAM,
     bulten_url,
     cekilecek_bultenler,
     dogrula,
+    il_bazinda_url,
+    il_sektor_noktalari,
     sayfayi_ayikla,
     sektor_adini_normalize,
     seri_cek,
@@ -315,3 +318,118 @@ def test_seri_cek_http_hatasi_yukselir():
     oturum = SahteOturum({bulten_url(2019, 12): SahteYanit(500)})
     with pytest.raises(RuntimeError, match="HTTP 500"):
         seri_cek(tim_seri(), session=oturum, bugun=date(2019, 12, 31))
+
+
+def il_bulten_baytlari(yil=2026, gunluk=False, il_sayisi=81, degistir=None):
+    """Ölçülen 3/4 dönem grubunu XLSX içinde üretir; ağ kullanmaz."""
+    kitap = openpyxl.Workbook()
+    sayfa = kitap.active
+    sayfa.title = "ILLER_SEKTOR"
+    sayfa.append([f"31.08.{yil} İHRACATÇI FİRMALARIN KANUNİ MERKEZLERİ "
+                  "BAZINDA SEKTÖR İHRACAT PERFORMANSI (1000 $)"])
+    sayfa.append([])
+    gruplar = ["1 - 31 AĞUSTOS", None, None, "1 - 31 TEMMUZ", None,
+               "1 OCAK - 31 AĞUSTOS"]
+    basliklar = [yil - 1, yil, "DEĞ.", yil, "DEĞ.", yil - 1, yil, "DEĞ."]
+    degerler = [6842.38538, 8596.20534, 0.2563170389563765, 7870.97464,
+               0.09213988523281524, 74472.69035, 64959.93723, -0.1277347853997597]
+    if gunluk:
+        gruplar = ["31 AĞUSTOS", None, None, *gruplar]
+        basliklar = [yil - 1, yil, "DEĞ.", *basliklar]
+        degerler = [410.73614, 0, -1, *degerler]
+    sayfa.append(gruplar)
+    sayfa.append(["SEKTÖR", "ILLER", *basliklar])
+    for i in range(il_sayisi):
+        il = "ADANA" if i == 0 else f"İL {i}"
+        sayfa.append(["Çelik", il, *degerler])
+        sayfa.append(["TOPLAM", il, *degerler])
+    if degistir:
+        degistir(sayfa)
+    tampon = io.BytesIO()
+    kitap.save(tampon)
+    kitap.close()
+    return tampon.getvalue()
+
+
+def test_il_bazinda_url_ad_degisim_siniri():
+    assert il_bazinda_url(2023, 12).endswith(
+        "/2023/12/2023-12-iller-bazinda-sektor-rakamlari.xlsx"
+    )
+    assert il_bazinda_url(2024, 1).endswith(
+        "/2024/1/2024-01-il-bazinda-sektor-rakamlari.xlsx"
+    )
+
+
+def test_il_sektor_karsilastirmalari_aylik_seriye_donusturmez():
+    noktalar = il_sektor_noktalari(il_bulten_baytlari())
+    assert noktalar["ADANA", "Çelik"] == {
+        "1 - 31 AĞUSTOS / 2025": 6842.38538,
+        "1 - 31 AĞUSTOS / 2026": 8596.20534,
+        "1 - 31 AĞUSTOS / DEĞ.": 0.2563170389563765,
+        "1 - 31 TEMMUZ / 2026": 7870.97464,
+        "1 - 31 TEMMUZ / DEĞ.": 0.09213988523281524,
+        "1 OCAK - 31 AĞUSTOS / 2025": 74472.69035,
+        "1 OCAK - 31 AĞUSTOS / 2026": 64959.93723,
+        "1 OCAK - 31 AĞUSTOS / DEĞ.": -0.1277347853997597,
+    }
+    assert noktalar["İL 80", "TOPLAM"] == noktalar["ADANA", "Çelik"]
+    assert ("ADANA", "Otomotiv Endüstrisi") not in noktalar
+
+
+def test_il_sektor_eski_gunluk_grubu_ve_gercek_sifiri_korur():
+    noktalar = il_sektor_noktalari(il_bulten_baytlari(yil=2023, gunluk=True))
+    adana = noktalar["ADANA", "Çelik"]
+    assert adana["31 AĞUSTOS / 2023"] == 0
+    assert adana["31 AĞUSTOS / DEĞ."] == -1
+    assert adana["1 - 31 AĞUSTOS / 2023"] == 8596.20534
+    assert adana["1 OCAK - 31 AĞUSTOS / 2023"] == 64959.93723
+    # Sekiz sütunlu şablon da 2023'te mevcut; dosya yılı şablonu seçmez.
+    modern = il_sektor_noktalari(il_bulten_baytlari(yil=2023))
+    assert modern["ADANA", "Çelik"]["1 - 31 AĞUSTOS / 2023"] == 8596.20534
+
+
+@pytest.mark.parametrize("degistir, hata", [
+    (lambda s: setattr(s, "title", "YANLIS"), "sayfası yok"),
+    (lambda s: s.cell(4, 2, "ÜLKE"), "SEKTÖR/ILLER"),
+    (lambda s: s.cell(4, 4, 2024), "dönem/yıl"),
+    (lambda s: s.cell(3, 4, "1 - 31 AĞUSTOS"), "yinelenen dönem"),
+    (lambda s: s.cell(6, 1, "Çelik"), "yinelenen il/sektör"),
+    (lambda s: s.cell(6, 1, "Başka sektör"), "TOPLAM anahtarı"),
+    (lambda s: s.cell(5, 2, ""), "eksik il/sektör"),
+    (lambda s: s.cell(5, 4, "hatalı"), "sayısal olmayan"),
+])
+def test_il_sektor_sablon_kaymasinda_sessiz_veri_yazmaz(degistir, hata):
+    with pytest.raises(RuntimeError, match=hata):
+        il_sektor_noktalari(il_bulten_baytlari(degistir=degistir), "2026.08")
+
+
+def test_il_sektor_kismi_il_listesinde_hata():
+    with pytest.raises(RuntimeError, match="asgari"):
+        il_sektor_noktalari(il_bulten_baytlari(il_sayisi=12), "2026.08")
+
+
+def test_il_sektor_bos_hucreyi_sifir_uydurmaz():
+    def bosalt(sayfa):
+        sayfa.cell(5, 3).value = None
+
+    noktalar = il_sektor_noktalari(il_bulten_baytlari(degistir=bosalt))
+    assert "1 - 31 AĞUSTOS / 2025" not in noktalar["ADANA", "Çelik"]
+    assert noktalar["ADANA", "Çelik"]["1 - 31 AĞUSTOS / 2026"] == 8596.20534
+
+
+def test_il_sektor_genel_toplami_il_toplamlariyla_uzlasir():
+    """GENEL TOPLAM il TOPLAM toplamıyla uzlaşır; ölçülen TİM yuvarlaması
+    (göreli ~%0.002) tolerans içinde, birim kayması (göreli %1 üstü) hata."""
+
+    def genel_toplam_ekle(sayfa):
+        toplamlar = [
+            sum(sayfa.cell(satir, sutun).value for satir in range(6, 167, 2))
+            if sutun not in (5, 7, 10) else 0.25
+            for sutun in range(3, 11)
+        ]
+        toplamlar[0] += 6962.94  # il toplamının üstünde, eşik içinde
+        toplamlar[1] *= 1.02     # birim kayması: eşik dışı
+        sayfa.append(["TOPLAM", None, *toplamlar])
+
+    with pytest.raises(RuntimeError, match="GENEL TOPLAM.*uyuşmuyor"):
+        il_sektor_noktalari(il_bulten_baytlari(yil=2023, degistir=genel_toplam_ekle))

@@ -39,6 +39,9 @@ import requests
 TABAN = "https://tim.org.tr"
 ZAMAN_ASIMI = 60
 SAYFA_ADI = "SEKTOR"
+IL_SAYFA_ADI = "ILLER_SEKTOR"
+ASGARI_IL_SAYISI = 75
+IL_GENEL_TOPLAM = "GENEL TOPLAM"
 
 # Modern (xlsx) yayının başladığı dosya. 2019'un tamamı bu dosyada.
 ILK_YIL = 2019
@@ -59,6 +62,15 @@ def bulten_url(yil: int, ay: int) -> str:
     return (
         f"{TABAN}/files/downloads/rakamlar/{yil}/{ay}/"
         f"{yil}-{ay:02d}-sektorel-bazda-rakamlar.xlsx"
+    )
+
+
+def il_bazinda_url(yil: int, ay: int) -> str:
+    """İl×sektör karşılaştırma bülteni; dosya adı 2024'te tekile döndü."""
+    kapsam = "il" if yil >= 2024 else "iller"
+    return (
+        f"{TABAN}/files/downloads/rakamlar/{yil}/{ay}/"
+        f"{yil}-{ay:02d}-{kapsam}-bazinda-sektor-rakamlari.xlsx"
     )
 
 
@@ -117,6 +129,127 @@ def sayfayi_ayikla(baytlar: bytes) -> dict[str, dict[str, float]]:
             # tabloları geliyor; okumaya devam etmek onları sektör sanardı.
             break
     return noktalar
+
+
+def il_sektor_noktalari(
+    baytlar: bytes, anahtar: str = IL_SAYFA_ADI,
+) -> dict[tuple[str, str], dict[str, float]]:
+    """Karşılaştırma tablosunu `{(il, sektör): {dönem / yıl: değer}}` okur.
+
+    Bu dosya aylık zaman serisi değildir: ay, önceki ay ve yılbaşından
+    bugüne birikimli karşılaştırmaları yan yana taşır. Dönem başlıkları
+    aynen korunur; YYYY-MM-01 noktaları üretilmez. Tutarlar Bin USD,
+    `DEĞ.` sütunları ise kaynakta yazıldığı gibi oran (0.10 = %10) kalır.
+    Eski dosyaların ek dönem grubu sabit sütun konumu varsaymadan okunur.
+    Eksik sektör satırı/sayısal hücre sıfıra çevrilmez; gerçek sıfır korunur.
+    İl hücresi boş genel TOPLAM, `(IL_GENEL_TOPLAM, TOPLAM_ETIKETI)`
+    anahtarında korunur; tutarları il toplamlarıyla doğrulanır.
+    """
+    kitap = openpyxl.load_workbook(io.BytesIO(baytlar), data_only=True)
+    try:
+        if IL_SAYFA_ADI not in kitap.sheetnames:
+            raise RuntimeError(
+                f"TİM il bülteni {anahtar}: '{IL_SAYFA_ADI}' sayfası yok"
+            )
+        sayfa = kitap[IL_SAYFA_ADI]
+        yil = _yili_bul(sayfa)
+        gruplar = next(sayfa.iter_rows(min_row=3, max_row=3, values_only=True))
+        basliklar = next(sayfa.iter_rows(min_row=4, max_row=4, values_only=True))
+        if tuple(sektor_adini_normalize(h) for h in basliklar[:2]) != (
+            "SEKTÖR", "ILLER",
+        ):
+            raise RuntimeError(f"TİM il bülteni {anahtar}: SEKTÖR/ILLER başlığı yok")
+        donemler = [sektor_adini_normalize(h) for h in gruplar if h is not None and str(h).strip()]
+        yillar = (str(yil - 1), str(yil), "DEĞ.")
+        bloklar = [yillar, (str(yil), "DEĞ."), yillar]
+        if len(donemler) == 4:
+            bloklar.insert(0, yillar)
+        beklenen = tuple(h for blok in bloklar for h in blok)
+        okunan = tuple(sektor_adini_normalize(h) for h in basliklar[2:])
+        # Sonda yalnızca biçimlendirme için ayrılmış boş sütunlar olabilir.
+        while okunan and not okunan[-1]:
+            okunan = okunan[:-1]
+        if len(donemler) not in (3, 4) or okunan != beklenen:
+            raise RuntimeError(f"TİM il bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları")
+        etiketler = [
+            f"{donem} / {baslik}"
+            for donem, blok in zip(donemler, bloklar)
+            for baslik in blok
+        ]
+        if len(set(etiketler)) != len(etiketler):
+            raise RuntimeError(f"TİM il bülteni {anahtar}: yinelenen dönem başlığı")
+        sutunlar = dict(enumerate(etiketler, start=2))
+
+        noktalar = {}
+        for satir in sayfa.iter_rows(min_row=5, values_only=True):
+            sektor, il = (sektor_adini_normalize(h) for h in satir[:2])
+            if not sektor and not il:
+                continue
+            # Genel toplam iki imzayla gelir: 2023'te boş IL ('TOPLAM',
+            # boş), 2026'da ('TOPLAM', 'TOPLAM'). İkisi de aynı satır.
+            if sektor == TOPLAM_ETIKETI and (not il or il == TOPLAM_ETIKETI):
+                il = IL_GENEL_TOPLAM
+            if not sektor or not il:
+                raise RuntimeError(f"TİM il bülteni {anahtar}: eksik il/sektör anahtarı")
+            if (il, sektor) in noktalar:
+                raise RuntimeError(
+                    f"TİM il bülteni {anahtar}: yinelenen il/sektör {(il, sektor)!r}"
+                )
+            degerler = {}
+            for sutun, etiket in sutunlar.items():
+                hucre = satir[sutun]
+                if hucre is None:
+                    continue
+                if isinstance(hucre, bool) or not isinstance(hucre, (int, float)):
+                    raise RuntimeError(
+                        f"TİM il bülteni {anahtar}: sayısal olmayan hücre "
+                        f"{il}/{sektor}/{etiket}: {hucre!r}"
+                    )
+                degerler[etiket] = float(hucre)
+            if not degerler:
+                raise RuntimeError(f"TİM il bülteni {anahtar}: boş veri {il}/{sektor}")
+            noktalar[il, sektor] = degerler
+        il_sektor_dogrula(noktalar, anahtar)
+        return noktalar
+    finally:
+        kitap.close()
+
+
+def il_sektor_dogrula(
+    noktalar: dict[tuple[str, str], dict[str, float]], anahtar: str,
+) -> None:
+    """Kısmi okuma ve kayıp il TOPLAM anahtarları sessizce geçmemeli."""
+    iller = {il for il, _ in noktalar if il != IL_GENEL_TOPLAM}
+    if len(iller) < ASGARI_IL_SAYISI:
+        raise RuntimeError(
+            f"TİM il bülteni {anahtar}: yalnızca {len(iller)} il okundu "
+            f"(asgari {ASGARI_IL_SAYISI}) — şablon değişmiş olabilir"
+        )
+    eksik = sorted(il for il in iller if (il, TOPLAM_ETIKETI) not in noktalar)
+    if eksik:
+        raise RuntimeError(
+            f"TİM il bülteni {anahtar}: TOPLAM anahtarı bulunamadı: {', '.join(eksik)}"
+        )
+    genel = noktalar.get((IL_GENEL_TOPLAM, TOPLAM_ETIKETI))
+    if genel is not None:
+        for etiket, toplam in genel.items():
+            # Değişim oranları toplanamaz; yalnızca tutar sütunları uzlaşır.
+            if etiket.endswith(" / DEĞ."):
+                continue
+            if any(etiket not in noktalar[il, TOPLAM_ETIKETI] for il in iller):
+                raise RuntimeError(
+                    f"TİM il bülteni {anahtar}: il TOPLAM değeri eksik: {etiket}"
+                )
+            il_toplami = sum(noktalar[il, TOPLAM_ETIKETI][etiket] for il in iller)
+            # Ölçüldü (2026.08): cari yıl sütunları bire bir; GEÇMİŞ yıl
+            # sütunlarında TİM'in il yuvarlamaları birikir (göreli ~%0.002).
+            # Mutlak 0.5 bu yüzden geçmiş yıl sütununda patlar; eşik göreli.
+            # ponytail: sabit %0.01; il sayısı 100'i aşarsa yeniden ölç.
+            if abs(il_toplami - toplam) > toplam * 0.01 + TOLERANS:
+                raise RuntimeError(
+                    f"TİM il bülteni {anahtar}: {etiket} il toplamı "
+                    f"{il_toplami:.1f} ile GENEL TOPLAM {toplam:.1f} uyuşmuyor"
+                )
 
 
 def _yili_bul(sayfa) -> int:
