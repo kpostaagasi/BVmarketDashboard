@@ -37,7 +37,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 132
+    assert len(serileri_yukle()) == 139
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -102,7 +102,7 @@ def test_alan_degerleri_gecerli_kumelerde():
         assert seri.freq in {"daily", "weekly", "monthly"}, seri.id
         assert seri.monthly_agg in {"mean", "last", "sum"}, seri.id
         assert seri.charts, seri.id
-        assert set(seri.charts) <= {"seasonality", "level", "composition"}, seri.id
+        assert set(seri.charts) <= {"seasonality", "daily_seasonality", "level", "composition"}, seri.id
         if seri.kaynak_tipi == "evds":
             assert seri.evds_frequency in {"1", "2", "5"}, seri.id
             assert seri.evds_code, seri.id
@@ -475,12 +475,12 @@ def test_eksik_zorunlu_alan_reddedilir():
 
 
 def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut 132 seriyi reddetmemeli."""
+    """Regresyon kalkanı: tablo mevcut serileri reddetmemeli."""
     from core.catalog import serileri_yukle
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 132
+        assert len(serileri_yukle()) == 139
     finally:
         serileri_yukle.cache_clear()
 
@@ -723,3 +723,16 @@ def test_eurocontrol_serisi_gecersiz_kaynak_reddedilir():
 def test_evds_serisi_ec_alani_tasiyamaz():
     with pytest.raises(KatalogHatasi, match="ec_"):
         _dogrula_ham(_ham_seri(ec_varlik="Türkiye"))
+
+
+@pytest.mark.parametrize("gun", [0, -1, 1.5, True, "7"])
+def test_hareketli_ortalama_pozitif_tam_sayi_ister(gun):
+    with pytest.raises(KatalogHatasi, match="hareketli_ortalama_gun"):
+        _dogrula_ham(_ham_seri(freq="daily", hareketli_ortalama_gun=gun))
+
+
+def test_gunluk_gorunum_aylik_seriyi_reddeder():
+    with pytest.raises(KatalogHatasi, match="daily_seasonality"):
+        _dogrula_ham(_ham_seri(charts=["daily_seasonality", "level"]))
+    with pytest.raises(KatalogHatasi, match="hareketli_ortalama_gun"):
+        _dogrula_ham(_ham_seri(hareketli_ortalama_gun=7))

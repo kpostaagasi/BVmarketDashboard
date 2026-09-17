@@ -65,6 +65,17 @@ def test_mevsimsellik_kisa_seride_mevcut_yillari_verir():
     assert fig.data[0].name == "2026"
 
 
+def test_mevsimsellik_eksik_ayi_cizgiyle_baglamaz():
+    df = pd.DataFrame(
+        {"value": [10.0, 30.0]},
+        index=pd.to_datetime(["2026-01-01", "2026-03-01"]),
+    )
+    iz = mevsimsellik_figuru(df, "Adet").data[0]
+    assert list(iz.x) == [1, 2, 3]
+    assert iz.y[0] == 10.0 and pd.isna(iz.y[1]) and iz.y[2] == 30.0
+    assert not iz.connectgaps
+
+
 def test_seviye_tek_iz_ve_legendsiz():
     df = aylik_df("2024-01-01", 24)
     fig = seviye_figuru(df, "TL")
@@ -409,3 +420,38 @@ def test_seviye_figuru_x_ekseni_dilden_bagimsiz_bicim_kullanir():
     )
     fig = seviye_figuru(df, "adet")
     assert fig.layout.xaxis.tickformat == "%m.%Y"
+
+
+def test_hareketli_ortalama_takvim_boslugunu_atlamaz():
+    from core.charts import hareketli_ortalama_uygula
+
+    ham = gunluk_df("2026-01-01", 16, 14.0).drop(pd.Timestamp("2026-01-09"))
+    sonuc = hareketli_ortalama_uygula(ham, 7)
+    assert sonuc.loc[:"2026-01-06", "value"].isna().all()
+    assert sonuc.loc["2026-01-07", "value"] == 14.0
+    assert sonuc.loc["2026-01-09":"2026-01-15", "value"].isna().all()
+    assert sonuc.loc["2026-01-16", "value"] == 14.0
+    assert pd.Timestamp("2026-01-09") not in ham.index
+    assert ham["value"].eq(14.0).all()
+    assert hareketli_ortalama_uygula(ham, None) is ham
+
+
+def test_gunluk_mevsimsellik_artik_gunu_hizalar_boslugu_korur():
+    from core.charts import gunluk_mevsimsellik_figuru
+
+    df = pd.DataFrame(
+        {"value": [10.0, 20.0, 30.0, 50.0, 60.0, 70.0]},
+        index=pd.to_datetime([
+            "2024-02-28", "2024-02-29", "2024-03-01", "2024-03-03",
+            "2025-02-28", "2025-03-01",
+        ]),
+    )
+    izler = {iz.name: iz for iz in gunluk_mevsimsellik_figuru(df, "Uçuş").data}
+    artik = izler["2024"]
+    normal = izler["2025"]
+    assert pd.Timestamp(artik.x[1]) == pd.Timestamp("2000-02-29")
+    assert artik.y[1] == 20.0
+    assert pd.Timestamp(artik.x[2]) == pd.Timestamp(normal.x[1]) == pd.Timestamp("2000-03-01")
+    assert pd.Timestamp(artik.x[3]) == pd.Timestamp("2000-03-02")
+    assert pd.isna(artik.y[3]) and not artik.connectgaps
+    assert list(artik.customdata)[1] == "29.02.2024"

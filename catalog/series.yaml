@@ -1526,3 +1526,87 @@
   evds_frequency: "5"
   monthly_agg: last
   charts: [level]
+
+- id: havacilik/amsterdam
+  title: Amsterdam Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Amsterdam"
+  unit: "Uçuş"
+  freq: daily
+  hareketli_ortalama_gun: 7
+  charts: [daily_seasonality, level]
+
+- id: havacilik/paris-cdg
+  title: Paris CDG Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Paris Charles de Gaulle"
+  unit: "Uçuş"
+  freq: daily
+  hareketli_ortalama_gun: 7
+  charts: [daily_seasonality, level]
+
+- id: havacilik/madrid-barajas
+  title: Madrid Barajas Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Madrid Barajas"
+  unit: "Uçuş"
+  freq: daily
+  hareketli_ortalama_gun: 7
+  charts: [daily_seasonality, level]
+
+- id: havacilik/frankfurt
+  title: Frankfurt Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Frankfurt"
+  unit: "Uçuş"
+  freq: daily
+  hareketli_ortalama_gun: 7
+  charts: [daily_seasonality, level]
+
+- id: havacilik/viyana
+  title: Viyana Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Vienna"
+  unit: "Uçuş"
+  freq: daily
+  hareketli_ortalama_gun: 7
+  charts: [daily_seasonality, level]
+
+- id: havacilik/budapeste
+  title: Budapeşte Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "Budapest"
+  unit: "Uçuş"
+  freq: daily
+  hareketli_ortalama_gun: 7
+  charts: [daily_seasonality, level]
+
+- id: havacilik/londra-heathrow
+  title: Londra Heathrow Havalimanı Günlük Uçuş
+  category: havacilik
+  kaynak: { name: EUROCONTROL, url: "https://www.eurocontrol.int/Economics/DailyTrafficVariation-States.html" }
+  kaynak_tipi: eurocontrol
+  ec_kaynak: havalimani
+  ec_varlik: "London Heathrow"
+  unit: "Uçuş"
+  freq: daily
+  hareketli_ortalama_gun: 7
+  charts: [daily_seasonality, level]

@@ -18,7 +18,7 @@ KATALOG_DIZINI = KOK / "catalog"
 
 GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
-GECERLI_GRAFIKLER = {"seasonality", "level", "composition"}
+GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol",
@@ -157,6 +157,7 @@ class Seri:
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
+    hareketli_ortalama_gun: int | None = None
 
 
 def _alan_verilmis(seri: Seri, alan: str) -> bool:
@@ -320,6 +321,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             gecikme_gunu=(
                 int(ham["gecikme_gunu"]) if "gecikme_gunu" in ham else None
             ),
+            hareketli_ortalama_gun=ham.get("hareketli_ortalama_gun"),
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)
@@ -349,6 +351,17 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(f"{seri.id}: bilinmeyen grafik türü {seri.charts}")
     if len(set(seri.charts)) != len(seri.charts):
         raise KatalogHatasi(f"{seri.id}: charts listesinde tekrar var {seri.charts}")
+    if "daily_seasonality" in seri.charts and seri.freq != "daily":
+        raise KatalogHatasi(f"{seri.id}: daily_seasonality günlük seri gerektirir")
+    if seri.hareketli_ortalama_gun is not None:
+        if type(seri.hareketli_ortalama_gun) is not int or seri.hareketli_ortalama_gun <= 0:
+            raise KatalogHatasi(
+                f"{seri.id}: hareketli_ortalama_gun pozitif tam sayı olmalı"
+            )
+        if seri.freq != "daily" or "composition" in seri.charts:
+            raise KatalogHatasi(
+                f"{seri.id}: hareketli_ortalama_gun günlük tek değerli seri gerektirir"
+            )
     if seri.kaynak_tipi not in GECERLI_KAYNAK_TIPLERI:
         raise KatalogHatasi(f"{seri.id}: geçersiz kaynak_tipi '{seri.kaynak_tipi}'")
     _alan_sahipligini_dogrula(seri)

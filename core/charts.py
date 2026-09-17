@@ -137,6 +137,8 @@ def mevsimsellik_figuru(
         alt = aylik[aylik.index.year == yil]
         if alt.empty:
             continue
+        # Eksik ayı atlamak komşu ayları bağlar ve olmayan veriyi ima eder.
+        alt = alt.asfreq("MS")
         fig.add_trace(
             go.Scatter(
                 x=list(alt.index.month),
@@ -154,6 +156,55 @@ def mevsimsellik_figuru(
         tickvals=list(range(1, 13)),
         ticktext=TR_AYLAR,
         range=[0.5, 12.5],
+    )
+    _temayi_uygula(fig, birim)
+    fig.update_layout(showlegend=len(fig.data) >= 2)
+    return fig
+
+
+def hareketli_ortalama_uygula(
+    df: pd.DataFrame, gun: int | None
+) -> pd.DataFrame:
+    """Ham veriyi değiştirmeden tam takvim penceresinin ortalamasını alır."""
+    if gun is None or df.empty:
+        return df
+    return df.asfreq("D").rolling(f"{gun}D", min_periods=gun).mean()
+
+
+def gunluk_mevsimsellik_figuru(
+    df: pd.DataFrame, birim: str, yil_sayisi: int = 3
+) -> go.Figure:
+    """Ay/gün hizalı yıllar; 2000 referansı 29 Şubat'ı da korur."""
+    if not 1 <= yil_sayisi <= len(RENKLER["seri"]):
+        raise ValueError(f"yil_sayisi 1–{len(RENKLER['seri'])} arasında olmalı")
+    fig = go.Figure()
+    if df.empty:
+        return _temayi_uygula(fig, birim)
+
+    son_yil = int(df.index.year.max())
+    for sira, yil in enumerate(range(son_yil, son_yil - yil_sayisi, -1)):
+        alt = df[df.index.year == yil]
+        if alt.empty:
+            continue
+        alt = alt.asfreq("D")
+        fig.add_trace(
+            go.Scatter(
+                x=[tarih.replace(year=2000) for tarih in alt.index],
+                y=list(alt["value"]),
+                customdata=alt.index.strftime("%d.%m.%Y"),
+                name=str(yil),
+                mode="lines",
+                connectgaps=False,
+                line=dict(color=RENKLER["seri"][sira], width=3 if sira == 0 else 2),
+                hovertemplate=f"%{{customdata}}: %{{y:,.2f}} {birim}<extra></extra>",
+            )
+        )
+
+    fig.update_xaxes(
+        tickmode="array",
+        tickvals=pd.date_range("2000-01-01", periods=12, freq="MS"),
+        ticktext=TR_AYLAR,
+        range=[pd.Timestamp("2000-01-01"), pd.Timestamp("2000-12-31")],
     )
     _temayi_uygula(fig, birim)
     fig.update_layout(showlegend=len(fig.data) >= 2)

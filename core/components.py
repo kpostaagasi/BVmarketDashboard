@@ -10,6 +10,8 @@ import streamlit as st
 
 from core.catalog import SIKLIK_ETIKETLERI, Seri
 from core.charts import (
+    gunluk_mevsimsellik_figuru,
+    hareketli_ortalama_uygula,
     kompozisyon_figuru,
     kompozisyon_verisi_hazirla,
     mevsimsellik_figuru,
@@ -151,7 +153,13 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
         st.caption(f"Son Dönem: {donem_etiketi(son_tarih(df), seri.freq)} · {etiket}")
         _istatistik_satiri(df, seri)
 
-        gosterilecek = gorunum_uygula(df, gorunum)
+        hesaplanacak = hareketli_ortalama_uygula(df, seri.hareketli_ortalama_gun)
+        gosterilecek = gorunum_uygula(hesaplanacak, gorunum)
+        if seri.hareketli_ortalama_gun is not None:
+            st.caption(
+                f"Grafikler: {seri.hareketli_ortalama_gun} günlük hareketli ortalama · "
+                "Üstteki istatistikler: ham günlük veri"
+            )
         birim = seri.unit if gorunum == VARSAYILAN else "%"
 
         for grafik in seri.charts:
@@ -159,6 +167,8 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
                 fig = mevsimsellik_figuru(
                     gosterilecek, birim, agg=grafik_agg(seri, gorunum), freq=seri.freq
                 )
+            elif grafik == "daily_seasonality":
+                fig = gunluk_mevsimsellik_figuru(gosterilecek, birim)
             else:
                 fig = seviye_figuru(gosterilecek, birim)
             st.plotly_chart(fig, width="stretch", key=f"{seri.id}-{grafik}")
