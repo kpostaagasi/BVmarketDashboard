@@ -422,6 +422,19 @@ def test_seviye_figuru_x_ekseni_dilden_bagimsiz_bicim_kullanir():
     assert fig.layout.xaxis.tickformat == "%m.%Y"
 
 
+def test_ceyreklik_seviye_grafigi_gozlemleri_korur_ayliga_cevirmez():
+    df = pd.DataFrame(
+        {"value": [100.0, 110.0]},
+        index=pd.to_datetime(["2026-01-01", "2026-04-01"]),
+    )
+    fig = seviye_figuru(df, "EUR", "quarterly")
+    assert list(fig.data[0].x) == list(df.index)
+    assert list(fig.data[0].y) == [100.0, 110.0]
+    assert list(fig.data[0].customdata) == ["2026-Ç1", "2026-Ç2"]
+    with pytest.raises(ValueError, match="Çeyreklik"):
+        mevsimsellik_figuru(df, "EUR", freq="quarterly")
+
+
 def test_hareketli_ortalama_takvim_boslugunu_atlamaz():
     from core.charts import hareketli_ortalama_uygula
 

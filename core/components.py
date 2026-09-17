@@ -19,10 +19,12 @@ from core.charts import (
 )
 from core.data import VeriYokHatasi, load_series, load_wide_series
 from core.stats import (
+    MOM,
     VARSAYILAN,
     aralik_12a,
     gorunum_uygula,
     mom,
+    qoq,
     son_deger,
     son_tarih,
     yoy,
@@ -59,6 +61,8 @@ def grafik_agg(seri: Seri, gorunum: str) -> str:
 
 def donem_etiketi(tarih: pd.Timestamp, freq: str) -> str:
     """Günlük ve haftalık serilerde gün gösterilir — bayatlık ancak böyle görülür."""
+    if freq == "quarterly":
+        return f"{tarih.year}-Ç{tarih.quarter}"
     return f"{tarih:%Y-%m}" if freq == "monthly" else f"{tarih:%Y-%m-%d}"
 
 
@@ -99,7 +103,7 @@ def kpi_satiri(seriler: list[Seri], sutun_sayisi: int = 4) -> None:
                 continue
             st.markdown(f"### {sayi_bicimle(son_deger(df), seri.unit)}")
             st.markdown(
-                f"YoY {yuzde_rozeti(yoy(df))} · "
+                f"YoY {yuzde_rozeti(yoy(df, seri.freq))} · "
                 f"{donem_etiketi(son_tarih(df), seri.freq)}",
                 unsafe_allow_html=True,
             )
@@ -110,16 +114,18 @@ def _istatistik_satiri(df, seri: Seri) -> None:
     aralik_metni = (
         f"{sayi_bicimle(aralik[0])} – {sayi_bicimle(aralik[1])}" if aralik else "—"
     )
+    degisim_etiketi = "QoQ" if seri.freq == "quarterly" else "MoM"
+    degisim = qoq(df) if seri.freq == "quarterly" else mom(df)
     sol, sag = st.columns(2)
     with sol:
         st.markdown(
             f"**{sayi_bicimle(son_deger(df), seri.unit)}**  \n"
-            f"MoM {yuzde_rozeti(mom(df))}",
+            f"{degisim_etiketi} {yuzde_rozeti(degisim)}",
             unsafe_allow_html=True,
         )
     with sag:
         st.markdown(
-            f"YoY {yuzde_rozeti(yoy(df))}  \n"
+            f"YoY {yuzde_rozeti(yoy(df, seri.freq))}  \n"
             f"<span style='color:{RENKLER['metin_soluk']}'>12A aralık "
             f"{aralik_metni}</span>",
             unsafe_allow_html=True,
@@ -154,7 +160,9 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
         _istatistik_satiri(df, seri)
 
         hesaplanacak = hareketli_ortalama_uygula(df, seri.hareketli_ortalama_gun)
-        gosterilecek = gorunum_uygula(hesaplanacak, gorunum)
+        gosterilecek = gorunum_uygula(hesaplanacak, gorunum, seri.freq)
+        if seri.freq == "quarterly" and gorunum == MOM:
+            st.caption("Çeyreklik seri: önceki çeyreğe göre değişim (QoQ %)")
         if seri.hareketli_ortalama_gun is not None:
             st.caption(
                 f"Grafikler: {seri.hareketli_ortalama_gun} günlük hareketli ortalama · "
@@ -170,7 +178,7 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
             elif grafik == "daily_seasonality":
                 fig = gunluk_mevsimsellik_figuru(gosterilecek, birim)
             else:
-                fig = seviye_figuru(gosterilecek, birim)
+                fig = seviye_figuru(gosterilecek, birim, seri.freq)
             st.plotly_chart(fig, width="stretch", key=f"{seri.id}-{grafik}")
 
         with st.expander("Veri tablosu"):

@@ -108,6 +108,16 @@ def test_donem_sonu_aylik_etiketi_ay_sonuna_tasir():
     assert donem_sonu(date(2026, 2, 1), "monthly") == date(2026, 2, 28)
 
 
+def test_ceyreklik_donem_sonu_ve_bekleme():
+    assert donem_sonu(date(2024, 2, 29), "quarterly") == date(2024, 3, 31)
+    assert donem_sonu(date(2026, 4, 1), "quarterly") == date(2026, 6, 30)
+    assert donem_sonu(date(2026, 10, 1), "quarterly") == date(2026, 12, 31)
+    satir = satir_uret(seri("quarterly"), date(2026, 4, 1), date(2026, 9, 17))
+    assert satir.bekleme_gunu == 79
+    assert satir.durum == GUNCEL
+    assert tablo_df([satir]).iloc[0]["Son Dönem"] == "2026-Ç2"
+
+
 def test_donem_sonu_haftalik_etikete_alti_gun_ekler():
     assert donem_sonu(date(2026, 8, 21), "weekly") == date(2026, 8, 27)
 

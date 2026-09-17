@@ -30,7 +30,7 @@ import pandas as pd
 from core.catalog import SIKLIK_ETIKETLERI, Seri, seri_listele
 from core.data import VeriYokHatasi, genis_csv_oku, seri_csv_oku, seri_yolu
 
-ESIKLER = {"daily": 5, "weekly": 14, "monthly": 50}
+ESIKLER = {"daily": 5, "weekly": 14, "monthly": 50, "quarterly": 120}
 
 GUNCEL = "güncel"
 BEKLENIYOR = "bekleniyor"
@@ -57,6 +57,9 @@ def donem_sonu(etiket: date, freq: str) -> date:
     ayı" demektir, "1 temmuz" değil. Tazeliği etiketten ölçmek aylık serilere
     bir aylık sahte gecikme ekliyordu.
     """
+    if freq == "quarterly":
+        ay = (etiket.month - 1) // 3 * 3 + 3
+        return etiket.replace(month=ay, day=monthrange(etiket.year, ay)[1])
     if freq == "monthly":
         return etiket.replace(day=monthrange(etiket.year, etiket.month)[1])
     if freq == "weekly":
@@ -121,7 +124,11 @@ def tablo_df(satirlar: list[TakvimSatiri]) -> pd.DataFrame:
         {
             "Veri": s.seri.title,
             "Kategori": s.seri.category,
-            "Son Dönem": "—" if s.son_donem is None else s.son_donem.isoformat(),
+            "Son Dönem": (
+                "—" if s.son_donem is None else
+                f"{s.son_donem.year}-Ç{(s.son_donem.month - 1) // 3 + 1}"
+                if s.seri.freq == "quarterly" else s.son_donem.isoformat()
+            ),
             "Durum": _durum_metni(s),
             "Sıklık": SIKLIK_ETIKETLERI[s.seri.freq],
             "Kaynak": s.seri.kaynak.name,

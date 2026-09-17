@@ -1614,9 +1614,10 @@
 - id: ekonomi-makro/almanya-reel-gsyih
   title: Almanya Reel GSYİH
   category: ekonomi-makro
-  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/CLVMNACSCAB1GQDE" }
+  kaynak: { name: FRED (Eurostat), url: "https://fred.stlouisfed.org/series/CLVMNACSCAB1GQDE" }
   kaynak_tipi: fred
   fred_code: CLVMNACSCAB1GQDE
-  unit: "Milyon zincirleme hacim"
-  freq: monthly
+  unit: "Milyon EUR (zincirleme, 2010)"
+  freq: quarterly
   charts: [level]
+  yayin_notu: "Mevsimsellikten arındırılmış reel GSYİH; çeyreklik dönem, milyon zincirleme 2010 avrosu."

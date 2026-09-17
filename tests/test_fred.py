@@ -9,7 +9,7 @@ from core.catalog import Kaynak, Seri
 from ingest import fred
 
 
-def test_seri() -> Seri:
+def _ornek_seri() -> Seri:
     """FRED tipinde örnek Seri döndürür; doğrudan test değil, yardımcıdır."""
     return Seri(
         id="ekonomi-makro/test",
@@ -50,7 +50,7 @@ CSV_ORNEK = """observation_date,TESTKOD
 
 def test_fred_bos_gozlemi_dusurup_iki_satir_uretir():
     oturum = SahteOturum(SahteYanit(CSV_ORNEK))
-    df = fred.seri_cek(test_seri(), session=oturum)
+    df = fred.seri_cek(_ornek_seri(), session=oturum)
     assert oturum.cagrilar == [
         "https://fred.stlouisfed.org/graph/fredgraph.csv?id=TESTKOD"
     ]
@@ -62,7 +62,7 @@ def test_fred_bos_gozlemi_dusurup_iki_satir_uretir():
 
 def test_fred_start_date_onceki_gunleri_atar():
     oturum = SahteOturum(SahteYanit(CSV_ORNEK))
-    seri = test_seri()
+    seri = _ornek_seri()
     filtrelenen = Seri(
         **{
             **{f.name: getattr(seri, f.name) for f in seri.__dataclass_fields__.values()},
@@ -76,4 +76,4 @@ def test_fred_start_date_onceki_gunleri_atar():
 def test_fred_http_hatasinda_runtime_error_verir():
     oturum = SahteOturum(SahteYanit("<!DOCTYPE html>", durum=404))
     with pytest.raises(RuntimeError, match="TESTKOD"):
-        fred.seri_cek(test_seri(), session=oturum)
+        fred.seri_cek(_ornek_seri(), session=oturum)

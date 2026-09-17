@@ -16,7 +16,7 @@ import yaml
 KOK = Path(__file__).resolve().parent.parent
 KATALOG_DIZINI = KOK / "catalog"
 
-GECERLI_FREKANSLAR = {"daily", "weekly", "monthly"}
+GECERLI_FREKANSLAR = {"daily", "weekly", "monthly", "quarterly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
@@ -24,7 +24,7 @@ GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol",
     "fred",
 }
-SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
+SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
 # fon tipi ve hangi toplulaştırmanın istendiği.
 GECERLI_TEFAS_TIPLERI = {"YAT", "EMK"}
@@ -360,6 +360,8 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(f"{seri.id}: charts listesinde tekrar var {seri.charts}")
     if "daily_seasonality" in seri.charts and seri.freq != "daily":
         raise KatalogHatasi(f"{seri.id}: daily_seasonality günlük seri gerektirir")
+    if seri.freq == "quarterly" and set(seri.charts) != {"level"}:
+        raise KatalogHatasi(f"{seri.id}: çeyreklik seri yalnızca level grafiği destekler")
     if seri.hareketli_ortalama_gun is not None:
         if type(seri.hareketli_ortalama_gun) is not int or seri.hareketli_ortalama_gun <= 0:
             raise KatalogHatasi(

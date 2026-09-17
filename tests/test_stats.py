@@ -5,6 +5,7 @@ from core.stats import (
     aralik_12a,
     gorunum_uygula,
     mom,
+    qoq,
     seri_mom,
     seri_yoy,
     son_deger,
@@ -97,3 +98,20 @@ def test_gorunum_uygula_bilinmeyen_gorunumde_hata_verir():
     df = aylik_df([1.0, 2.0])
     with pytest.raises(ValueError):
         gorunum_uygula(df, "Haftalık %")
+
+
+def test_ceyreklik_degisim_eksik_ceyregi_atlamaz_ve_yili_eslestirir():
+    df = pd.DataFrame(
+        {"value": [100.0, 110.0, 120.0, 150.0]},
+        index=pd.to_datetime(["2024-03-31", "2024-06-30", "2024-12-31", "2025-03-31"]),
+    )
+    assert qoq(df) == pytest.approx(25.0)
+    assert yoy(df, "quarterly") == pytest.approx(50.0)
+    qoq_serisi = gorunum_uygula(df, "MoM %", "quarterly")
+    assert qoq_serisi.loc["2024-06-30", "value"] == pytest.approx(10.0)
+    assert pd.isna(qoq_serisi.loc["2024-12-31", "value"])
+    assert qoq(df.iloc[:3]) is None
+    assert qoq_serisi.loc["2025-03-31", "value"] == pytest.approx(25.0)
+    yoy_serisi = gorunum_uygula(df, "YoY %", "quarterly")
+    assert yoy_serisi.loc["2025-03-31", "value"] == pytest.approx(50.0)
+    assert yoy(df.iloc[1:], "quarterly") is None

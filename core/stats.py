@@ -52,7 +52,9 @@ def mom(df: pd.DataFrame) -> float | None:
     return _degisim(df, pd.DateOffset(months=1))
 
 
-def yoy(df: pd.DataFrame) -> float | None:
+def yoy(df: pd.DataFrame, freq: str = "monthly") -> float | None:
+    if freq == "quarterly":
+        return _son_ceyrek_degisim(df, 4)
     return _degisim(df, pd.DateOffset(years=1))
 
 
@@ -82,6 +84,27 @@ def _seri_degisim(df: pd.DataFrame, offset: pd.DateOffset) -> pd.DataFrame:
     return pd.DataFrame({"value": yuzde}, index=df.index)
 
 
+def _seri_ceyrek_degisim(df: pd.DataFrame, donem: int) -> pd.DataFrame:
+    ceyrekler = df.index.to_period("Q")
+    degerler = pd.Series(df["value"].to_numpy(), index=ceyrekler)
+    onceki = degerler.reindex(ceyrekler - donem).to_numpy()
+    with np.errstate(divide="ignore", invalid="ignore"):
+        yuzde = (df["value"].to_numpy() / np.where(onceki <= 0, np.nan, onceki) - 1) * 100
+    return pd.DataFrame({"value": yuzde}, index=df.index)
+
+
+def _son_ceyrek_degisim(df: pd.DataFrame, donem: int) -> float | None:
+    if df.empty:
+        return None
+    deger = _seri_ceyrek_degisim(df, donem).loc[son_tarih(df), "value"]
+    return None if pd.isna(deger) else float(deger)
+
+
+def qoq(df: pd.DataFrame) -> float | None:
+    """Önceki takvim çeyreği eksikse daha eski gözleme geri düşmez."""
+    return _son_ceyrek_degisim(df, 1)
+
+
 def seri_yoy(df: pd.DataFrame) -> pd.DataFrame:
     return _seri_degisim(df, pd.DateOffset(years=1))
 
@@ -90,11 +113,13 @@ def seri_mom(df: pd.DataFrame) -> pd.DataFrame:
     return _seri_degisim(df, pd.DateOffset(months=1))
 
 
-def gorunum_uygula(df: pd.DataFrame, gorunum: str) -> pd.DataFrame:
+def gorunum_uygula(
+    df: pd.DataFrame, gorunum: str, freq: str = "monthly"
+) -> pd.DataFrame:
     if gorunum == VARSAYILAN:
         return df
     if gorunum == YOY:
-        return seri_yoy(df)
+        return _seri_ceyrek_degisim(df, 4) if freq == "quarterly" else seri_yoy(df)
     if gorunum == MOM:
-        return seri_mom(df)
+        return _seri_ceyrek_degisim(df, 1) if freq == "quarterly" else seri_mom(df)
     raise ValueError(f"Bilinmeyen görünüm: {gorunum}")

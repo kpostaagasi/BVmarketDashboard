@@ -99,7 +99,7 @@ def test_charts_listesinde_tekrar_reddedilir():
 
 def test_alan_degerleri_gecerli_kumelerde():
     for seri in serileri_yukle():
-        assert seri.freq in {"daily", "weekly", "monthly"}, seri.id
+        assert seri.freq in {"daily", "weekly", "monthly", "quarterly"}, seri.id
         assert seri.monthly_agg in {"mean", "last", "sum"}, seri.id
         assert seri.charts, seri.id
         assert set(seri.charts) <= {"seasonality", "daily_seasonality", "level", "composition"}, seri.id
@@ -134,6 +134,14 @@ def test_evds_serisinde_evds_code_zorunlu():
 def test_evds_serisinde_gecersiz_frekans_reddedilir():
     seri = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), evds_frequency="9")
     with pytest.raises(KatalogHatasi, match="evds_frequency"):
+        _dogrula(seri, _sluglar(), set())
+
+
+def test_ceyreklik_seri_aylik_mevsimsellik_grafigini_reddeder():
+    seri = dataclasses.replace(
+        seri_getir("ekonomi-makro/almanya-reel-gsyih"), charts=("seasonality",)
+    )
+    with pytest.raises(KatalogHatasi, match="çeyreklik"):
         _dogrula(seri, _sluglar(), set())
 
 

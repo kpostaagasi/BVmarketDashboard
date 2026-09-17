@@ -65,6 +65,8 @@ def aylige_cevir(
     serilerinde KISMİ aylar (uçtaki ya da içteki) sahte bir düşüş gibi
     görünmemesi için atılır — aylık serilerde bu sorun yoktur.
     """
+    if freq == "quarterly":
+        raise ValueError("Çeyreklik veri aylık seriye dönüştürülemez")
     if agg not in _AGG_FONKSIYONLARI:
         raise ValueError(f"Bilinmeyen toplama: {agg}")
     if agg == "sum":
@@ -273,7 +275,7 @@ def kompozisyon_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
     return _temayi_uygula(fig, birim)
 
 
-def seviye_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
+def seviye_figuru(df: pd.DataFrame, birim: str, freq: str = "monthly") -> go.Figure:
     fig = go.Figure(
         go.Scatter(
             x=list(df.index),
@@ -289,5 +291,11 @@ def seviye_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
     # duruyor. Sayısal biçim (01.2022) dilden bağımsız ve Türkçe tarih
     # yazımına uygun; plotly.js için Türkçe locale paketi gerekmiyor.
     fig.update_xaxes(tickformat="%m.%Y")
+    if freq == "quarterly":
+        fig.update_xaxes(dtick="M3", tickformat="%Y-Ç%q")
+        fig.update_traces(
+            customdata=[f"{tarih.year}-Ç{tarih.quarter}" for tarih in df.index],
+            hovertemplate=f"%{{customdata}}<br>%{{y:,.2f}} {birim}<extra></extra>",
+        )
     fig.update_layout(showlegend=False)
     return fig
