@@ -1634,3 +1634,146 @@
   freq: daily
   monthly_agg: last
   charts: [fon]
+
+- id: beklentiler/hane-maddi-durum
+  title: Hanenin Maddi Durumu (Mevcut)
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y02
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/hane-maddi-durum-beklentisi
+  title: Hanenin Maddi Durum Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y03
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/genel-ekonomik-durum
+  title: Genel Ekonomik Durum (Mevcut)
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y04
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/genel-ekonomik-durum-beklentisi
+  title: Genel Ekonomik Durum Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y05
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/issizlik-beklentisi
+  title: İşsizlik Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y06
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/tufe-degisim-mevcut
+  title: Tüketici Fiyatları Değişimi (Mevcut)
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y14
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/tufe-beklentisi
+  title: Tüketici Fiyatları Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y15
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/ucret-beklentisi
+  title: Ücret Değişimi Beklentisi
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y16
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/dayanikli-tuketim-uygunluk
+  title: Dayanıklı Tüketim İçin Uygunluk
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y08
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/dayanikli-tuketim-niyeti
+  title: Dayanıklı Tüketim Harcama Niyeti
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y09
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/konut-satin-alma
+  title: Konut Satın Alma / İnşa İhtimali
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y19
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/tasarruf-uygunluk
+  title: Tasarruf İçin Uygunluk
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y10
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
+
+- id: beklentiler/tasarruf-ihtimali
+  title: Tasarruf Etme İhtimali
+  category: beklentiler
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TG2.Y12
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [level]
