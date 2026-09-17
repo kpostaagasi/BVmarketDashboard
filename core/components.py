@@ -10,6 +10,7 @@ import streamlit as st
 
 from core.catalog import SIKLIK_ETIKETLERI, Seri
 from core.charts import (
+    fon_donem_figuru,
     gunluk_mevsimsellik_figuru,
     hareketli_ortalama_uygula,
     kompozisyon_figuru,
@@ -77,7 +78,7 @@ def _kpi_uygun_seriler(seriler: list[Seri]) -> list[Seri]:
     düşürür. Bir seri `pano`da AÇIKÇA istenmişse bu sessiz atlama devreye
     girmez — `pano_serileri` (core/page.py) orada KatalogHatasi fırlatır.
     """
-    return [s for s in seriler if not s.epias_bilesenler]
+    return [s for s in seriler if not s.epias_bilesenler and "fon" not in s.charts]
 
 
 def kpi_satiri(seriler: list[Seri], sutun_sayisi: int = 4) -> None:
@@ -133,6 +134,9 @@ def _istatistik_satiri(df, seri: Seri) -> None:
 
 
 def grafik_karti(seri: Seri, gorunum: str) -> None:
+    if "fon" in seri.charts:
+        fon_karti(seri)
+        return
     with st.container(border=True):
         baslik, kaynak = st.columns([4, 1])
         baslik.markdown(f"**{seri.title}**")
@@ -247,3 +251,59 @@ def kompozisyon_karti(seri: Seri) -> None:
 
         with st.expander("Veri tablosu"):
             st.dataframe(gosterilecek, width="stretch")
+
+
+def fon_karti(seri: Seri) -> None:
+    """Fon fiyatı, dönem sonu büyüklüğü ve hesap değişimlerini gösterir."""
+    st.subheader(seri.title)
+    st.caption(f"Kaynak: {seri.kaynak.name} · Hesap sayısı tekil kişi sayısı değildir.")
+    try:
+        df = load_wide_series(seri.id)
+    except VeriYokHatasi as hata:
+        st.warning(str(hata))
+        return
+    if df.empty:
+        st.warning(f"{seri.title}: veri dosyası boş")
+        return
+    st.caption(f"Son yayın: {df.index.max():%d.%m.%Y} · {len(df)} günlük gözlem")
+    st.caption("Cari hafta ve ay tamamlanmamıştır; son yayın günündeki değer gösterilir.")
+    baslangic = st.date_input(
+        "Fiyat ve düşüş grafikleri başlangıcı",
+        value=max(df.index.min().date(), pd.Timestamp(df.index.max().year - 1, 1, 1).date()),
+        min_value=df.index.min().date(), max_value=df.index.max().date(),
+        key=f"fon_baslangic_{seri.id}",
+    )
+    fiyat = df.loc[pd.Timestamp(baslangic):, "fiyat"]
+    gorunum = st.segmented_control(
+        "Fiyat görünümü", ["Fiyat (TL)", "1.000 TL yatırım"],
+        default="Fiyat (TL)", key=f"fon_fiyat_{seri.id}",
+    )
+    gosterilen = fiyat if gorunum != "1.000 TL yatırım" else fiyat / fiyat.iloc[0] * 1000
+    st.markdown("**Günlük fiyat**")
+    fig = seviye_figuru(gosterilen.to_frame("value"), "TL", "daily")
+    fig.update_traces(hovertemplate="%{y:,.6f} TL<extra></extra>")
+    st.plotly_chart(fig, width="stretch", key=f"{seri.id}-fiyat")
+    for frekans, baslik, adet in (("W-SUN", "Haftalık", 52), ("ME", "Aylık", 24)):
+        donem = df.resample(frekans).last()
+        olcutler = (
+            ("Getiri", donem["fiyat"].pct_change(fill_method=None) * 100, "%"),
+            ("Fon büyüklüğü", donem["buyukluk"] / 1e6, "Milyon TL"),
+            ("Hesap değişimi", donem["hesap"].diff(), "Hesap"),
+            ("Hesap değişimi (%)", donem["hesap"].pct_change(fill_method=None) * 100, "%"),
+        )
+        sutunlar = st.columns(2)
+        for sira, (etiket, degerler, birim) in enumerate(olcutler):
+            with sutunlar[sira % 2]:
+                st.markdown(f"**{baslik} · {etiket}**")
+                st.plotly_chart(
+                    fon_donem_figuru(degerler.tail(adet), birim), width="stretch",
+                    key=f"{seri.id}-{frekans}-{sira}",
+                )
+    st.markdown("**Zirveden düşüş**")
+    dusus = (fiyat / fiyat.cummax() - 1) * 100
+    st.plotly_chart(seviye_figuru(dusus.to_frame("value"), "%", "daily"),
+                    width="stretch", key=f"{seri.id}-dusus")
+    st.info("BIST 100, Dolar/TL ve gram altın karşılaştırması henüz kaynak bazında doğrulanmadı.")
+    with st.expander("Fon verisi"):
+        st.dataframe(df.rename(columns={"fiyat": "Fiyat (TL)", "pay": "Pay",
+                     "hesap": "Hesap", "buyukluk": "Büyüklük (TL)"}), width="stretch")

@@ -63,7 +63,7 @@ def pano_serileri(kategori: Kategori, seriler: list[Seri]) -> list[Seri]:
         raise KatalogHatasi(
             f"{kategori.slug} panosunda bilinmeyen seri: {', '.join(eksik)}"
         )
-    genis = [i for i in kategori.pano if indeks[i].epias_bilesenler]
+    genis = [i for i in kategori.pano if indeks[i].epias_bilesenler or "fon" in indeks[i].charts]
     if genis:
         raise KatalogHatasi(
             f"{kategori.slug} panosunda çok bileşenli (geniş) seri: "
@@ -123,6 +123,12 @@ def _izgara_ciz(seriler: list[Seri], gorunum: str, sutun_sayisi: int = 2) -> Non
     Tam genişlik kart aynı zamanda doğru hiyerarşi: sayfanın baş aktörü
     şirketin kendi verisi, bağlam serileri yanında değil altında durur.
     """
+    fonlar = [seri for seri in seriler if "fon" in seri.charts]
+    for seri in fonlar:
+        grafik_karti(seri, gorunum)
+    seriler = [seri for seri in seriler if "fon" not in seri.charts]
+    if not seriler:
+        return
     sutunlar = st.columns(sutun_sayisi)
     for sira, seri in enumerate(seriler):
         with sutunlar[sira % sutun_sayisi]:

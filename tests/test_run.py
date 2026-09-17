@@ -139,6 +139,8 @@ def test_main_epias_giris_basarisizsa_diger_kaynaklar_calismaya_devam_eder(
     monkeypatch.setattr(run.tim, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
     monkeypatch.setattr(run.bddk, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
     monkeypatch.setattr(run.tefas, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
+    monkeypatch.setattr(run.tefas, "fon_tam_gecmisi", lambda *args, **kwargs: sahte_df())
+    monkeypatch.setattr(run.fred, "seri_cek", lambda *args, **kwargs: sahte_df())
     monkeypatch.setattr(run.eurocontrol, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
     monkeypatch.setattr(run, "seriyi_yaz", sahte_seriyi_yaz)
 
@@ -180,7 +182,8 @@ def test_main_epias_serileri_tek_onbellek_paylasir(monkeypatch):
     monkeypatch.setattr(run.tim, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
     monkeypatch.setattr(run.bddk, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
     monkeypatch.setattr(run.tefas, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.eurocontrol, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
+    monkeypatch.setattr(run.tefas, "fon_tam_gecmisi", lambda *args, **kwargs: sahte_df())
+    monkeypatch.setattr(run.fred, "seri_cek", lambda *args, **kwargs: sahte_df())
     monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
 
     assert run.main() == 0

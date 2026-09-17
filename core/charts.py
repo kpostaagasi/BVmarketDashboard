@@ -299,3 +299,16 @@ def seviye_figuru(df: pd.DataFrame, birim: str, freq: str = "monthly") -> go.Fig
         )
     fig.update_layout(showlegend=False)
     return fig
+
+
+def fon_donem_figuru(degerler: pd.Series, birim: str) -> go.Figure:
+    """Fon dönem sonu stokları ve değişimleri için sıfır tabanlı çubuklar."""
+    fig = go.Figure(go.Bar(
+        x=list(degerler.index), y=list(degerler),
+        marker_color=RENKLER["seri"][0],
+        hovertemplate=f"%{{x|%d.%m.%Y}}<br>%{{y:,.2f}} {birim}<extra></extra>",
+    ))
+    _temayi_uygula(fig, birim)
+    fig.update_xaxes(tickformat="%m.%Y")
+    fig.update_yaxes(rangemode="tozero")
+    return fig

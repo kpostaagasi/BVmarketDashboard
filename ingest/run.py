@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from datetime import date
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -78,6 +79,11 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = bddk.seri_cek(seri, onbellek=bddk_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tefas":
         df = tefas.seri_cek(seri, onbellek=tefas_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "tefas_fon":
+        df = tefas.fon_tam_gecmisi(
+            seri.tefas_kod, seri.start_date, date.today().isoformat(),
+            session=oturum, tip=seri.tefas_tip,
+        )
     elif seri.kaynak_tipi == "eurocontrol":
         df = eurocontrol.seri_cek(seri, onbellek=ec_onbellek, session=oturum)
     elif seri.kaynak_tipi == "fred":
@@ -90,7 +96,10 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
 def seriyi_yaz(seri: Seri, df) -> int:
     yol = seri_yolu(seri.id)
     yol.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(yol, index=False, float_format="%.5f")
+    if seri.kaynak_tipi == "tefas_fon":
+        df.to_csv(yol, index=False)
+    else:
+        df.to_csv(yol, index=False, float_format="%.5f")
     return len(df)
 
 

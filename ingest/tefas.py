@@ -246,39 +246,79 @@ def seri_cek(seri, onbellek: dict | None = None, session=None,
 
 
 def fon_gecmisi(
-    fon_kodu: str, bas: str, bit: str, session=None,
+    fon_kodu: str, bas: str, bit: str, session=None, *, tip: str = "YAT",
 ) -> pd.DataFrame:
-    """Tek fonun günlük geçmişi (fiyat, TL). `bas`/`bit` `YYYY-MM-DD`.
+    """Tek fonun bir takvim ayı içindeki günlük fiyat ve stok verileri.
 
-    Aynı `fonGnlBlgSiraliGetir` ucunun tek-fon modu (2026-09-17'de canlı
-    ölçüldü): `fonKodu` set edilince yanıt o fonun tarih artan günlük
-    satırlarıdır (fiyat/tedPay/kisi/portfoyBuyukluk). Ucun tarih aralığı
-    1 ayı aşamaz; bunu çağıran yerine burada zorluyoruz.
+    HTTP/uygulama hatası boş pencere değildir; eksik geçmiş yazılmamalı.
+    Fiyat hassasiyeti CSV yazılırken korunmalıdır (en az altı ondalık).
     """
     bas_gun = date.fromisoformat(bas)
     bit_gun = date.fromisoformat(bit)
-    if (bit_gun - bas_gun).days > 31:
-        raise ValueError(
-            f"TEFAS penceresi 1 ayı aşamaz: {bas} → {bit} "
-            f"({(bit_gun - bas_gun).days} gün)"
-        )
+    if bas_gun > bit_gun:
+        raise ValueError("TEFAS başlangıcı bitişten sonra olamaz")
+    if (bas_gun.year, bas_gun.month) != (bit_gun.year, bit_gun.month):
+        raise ValueError(f"TEFAS penceresi 1 ay içinde kalmalı: {bas} → {bit}")
+    if tip not in GECERLI_TIPLER:
+        raise ValueError(f"Geçersiz TEFAS fon tipi: {tip}")
+    if not fon_kodu or not fon_kodu.isalnum():
+        raise ValueError(f"Geçersiz TEFAS fon kodu: {fon_kodu}")
     http = session or requests
     _bekle()
-    govde = json.loads(_istek_govdesi("YAT", bas_gun))
+    govde = json.loads(_istek_govdesi(tip, bas_gun))
     govde["fonKodu"] = fon_kodu
-    govde["basTarih"] = bas_gun.strftime("%Y%m%d")
     govde["bitTarih"] = bit_gun.strftime("%Y%m%d")
     yanit = http.post(UC, data=json.dumps(govde), headers=BASLIKLAR,
                       timeout=ZAMAN_ASIMI)
     if yanit.status_code != 200:
         raise RuntimeError(f"TEFAS HTTP {yanit.status_code} ({fon_kodu})")
-    satirlar = yanit.json().get("resultList") or []
+    sonuc = yanit.json()
+    mesaj = sonuc.get("errorMessage") or ""
+    if sonuc.get("errorCode"):
+        raise RuntimeError(f"TEFAS uygulama hatası ({fon_kodu}): {mesaj}")
+    satirlar = sonuc["resultList"]
+    sutunlar = {
+        "tarih": "date", "fiyat": "fiyat", "tedPaySayisi": "pay",
+        "kisiSayisi": "hesap", "portfoyBuyukluk": "buyukluk",
+    }
     if not satirlar:
-        return pd.DataFrame(columns=["date", "value"])
+        if "out of bounds" not in mesaj and "bulunamadı" not in mesaj.lower():
+            raise RuntimeError(f"TEFAS beklenmeyen boş yanıt ({fon_kodu}): {mesaj}")
+        return pd.DataFrame(columns=list(sutunlar.values()))
+    if mesaj:
+        raise RuntimeError(f"TEFAS uygulama hatası ({fon_kodu}): {mesaj}")
+    if len(satirlar) >= SAYFA_TAVANI or int(sonuc["toplamSayi"]) != len(satirlar):
+        raise RuntimeError(f"TEFAS eksik pencere ({fon_kodu} {bas} → {bit})")
     df = pd.DataFrame(satirlar)
-    return (
-        df[["tarih", "fiyat"]]
-        .rename(columns={"tarih": "date", "fiyat": "value"})
-        .sort_values("date")
-        .reset_index(drop=True)
-    )
+    tarihler = pd.to_datetime(df["tarih"], errors="raise")
+    if (df["fonKodu"] != fon_kodu).any() or not tarihler.between(bas, bit).all():
+        raise RuntimeError(f"TEFAS fon/tarih uyuşmazlığı ({fon_kodu})")
+    if tarihler.duplicated().any():
+        raise RuntimeError(f"TEFAS yinelenen tarih ({fon_kodu})")
+    df = df[list(sutunlar)].rename(columns=sutunlar)
+    df["date"] = tarihler.dt.strftime("%Y-%m-%d")
+    for sutun in ("fiyat", "pay", "hesap", "buyukluk"):
+        df[sutun] = pd.to_numeric(df[sutun], errors="raise")
+    if df.isna().any().any():
+        raise RuntimeError(f"TEFAS eksik alan ({fon_kodu})")
+    return df.sort_values("date").reset_index(drop=True)
+
+
+def fon_tam_gecmisi(
+    fon_kodu: str, bas: str, bit: str, session=None, *, tip: str = "YAT",
+) -> pd.DataFrame:
+    """Tüm ayları yeniden çeker; herhangi bir pencere hatası işlemi durdurur."""
+    ilk, son = date.fromisoformat(bas), date.fromisoformat(bit)
+    if ilk > son:
+        raise ValueError("TEFAS başlangıcı bitişten sonra olamaz")
+    parcalar = []
+    while ilk <= son:
+        ay_sonu = min(date(ilk.year, ilk.month, monthrange(ilk.year, ilk.month)[1]), son)
+        parcalar.append(fon_gecmisi(
+            fon_kodu, ilk.isoformat(), ay_sonu.isoformat(), session, tip=tip,
+        ))
+        ilk = ay_sonu + timedelta(days=1)
+    dolu = [parca for parca in parcalar if not parca.empty]
+    if not dolu:
+        raise RuntimeError(f"TEFAS fon geçmişi boş ({fon_kodu})")
+    return pd.concat(dolu, ignore_index=True)

@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 
 from dataclasses import dataclass
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
@@ -18,11 +19,11 @@ KATALOG_DIZINI = KOK / "catalog"
 
 GECERLI_FREKANSLAR = {"daily", "weekly", "monthly", "quarterly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
-GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition"}
+GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition", "fon"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol",
-    "fred",
+    "fred", "tefas_fon",
 }
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
@@ -67,6 +68,10 @@ KAYNAK_ALANLARI = {
     "tefas": {
         "zorunlu": ("tefas_tip", "tefas_olcut"),
         "istege_bagli": ("start_date",),
+    },
+    "tefas_fon": {
+        "zorunlu": ("tefas_tip", "tefas_kod", "start_date"),
+        "istege_bagli": (),
     },
     "eurocontrol": {
         "zorunlu": ("ec_kaynak", "ec_varlik"),
@@ -157,6 +162,7 @@ class Seri:
     bddk_kumulatif: bool | None = None
     tefas_tip: str | None = None
     tefas_olcut: str | None = None
+    tefas_kod: str | None = None
     ec_kaynak: str | None = None
     ec_varlik: str | None = None
     fred_code: str | None = None
@@ -318,6 +324,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             bddk_kumulatif=ham.get("bddk_kumulatif"),
             tefas_tip=ham.get("tefas_tip"),
             tefas_olcut=ham.get("tefas_olcut"),
+            tefas_kod=ham.get("tefas_kod"),
             ec_kaynak=ham.get("ec_kaynak"),
             ec_varlik=ham.get("ec_varlik"),
             fred_code=ham.get("fred_code"),
@@ -360,6 +367,8 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(f"{seri.id}: charts listesinde tekrar var {seri.charts}")
     if "daily_seasonality" in seri.charts and seri.freq != "daily":
         raise KatalogHatasi(f"{seri.id}: daily_seasonality günlük seri gerektirir")
+    if "fon" in seri.charts and seri.freq != "daily":
+        raise KatalogHatasi(f"{seri.id}: fon grafiği günlük seri gerektirir")
     if seri.freq == "quarterly" and set(seri.charts) != {"level"}:
         raise KatalogHatasi(f"{seri.id}: çeyreklik seri yalnızca level grafiği destekler")
     if seri.hareketli_ortalama_gun is not None:
@@ -367,13 +376,17 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             raise KatalogHatasi(
                 f"{seri.id}: hareketli_ortalama_gun pozitif tam sayı olmalı"
             )
-        if seri.freq != "daily" or "composition" in seri.charts:
+        if seri.freq != "daily" or set(seri.charts) & {"composition", "fon"}:
             raise KatalogHatasi(
                 f"{seri.id}: hareketli_ortalama_gun günlük tek değerli seri gerektirir"
             )
     if seri.kaynak_tipi not in GECERLI_KAYNAK_TIPLERI:
         raise KatalogHatasi(f"{seri.id}: geçersiz kaynak_tipi '{seri.kaynak_tipi}'")
     _alan_sahipligini_dogrula(seri)
+    if (seri.kaynak_tipi == "tefas_fon") != ("fon" in seri.charts):
+        raise KatalogHatasi(f"{seri.id}: tefas_fon kaynağı ile fon grafiği birlikte kullanılmalı")
+    if "fon" in seri.charts and seri.charts != ("fon",):
+        raise KatalogHatasi(f"{seri.id}: fon tek başına olmalı, başka grafikle birleştirilemez")
     if seri.kaynak_tipi == "epias":
         # Tek alan mı, bileşen grubu mu: biri ya da diğeri, ikisi birden değil.
         if bool(seri.epias_alani) == bool(seri.epias_bilesenler):
@@ -408,18 +421,27 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             f"{seri.id}: geçersiz ec_kaynak '{seri.ec_kaynak}' "
             f"(geçerli: {', '.join(sorted(GECERLI_EC_KAYNAKLARI))})"
         )
-    if seri.kaynak_tipi == "tefas":
+    if seri.kaynak_tipi in {"tefas", "tefas_fon"}:
         # Yazım hatası adaptörün derinliklerinde KeyError'a dönüşmesin.
         if seri.tefas_tip not in GECERLI_TEFAS_TIPLERI:
             raise KatalogHatasi(
                 f"{seri.id}: geçersiz tefas_tip '{seri.tefas_tip}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_TEFAS_TIPLERI))})"
             )
-        if seri.tefas_olcut not in GECERLI_TEFAS_OLCUTLERI:
+        if seri.kaynak_tipi == "tefas" and seri.tefas_olcut not in GECERLI_TEFAS_OLCUTLERI:
             raise KatalogHatasi(
                 f"{seri.id}: geçersiz tefas_olcut '{seri.tefas_olcut}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_TEFAS_OLCUTLERI))})"
             )
+    if seri.kaynak_tipi == "tefas_fon":
+        if not isinstance(seri.tefas_kod, str) or not re.fullmatch(r"[A-Z0-9]+", seri.tefas_kod):
+            raise KatalogHatasi(f"{seri.id}: geçersiz tefas_kod '{seri.tefas_kod}'")
+        try:
+            baslangic = date.fromisoformat(seri.start_date)
+        except (TypeError, ValueError) as hata:
+            raise KatalogHatasi(f"{seri.id}: start_date YYYY-MM-DD biçiminde geçerli tarih olmalı") from hata
+        if baslangic.isoformat() != seri.start_date or baslangic > date.today():
+            raise KatalogHatasi(f"{seri.id}: start_date YYYY-MM-DD biçiminde ve bugün veya öncesinde olmalı")
     # Alan varlığı tabloda; burada yalnızca değer geçerliliği kalıyor.
     if seri.olcek is not None and seri.olcek <= 0:
         raise KatalogHatasi(

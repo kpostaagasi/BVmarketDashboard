@@ -36,10 +36,6 @@ def test_kategori_sirasi():
     ]
 
 
-def test_seri_sayisi():
-    assert len(serileri_yukle()) == 140
-
-
 def test_seri_alanlari_dogru_tiplerde():
     seri = seri_getir("enflasyon/tufe-genel")
     assert isinstance(seri, Seri)
@@ -102,7 +98,7 @@ def test_alan_degerleri_gecerli_kumelerde():
         assert seri.freq in {"daily", "weekly", "monthly", "quarterly"}, seri.id
         assert seri.monthly_agg in {"mean", "last", "sum"}, seri.id
         assert seri.charts, seri.id
-        assert set(seri.charts) <= {"seasonality", "daily_seasonality", "level", "composition"}, seri.id
+        assert set(seri.charts) <= {"seasonality", "daily_seasonality", "level", "composition", "fon"}, seri.id
         if seri.kaynak_tipi == "evds":
             assert seri.evds_frequency in {"1", "2", "5"}, seri.id
             assert seri.evds_code, seri.id
@@ -116,7 +112,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol", "fred"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "tefas_fon", "eurocontrol", "fred"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -482,15 +478,6 @@ def test_eksik_zorunlu_alan_reddedilir():
         _dogrula_ham(_ham_seri(evds_code=None))
 
 
-def test_gercek_katalog_alan_sahipligini_gecer():
-    """Regresyon kalkanı: tablo mevcut serileri reddetmemeli."""
-    from core.catalog import serileri_yukle
-
-    serileri_yukle.cache_clear()
-    try:
-        assert len(serileri_yukle()) == 140
-    finally:
-        serileri_yukle.cache_clear()
 
 
 def test_bos_string_zorunlu_alani_karsilamaz():

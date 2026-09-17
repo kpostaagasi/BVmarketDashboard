@@ -146,7 +146,7 @@ def _seriyi_oku(seri: Seri) -> pd.DataFrame:
     gövdesindeki `df[["value"]]` KeyError fırlatır. Hata yakalama
     `takvim()` içinde kalır: VERI_YOK ile OKUNAMADI ayrımı oraya aittir.
     """
-    if seri.epias_bilesenler:
+    if seri.epias_bilesenler or "fon" in seri.charts:
         return genis_csv_oku(seri_yolu(seri.id))
     return seri_csv_oku(seri_yolu(seri.id))
 
