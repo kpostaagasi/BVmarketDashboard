@@ -243,3 +243,42 @@ def seri_cek(seri, onbellek: dict | None = None, session=None,
     if seri.start_date:
         df = df[df["date"] >= seri.start_date]
     return df.reset_index(drop=True)
+
+
+def fon_gecmisi(
+    fon_kodu: str, bas: str, bit: str, session=None,
+) -> pd.DataFrame:
+    """Tek fonun günlük geçmişi (fiyat, TL). `bas`/`bit` `YYYY-MM-DD`.
+
+    Aynı `fonGnlBlgSiraliGetir` ucunun tek-fon modu (2026-09-17'de canlı
+    ölçüldü): `fonKodu` set edilince yanıt o fonun tarih artan günlük
+    satırlarıdır (fiyat/tedPay/kisi/portfoyBuyukluk). Ucun tarih aralığı
+    1 ayı aşamaz; bunu çağıran yerine burada zorluyoruz.
+    """
+    bas_gun = date.fromisoformat(bas)
+    bit_gun = date.fromisoformat(bit)
+    if (bit_gun - bas_gun).days > 31:
+        raise ValueError(
+            f"TEFAS penceresi 1 ayı aşamaz: {bas} → {bit} "
+            f"({(bit_gun - bas_gun).days} gün)"
+        )
+    http = session or requests
+    _bekle()
+    govde = json.loads(_istek_govdesi("YAT", bas_gun))
+    govde["fonKodu"] = fon_kodu
+    govde["basTarih"] = bas_gun.strftime("%Y%m%d")
+    govde["bitTarih"] = bit_gun.strftime("%Y%m%d")
+    yanit = http.post(UC, data=json.dumps(govde), headers=BASLIKLAR,
+                      timeout=ZAMAN_ASIMI)
+    if yanit.status_code != 200:
+        raise RuntimeError(f"TEFAS HTTP {yanit.status_code} ({fon_kodu})")
+    satirlar = yanit.json().get("resultList") or []
+    if not satirlar:
+        return pd.DataFrame(columns=["date", "value"])
+    df = pd.DataFrame(satirlar)
+    return (
+        df[["tarih", "fiyat"]]
+        .rename(columns={"tarih": "date", "fiyat": "value"})
+        .sort_values("date")
+        .reset_index(drop=True)
+    )
