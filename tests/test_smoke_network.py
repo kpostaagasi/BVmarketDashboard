@@ -243,3 +243,45 @@ def test_eurocontrol_dosyalari_beklenen_varliklari_donduruyor():
         assert len(df) > 200, seri_id
         assert df["value"].min() > 0, seri_id
         assert df["date"].is_monotonic_increasing, seri_id
+
+
+def test_yeni_havacilik_csv_canli_kaynakla_birebir():
+    """Faz havacılık diliminin yazdığı CSV ile canlı çekim aynı satırları
+    taşır: CSV güncel değilse ya da adapter penceresi kayarsa burada görülür.
+    """
+    import pandas as pd
+
+    from ingest.eurocontrol import seri_cek as eurocontrol_seri_cek
+    from core.catalog import seri_getir
+    from core.data import seri_csv_oku
+
+    for seri_id in ("havacilik/amsterdam", "havacilik/londra-heathrow"):
+        seri = seri_getir(seri_id)
+        canli = eurocontrol_seri_cek(seri, session=requests.Session()).set_index("date")
+        yerel = seri_csv_oku(seri)
+        ortak = canli.index.intersection(yerel.index)
+        assert len(ortak) > 300, seri_id
+        pd.testing.assert_series_equal(
+            canli["value"].reindex(ortak), yerel["value"].reindex(ortak),
+            check_names=False,
+        )
+
+
+def test_fred_csv_canli_kaynakla_birebir():
+    """Çeyreklik GSYİH CSV'si FRED yayınıyla birebir; revizyon sonrası
+    CSV yeniden yazılmamışsa fark burada patlar."""
+    import pandas as pd
+
+    from ingest import fred
+    from core.catalog import seri_getir
+    from core.data import seri_csv_oku
+
+    seri = seri_getir("ekonomi-makro/almanya-reel-gsyih")
+    canli = fred.seri_cek(seri, session=requests.Session()).set_index("date")
+    yerel = seri_csv_oku(seri)
+    ortak = canli.index.intersection(yerel.index)
+    assert len(ortak) == len(canli) == 142
+    pd.testing.assert_series_equal(
+        canli["value"].reindex(ortak), yerel["value"].reindex(ortak),
+        check_names=False,
+    )
