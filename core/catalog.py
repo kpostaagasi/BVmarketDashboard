@@ -22,6 +22,7 @@ GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol",
+    "fred",
 }
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
@@ -69,6 +70,10 @@ KAYNAK_ALANLARI = {
     },
     "eurocontrol": {
         "zorunlu": ("ec_kaynak", "ec_varlik"),
+        "istege_bagli": ("start_date",),
+    },
+    "fred": {
+        "zorunlu": ("fred_code",),
         "istege_bagli": ("start_date",),
     },
 }
@@ -154,6 +159,7 @@ class Seri:
     tefas_olcut: str | None = None
     ec_kaynak: str | None = None
     ec_varlik: str | None = None
+    fred_code: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -314,6 +320,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             tefas_olcut=ham.get("tefas_olcut"),
             ec_kaynak=ham.get("ec_kaynak"),
             ec_varlik=ham.get("ec_varlik"),
+            fred_code=ham.get("fred_code"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),

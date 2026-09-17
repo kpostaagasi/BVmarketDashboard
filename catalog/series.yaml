@@ -1610,3 +1610,13 @@
   freq: daily
   hareketli_ortalama_gun: 7
   charts: [daily_seasonality, level]
+
+- id: ekonomi-makro/almanya-reel-gsyih
+  title: Almanya Reel GSYİH
+  category: ekonomi-makro
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/CLVMNACSCAB1GQDE" }
+  kaynak_tipi: fred
+  fred_code: CLVMNACSCAB1GQDE
+  unit: "Milyon zincirleme hacim"
+  freq: monthly
+  charts: [level]

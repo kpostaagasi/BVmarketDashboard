@@ -37,7 +37,7 @@ def test_kategori_sirasi():
 
 
 def test_seri_sayisi():
-    assert len(serileri_yukle()) == 139
+    assert len(serileri_yukle()) == 140
 
 
 def test_seri_alanlari_dogru_tiplerde():
@@ -116,7 +116,7 @@ def _sluglar():
 
 def test_her_serinin_kaynak_tipi_gecerli():
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol"}, seri.id
+        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol", "fred"}, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():
@@ -480,7 +480,7 @@ def test_gercek_katalog_alan_sahipligini_gecer():
 
     serileri_yukle.cache_clear()
     try:
-        assert len(serileri_yukle()) == 139
+        assert len(serileri_yukle()) == 140
     finally:
         serileri_yukle.cache_clear()
 

@@ -17,7 +17,7 @@ from urllib3.util.retry import Retry
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import bddk, epias, eurocontrol, evds, osd, tefas, tim, yahoo
+from ingest import bddk, epias, eurocontrol, evds, fred, osd, tefas, tim, yahoo
 
 # Koşu başına tek oturum tüm adaptörlere geçiyor; retry politikası bu yüzden
 # tek yerde tanımlanabiliyor (devredilen iş #1). Ölçüm: 111 serilik bir tam
@@ -80,6 +80,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = tefas.seri_cek(seri, onbellek=tefas_onbellek, session=oturum)
     elif seri.kaynak_tipi == "eurocontrol":
         df = eurocontrol.seri_cek(seri, onbellek=ec_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "fred":
+        df = fred.seri_cek(seri, session=oturum)
     else:
         raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
     return olcekle(df, seri.olcek)
