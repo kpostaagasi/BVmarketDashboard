@@ -253,12 +253,16 @@ def test_yeni_havacilik_csv_canli_kaynakla_birebir():
 
     from ingest.eurocontrol import seri_cek as eurocontrol_seri_cek
     from core.catalog import seri_getir
-    from core.data import seri_csv_oku
+    from core.data import seri_csv_oku, seri_yolu
 
     for seri_id in ("havacilik/amsterdam", "havacilik/londra-heathrow"):
         seri = seri_getir(seri_id)
-        canli = eurocontrol_seri_cek(seri, session=requests.Session()).set_index("date")
-        yerel = seri_csv_oku(seri)
+        canli = eurocontrol_seri_cek(
+            seri, session=requests.Session()
+        )
+        canli["date"] = pd.to_datetime(canli["date"])
+        canli = canli.set_index("date")
+        yerel = seri_csv_oku(seri_yolu(seri.id))
         ortak = canli.index.intersection(yerel.index)
         assert len(ortak) > 300, seri_id
         pd.testing.assert_series_equal(
@@ -274,11 +278,11 @@ def test_fred_csv_canli_kaynakla_birebir():
 
     from ingest import fred
     from core.catalog import seri_getir
-    from core.data import seri_csv_oku
+    from core.data import seri_csv_oku, seri_yolu
 
     seri = seri_getir("ekonomi-makro/almanya-reel-gsyih")
     canli = fred.seri_cek(seri, session=requests.Session()).set_index("date")
-    yerel = seri_csv_oku(seri)
+    yerel = seri_csv_oku(seri_yolu(seri.id))
     ortak = canli.index.intersection(yerel.index)
     assert len(ortak) == len(canli) == 142
     pd.testing.assert_series_equal(
