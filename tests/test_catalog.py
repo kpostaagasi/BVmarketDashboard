@@ -36,6 +36,7 @@ def test_kategori_sirasi():
         "otomotiv",
         "beklentiler",
         "ihracat-il",
+        "ihracat-ulke",
     ]
 
 
@@ -532,14 +533,19 @@ def test_gecikme_gunu_sifir_veya_negatif_reddedilir():
             _dogrula_ham(_ham_seri(gecikme_gunu=gecersiz))
 
 
-def test_gecikme_gunu_katalogda_yalnizca_gecikmeli_serilerde():
-    """Faz 3f: yalnızca kaynağı ~42 gün gecikmeli iki seri taşır.
+def test_gecikme_gunu_katalogda_yayilmamis():
+    """Alan yalnızca kaynağı gerçekten gecikmeli serilerde olmalı.
 
-    Alanın her seriye yayılması eşiği anlamsızlaştırır; bu test yayılmayı
-    fark ettirir.
+    Eskiden iki seri id'si birebir pinliydi; yeni gecikmeli seri eklenince
+    (TÜİK yapı ruhsatı/izni) test davranış değil liste kırıyordu. Kural
+    yayılma disiplinidir: alan katalogun küçük bir azınlığında kalmalı ve
+    pozitif olmalı — sınırı her seride taşımak eşiği anlamsızlaştırır.
     """
-    tasiyanlar = {s.id for s in seri_listele() if s.gecikme_gunu is not None}
-    assert tasiyanlar == {"sanayi/uretim-endeksi", "dis-ticaret/cari-denge"}
+    tumu = seri_listele()
+    tasiyanlar = [s for s in tumu if s.gecikme_gunu is not None]
+    assert tasiyanlar, "en az bir gecikmeli seri olmalı"
+    assert all(s.gecikme_gunu > 0 for s in tasiyanlar)
+    assert len(tasiyanlar) < len(tumu) * 0.05
 
 
 def test_olcek_sifir_veya_negatif_reddedilir():

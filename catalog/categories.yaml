@@ -198,4 +198,11 @@
     bültenin kendi TOPLAM satırı DEĞİL, o ilin sektör satırlarının
     toplamıdır — bülten TOPLAM satırı birlik bazlı bir fazlalık taşır ve
     referans site parite ölçütü sektör toplamıdır.
+- slug: ihracat-ulke
+  title: İhracat (Ülke × Sektör)
+  note: >-
+    Kaynak TİM ülke×sektör karşılaştırma bülteni; değerler Bin USD ve
+    AYLIKTIR (o ayın 1'inden son gününe). Bir ülkenin "Toplam" serisi
+    bültenin kendi TOPLAM satırı DEĞİL (böyle bir satır ülke başına hiç
+    yayımlanmıyor), o ülkenin sektör satırlarının toplamıdır.
 

@@ -24874,3 +24874,81 @@
   freq: weekly
   monthly_agg: sum
   charts: [level, seasonality]
+
+- id: insaat/yapi-ruhsati-yapi-sayisi
+  title: "Yapı Ruhsatı · Yapı Sayısı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.IN.RH2.TOPLAM.TOP.A
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  gecikme_gunu: 30
+  charts: [seasonality, level]
+
+- id: insaat/yapi-ruhsati-yuzolcum
+  title: "Yapı Ruhsatı · Yüzölçüm"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.IN.RH2.TOPLAM.TOP.B
+  evds_frequency: "5"
+  unit: "m²"
+  freq: monthly
+  monthly_agg: sum
+  gecikme_gunu: 30
+  charts: [seasonality, level]
+
+- id: insaat/yapi-ruhsati-daire-sayisi
+  title: "Yapı Ruhsatı · Daire Sayısı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.IN.RH2.TOPLAM.TOP.D
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  gecikme_gunu: 30
+  charts: [seasonality, level]
+
+- id: insaat/yapi-kullanma-izni-yapi-sayisi
+  title: "Yapı Kullanma İzni · Yapı Sayısı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.IN.KL2.TOPLAM.TOP.A
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  gecikme_gunu: 30
+  charts: [seasonality, level]
+
+- id: insaat/yapi-kullanma-izni-yuzolcum
+  title: "Yapı Kullanma İzni · Yüzölçüm"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.IN.KL2.TOPLAM.TOP.B
+  evds_frequency: "5"
+  unit: "m²"
+  freq: monthly
+  monthly_agg: sum
+  gecikme_gunu: 30
+  charts: [seasonality, level]
+
+- id: insaat/yapi-kullanma-izni-daire-sayisi
+  title: "Yapı Kullanma İzni · Daire Sayısı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.IN.KL2.TOPLAM.TOP.D
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  gecikme_gunu: 30
+  charts: [seasonality, level]
