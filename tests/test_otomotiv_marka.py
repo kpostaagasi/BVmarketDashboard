@@ -351,6 +351,19 @@ def test_marka_satirlari_toplam_kolonlarini_okur():
     assert markalar["AUDI"]["toplam"] == 1275.0
 
 
+def test_marka_satirlari_toplam_sozde_markayi_dosyanin_kendi_toplam_satirindan_dondurur():
+    """Toplam pazar kartları için: dönen sözlükte gerçek markaların yanında
+    dosyanın kendi "TOPLAM:" satırı da `"TOPLAM"` anahtarıyla bulunmalı —
+    marka toplamına KATILMADAN (öz-doğrulamadan sonra eklenir)."""
+    baytlar = _sahte_odmd_xlsx([
+        ["FIAT", 1905, 220, 2125, 630, 3424, 4054, 2535, 3644, 6179],
+        ["AUDI", 0, 1275, 1275, 0, 0, 0, 0, 1275, 1275],
+    ])
+    markalar = marka_satirlari(baytlar)
+    assert markalar["TOPLAM"] == {"otomobil": 3400.0, "hafif_ticari": 4054.0, "toplam": 7454.0}
+    assert "TOPLAM" not in {"FIAT", "AUDI"}  # gerçek marka listesine sızmadı
+
+
 def test_marka_satirlari_marka_etiketi_bos_olsa_da_calisir():
     """Eski dosyalarda (2021 öncesi) MARKA hücresinin metni boş — yapısal
     olarak OTOMOBİL/HAFİF TİCARİ/TOPLAM sütun üçlüsüne bakılır."""

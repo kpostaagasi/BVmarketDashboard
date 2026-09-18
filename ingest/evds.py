@@ -5,8 +5,14 @@ keşfedilip doğrulanmıştır — sıfırdan yeniden keşfetmeye çalışmayın
 
 - Endpoint resmi evds2 REST'i değil; POST /igmevdsms-dis/fe, key HTTP
   header'ında gider.
-- Tarih alanı frekansa göre iki farklı biçimde döner: aylık "YYYY-MM"
-  (gün yok), günlük/haftalık "DD-MM-YYYY".
+- Tarih alanı frekansa göre üç farklı biçimde döner: aylık "YYYY-MM"
+  (gün yok), günlük/haftalık "DD-MM-YYYY", çeyreklik "YYYY-Qn" (n=1..4).
+  Çeyreklik `date` çeyreğin İLK ayına indirgenir (adaptör sözleşmesi).
+- frequency alanı "6" istendiğinde native aylık bir seri bile üç aylığa
+  TOPLULAŞTIRILIR (ölçüldü: TP.TUKFIY2025.GENEL 8 aylık nokta yerine 3
+  çeyrek noktası döndü) — GSYİH gibi doğal çeyreklik seriler için "6"
+  kullanılmalı, "5" (aylık) değil. "3"/"4" tanımsız: sunucu bunları
+  sessizce serinin doğal frekansına düşürüyor (güvenilmez, kullanılmadı).
 - Yanıttaki değer alanının adı, seri kodunun noktalarının alt çizgiye
   çevrilmiş halidir.
 - groupSeperator:true istendiği için değerler binlik ayraç içerir.

@@ -38546,3 +38546,260 @@
   unit: "Adet"
   freq: yearly
   charts: [level]
+
+
+- id: emtia-tarim/pamuk
+  title: Pamuk
+  category: emtia-tarim
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/CT=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "CT=F"
+  unit: "USc/lb"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-tarim/seker
+  title: Şeker
+  category: emtia-tarim
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/SB=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "SB=F"
+  unit: "USc/lb"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-tarim/kakao
+  title: Kakao
+  category: emtia-tarim
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/CC=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "CC=F"
+  unit: "USD/ton"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+  yayin_notu: "MarketVisuals sayfasında kaynak 'Trading Economics' etiketli; ICE ABD (New York) kakao vadeli işlem sözleşmesi (CC=F) aynı emtiayı izler, ölçülen sapma ~%1 (2026-09-18)."
+
+- id: emtia-tarim/bugday
+  title: Buğday
+  category: emtia-tarim
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/ZW=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "ZW=F"
+  unit: "USc/bu"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-tarim/misir
+  title: Mısır
+  category: emtia-tarim
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/ZC=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "ZC=F"
+  unit: "USc/bu"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-tarim/soya
+  title: Soya (Soya Fasulyesi)
+  category: emtia-tarim
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/ZS=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "ZS=F"
+  unit: "USc/bu"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-tarim/kahve
+  title: Kahve
+  category: emtia-tarim
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/KC=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "KC=F"
+  unit: "USc/lb"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: emtia-tarim/gubre-endeksi
+  title: Gübre Endeksi (Dünya Bankası)
+  category: emtia-tarim
+  kaynak: { name: Dünya Bankası (Pink Sheet), url: "https://www.worldbank.org/en/research/commodity-markets" }
+  kaynak_tipi: worldbank
+  wb_seri: gubre-endeksi
+  unit: "Endeks (2010=100)"
+  freq: monthly
+  charts: [seasonality, level]
+  yayin_notu: "Dünya Bankası 'Pink Sheet' aylık gübre fiyat endeksi (2010=100); nominal USD bazlı."
+
+- id: emtia-tarim/ure
+  title: Üre (Granüler)
+  category: emtia-tarim
+  kaynak: { name: Dünya Bankası (Pink Sheet), url: "https://www.worldbank.org/en/research/commodity-markets" }
+  kaynak_tipi: worldbank
+  wb_seri: urea
+  unit: "USD/ton"
+  freq: monthly
+  charts: [seasonality, level]
+  yayin_notu: "Dünya Bankası Pink Sheet aylık ortalama, f.o.b. Orta Doğu (Ukrayna kaynaklı, 2022 Mart'tan itibaren; öncesi f.o.b. Karadeniz). MarketVisuals kartı GÜNLÜK (Trading Economics); aylık ortalama ile günlük anlık değer arasında yüksek volatilite dönemlerinde büyük sapma olabilir (ölçülen: Ağustos 2026 ortalaması 390 USD/ton, MV'nin 17.09.2026 günlük değeri 460.25 USD/ton, %15 fark)."
+
+- id: emtia-tarim/dap
+  title: DAP (Di-Amonyum Fosfat)
+  category: emtia-tarim
+  kaynak: { name: Dünya Bankası (Pink Sheet), url: "https://www.worldbank.org/en/research/commodity-markets" }
+  kaynak_tipi: worldbank
+  wb_seri: dap
+  unit: "USD/ton"
+  freq: monthly
+  charts: [seasonality, level]
+  yayin_notu: "Dünya Bankası Pink Sheet aylık ortalama, spot f.o.b. ABD Körfezi."
+
+
+- id: emtia-metaller/demir-cevheri
+  title: Demir Cevheri
+  category: emtia-metaller
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/TIO=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "TIO=F"
+  unit: "USD/ton"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+  yayin_notu: "SGX TSI Demir Cevheri %62 Fe, CFR Çin vadeli işlem sözleşmesi; MV kartıyla 17.09.2026 için TAM eşleşme (97.42 USD/ton)."
+
+
+- id: avrupa/almanya-tufe-hicp
+  title: Almanya TÜFE (HICP)
+  category: avrupa
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/CP0000DEM086NEST" }
+  kaynak_tipi: fred
+  fred_code: CP0000DEM086NEST
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/almanya-issizlik-orani
+  title: Almanya İşsizlik Oranı
+  category: avrupa
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/LRHUTTTTDEM156S" }
+  kaynak_tipi: fred
+  fred_code: LRHUTTTTDEM156S
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/almanya-tuketici-guven
+  title: Almanya Tüketici Güven Endeksi
+  category: avrupa
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/CSCICP02DEM460S" }
+  kaynak_tipi: fred
+  fred_code: CSCICP02DEM460S
+  unit: "Denge (puan)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/almanya-imalat-guven
+  title: Almanya İmalat Sanayi Güven Endeksi
+  category: avrupa
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/BSCICP02DEM460S" }
+  kaynak_tipi: fred
+  fred_code: BSCICP02DEM460S
+  unit: "Denge (puan)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/almanya-ifo-iklim
+  title: "Almanya ifo İş Dünyası Güven Endeksi (Business Climate)"
+  category: avrupa
+  kaynak: { name: ifo Institute, url: "https://www.ifo.de/en/survey/ifo-business-climate-index-germany" }
+  kaynak_tipi: ifo
+  ifo_seri: iklim
+  unit: "Endeks (2015=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/almanya-ifo-durum
+  title: "Almanya ifo Cari Durum Endeksi (Business Situation)"
+  category: avrupa
+  kaynak: { name: ifo Institute, url: "https://www.ifo.de/en/survey/ifo-business-climate-index-germany" }
+  kaynak_tipi: ifo
+  ifo_seri: durum
+  unit: "Endeks (2015=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/almanya-ifo-beklenti
+  title: "Almanya ifo Beklentiler Endeksi (Business Expectations)"
+  category: avrupa
+  kaynak: { name: ifo Institute, url: "https://www.ifo.de/en/survey/ifo-business-climate-index-germany" }
+  kaynak_tipi: ifo
+  ifo_seri: beklenti
+  unit: "Endeks (2015=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/almanya-oecd-cli
+  title: "Almanya OECD Öncü Gösterge Endeksi (CLI)"
+  category: avrupa
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/DEULOLITOAASTSAM" }
+  kaynak_tipi: fred
+  fred_code: DEULOLITOAASTSAM
+  unit: "Endeks (uzun dönem ort.=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/euro-tufe-hicp
+  title: Euro Bölgesi TÜFE (HICP)
+  category: avrupa
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/CP0000EZ19M086NEST" }
+  kaynak_tipi: fred
+  fred_code: CP0000EZ19M086NEST
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/euro-reel-gsyih
+  title: Euro Bölgesi Reel GSYİH
+  category: avrupa
+  kaynak: { name: FRED (Eurostat), url: "https://fred.stlouisfed.org/series/CLVMNACSCAB1GQEA19" }
+  kaynak_tipi: fred
+  fred_code: CLVMNACSCAB1GQEA19
+  unit: "Milyon EUR (zincirleme, 2010)"
+  freq: quarterly
+  charts: [level]
+
+- id: avrupa/euro-tuketici-guven
+  title: Euro Bölgesi Tüketici Güven Endeksi
+  category: avrupa
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/CSCICP02EZM460S" }
+  kaynak_tipi: fred
+  fred_code: CSCICP02EZM460S
+  unit: "Denge (puan)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/euro-imalat-guven
+  title: Euro Bölgesi İmalat Sanayi Güven Endeksi
+  category: avrupa
+  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/BSCICP02EZM460S" }
+  kaynak_tipi: fred
+  fred_code: BSCICP02EZM460S
+  unit: "Denge (puan)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: avrupa/euro-ecb-mevduat-faizi
+  title: Euro Bölgesi ECB Mevduat Faiz Oranı
+  category: avrupa
+  kaynak: { name: FRED (ECB), url: "https://fred.stlouisfed.org/series/ECBDFR" }
+  kaynak_tipi: fred
+  fred_code: ECBDFR
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]

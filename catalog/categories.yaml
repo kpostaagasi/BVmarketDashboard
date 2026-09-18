@@ -315,3 +315,34 @@
     yayımlamıyor (bkz. `ingest/turkbesd.py` docstring'i — "Beyaz Dünya"
     bültenleri salt anlatı, mutlak aylık tablo taşımıyor ve arşivi
     yalnızca son ~5 ayı kapsıyor).
+
+- slug: emtia-tarim
+  title: Emtia · Tarım
+  pano:
+    [
+      emtia-tarim/pamuk,
+      emtia-tarim/bugday,
+      emtia-tarim/kakao,
+      emtia-tarim/kahve,
+    ]
+  note: >-
+    Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade
+    değişimlerinde grafikte görülen sıçrama piyasa hareketi değil
+    kontrat roll'üdür. Gübre Endeksi, Üre ve DAP, Dünya Bankası Pink
+    Sheet AYLIK ortalamalarıdır (diğer kalemler gibi günlük değil) ve
+    yaklaşık bir ay gecikmeyle yayımlanır.
+
+- slug: avrupa
+  title: Avrupa Ekonomisi
+  pano:
+    [
+      avrupa/almanya-tufe-hicp,
+      avrupa/almanya-issizlik-orani,
+      avrupa/euro-tufe-hicp,
+      avrupa/euro-ecb-mevduat-faizi,
+    ]
+  note: >-
+    FRED üzerinden OECD/Eurostat kaynaklı aylık/çeyreklik göstergeler
+    ile ifo Institute'ün Almanya iş dünyası güven endeksleri bir arada
+    sunulur; veriler ilgili ülke/bölge istatistik kurumlarının yayın
+    takvimine göre 1-2 ay gecikmeli gelir.

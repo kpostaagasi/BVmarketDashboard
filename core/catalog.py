@@ -18,7 +18,7 @@ KOK = Path(__file__).resolve().parent.parent
 KATALOG_DIZINI = KOK / "catalog"
 
 GECERLI_FREKANSLAR = {"daily", "weekly", "monthly", "quarterly", "yearly"}
-GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
+GECERLI_EVDS_FREKANSLARI = {"1", "2", "5", "6"}  # günlük, haftalık, aylık, çeyreklik (bkz. ingest/evds.py docstring)
 GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition", "fon"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
@@ -29,9 +29,10 @@ GECERLI_KAYNAK_TIPLERI = {
     "turkcell", "ttkom",
     "odmd",
     "eib", "usk", "turkbesd",
-    "worldbank", "ifo",
     "tsb",
     "eurostat",
+    "ecb", "turkcimento",
+    "worldbank", "ifo",
 }
 SIKLIK_ETIKETLERI = {
     "daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK",
@@ -154,6 +155,19 @@ GECERLI_EPDK_DOGALGAZ_OLCUTLERI = {
 GECERLI_EUROSTAT_DATASETLERI = {"nrg_pc_204", "nrg_pc_205"}
 GECERLI_EUROSTAT_GEO = {"TR", "EU27_2020"}
 GECERLI_EUROSTAT_PARA_BIRIMLERI = {"EUR", "NAC"}
+# TürkÇimento aylık bölgesel istatistik dosyasından (`.xls`, yıl başına bir
+# dosya) okunan sekiz ÇİMENTO/KLİNKER ölçütü. Bkz. ingest/turkcimento.py
+# docstring'i (METRIK_ESLEME ile birebir).
+GECERLI_TURKCIMENTO_METRIKLERI = {
+    "cimento-uretim", "cimento-ic-satis", "cimento-ihracat",
+    "cimento-toplam-satis", "cimento-stok",
+    "klinker-uretim", "klinker-ihracat", "klinker-stok",
+}
+# Finansal Kiralama, Faktoring ve Finansman Şirketleri portalının (BultenAylikBdmk)
+# iki ürünü: Faktoring ve Finansal Kiralama sektör bültenleri. Bkz.
+# ingest/bddk.py::seri_cek_bdmk docstring'i.
+GECERLI_BDDK_BDMK_URUNLERI = {"faktoring", "finansal_kiralama"}
+
 
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
@@ -197,6 +211,14 @@ KAYNAK_ALANLARI = {
     "bddk": {
         "zorunlu": ("bddk_kalem",),
         "istege_bagli": ("bddk_taraf", "bddk_kumulatif", "start_date"),
+    },
+    "bddk_haftalik": {
+        "zorunlu": ("bddk_haftalik_id",),
+        "istege_bagli": ("bddk_haftalik_sutun", "bddk_haftalik_taraf", "start_date"),
+    },
+    "bddk_bdmk": {
+        "zorunlu": ("bddk_bdmk_urun", "bddk_bdmk_tablo", "bddk_bdmk_kalem"),
+        "istege_bagli": ("bddk_bdmk_kumulatif", "start_date"),
     },
     "tefas": {
         "zorunlu": ("tefas_tip", "tefas_olcut"),
@@ -276,6 +298,14 @@ KAYNAK_ALANLARI = {
     },
     "eurostat": {
         "zorunlu": ("eurostat_dataset", "eurostat_geo", "eurostat_currency"),
+        "istege_bagli": ("start_date",),
+    },
+    "ecb": {
+        "zorunlu": ("ecb_akis", "ecb_anahtar"),
+        "istege_bagli": ("start_date",),
+    },
+    "turkcimento": {
+        "zorunlu": ("turkcimento_metrik",),
         "istege_bagli": ("start_date",),
     },
 }
@@ -362,6 +392,13 @@ class Seri:
     bddk_kalem: str | None = None
     bddk_taraf: str | None = None
     bddk_kumulatif: bool | None = None
+    bddk_haftalik_id: str | None = None
+    bddk_haftalik_sutun: int | None = None
+    bddk_haftalik_taraf: str | None = None
+    bddk_bdmk_urun: str | None = None
+    bddk_bdmk_tablo: int | None = None
+    bddk_bdmk_kalem: str | None = None
+    bddk_bdmk_kumulatif: bool | None = None
     tefas_tip: str | None = None
     tefas_olcut: str | None = None
     tefas_kod: str | None = None
@@ -398,6 +435,9 @@ class Seri:
     eurostat_dataset: str | None = None
     eurostat_geo: str | None = None
     eurostat_currency: str | None = None
+    ecb_akis: str | None = None
+    ecb_anahtar: str | None = None
+    turkcimento_metrik: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -606,6 +646,9 @@ def serileri_yukle() -> tuple[Seri, ...]:
             eurostat_dataset=ham.get("eurostat_dataset"),
             eurostat_geo=ham.get("eurostat_geo"),
             eurostat_currency=ham.get("eurostat_currency"),
+            ecb_akis=ham.get("ecb_akis"),
+            ecb_anahtar=ham.get("ecb_anahtar"),
+            turkcimento_metrik=ham.get("turkcimento_metrik"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -796,6 +839,14 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
                 f"{seri.id}: geçersiz eurostat_currency '{seri.eurostat_currency}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_PARA_BIRIMLERI))})"
             )
+    if (
+        seri.kaynak_tipi == "turkcimento"
+        and seri.turkcimento_metrik not in GECERLI_TURKCIMENTO_METRIKLERI
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz turkcimento_metrik '{seri.turkcimento_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TURKCIMENTO_METRIKLERI))})"
+        )
     if seri.kaynak_tipi == "turkcell" and seri.turkcell_metrik not in GECERLI_TURKCELL_METRIKLERI:
         raise KatalogHatasi(
             f"{seri.id}: geçersiz turkcell_metrik '{seri.turkcell_metrik}' "

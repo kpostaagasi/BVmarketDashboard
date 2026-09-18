@@ -464,7 +464,15 @@ def seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
 # Sm³ ithalat yaptığı biçiminde YORUMLANIR (veri UYDURULMAZ, yalnızca
 # gerçek boş hücre 0 sayılır) — bu yüzden bizim seri Mayıs-Temmuz için de
 # gerçek (0'a yakın) gözlemler taşıyabilir; kart yalnızca son SIFIR OLMAYAN
-# noktayı öne çıkarıyor, veri kümesi farklı değil.
+# noktayı öne çıkarıyor, veri kümesi farklı değil. Ayrıca canlı ölçüldü:
+# Mayıs 2026'nın KENDİ dosyasında Tablo-6'nın Mayıs sütunu Nisan'la
+# BİREBİR AYNI (EPDK'nın o ayki yayınında henüz güncellenmemiş bir
+# anlık görüntü) — Temmuz dosyasının kümülatif tablosunda Mayıs değeri
+# FARKLI (düzeltilmiş). Bu adaptör HER ayı KENDİ dosyasından okuduğu için
+# (yukarıdaki "en son dosyanın çok-aylık sütununa güven" riskinden kaçınma
+# ilkesi) bizim Mayıs noktamız düzeltilmemiş anlık görüntüyü taşır —
+# petrol.py'nin kabul ettiği "revizyonlar farklı ay dosyalarında farklı
+# görünebilir" riskiyle AYNI, kodda düzeltilecek bir hata değil.
 DOGALGAZ_LISTE_URL = f"{TABAN}/Detay/Icerik/3-0-95-1007/dogal-gazaylik-sektor-raporu"
 
 _DOGALGAZ_DOSYA_LISTESI_RE = re.compile(
