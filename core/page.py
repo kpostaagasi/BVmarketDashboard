@@ -26,6 +26,11 @@ from core.stats import GORUNUMLER, VARSAYILAN
 from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
 
 
+# Bir kategori bu sayıdan çok seri taşıyorsa hepsi birden çizilmez: TİM
+# il×sektör 741, ülke×sektör 674 seri içeriyor ve tamamı 1.400+ Plotly
+# figürü demek — sayfa açılmıyor. Eşiğin üstünde seri SEÇİCİ gösterilir.
+IZGARA_TAVANI = 24
+
 # Yalnızca "Durum" ayarlanır: "bekleniyor (59 gün)" otomatik genişliğe
 # sığmıyor. Diğer sütunlarda otomatik boyutlandırma zaten doğru sonuç
 # veriyor; genişlik dayatmak onları kesiyordu.
@@ -103,6 +108,24 @@ def _kategoriyi_ciz(kategori: Kategori) -> None:
             column_order=takvim_sutun_sirasi(takvim_df),
         )
     st.divider()
+
+    if len(seriler) > IZGARA_TAVANI:
+        indeks = {seri.id: seri for seri in seriler}
+        varsayilan = [seri.id for seri in pano_serileri(kategori, seriler)[:4]]
+        secim = st.multiselect(
+            "Seri",
+            list(indeks),
+            default=varsayilan,
+            format_func=lambda seri_id: indeks[seri_id].title,
+            key=f"secim_{kategori.slug}",
+            placeholder="Seri adı yazın",
+        )
+        st.caption(
+            f"{len(seriler)} serinin tamamı birden çizilmez; yazarak seçin "
+            f"(en çok {IZGARA_TAVANI} kart önerilir)."
+        )
+        _izgara_ciz([indeks[seri_id] for seri_id in secim], gorunum)
+        return
 
     _izgara_ciz(seriler, gorunum)
 
