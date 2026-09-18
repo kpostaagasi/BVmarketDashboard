@@ -18,7 +18,7 @@ from urllib3.util.retry import Retry
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import bddk, epias, eurocontrol, evds, fred, osd, pgsus, tav, tefas, thy, tim, yahoo
+from ingest import bddk, ebebek, epdk, epias, eurocontrol, evds, fred, osd, pgsus, tav, tefas, thy, tim, yahoo
 
 # Koşu başına tek oturum tüm adaptörlere geçiyor; retry politikası bu yüzden
 # tek yerde tanımlanabiliyor (devredilen iş #1). Ölçüm: 111 serilik bir tam
@@ -68,7 +68,9 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          tim_ulke_onbellek: dict | None = None,
          thy_onbellek: dict | None = None,
          pgsus_onbellek: dict | None = None,
-         tav_onbellek: dict | None = None):
+         tav_onbellek: dict | None = None,
+         ebebek_onbellek: dict | None = None,
+         epdk_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
         df = evds.seri_cek(seri, api_key, session=oturum)
@@ -103,6 +105,10 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = thy.seri_cek(seri, onbellek=thy_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tav":
         df = tav.seri_cek(seri, onbellek=tav_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "ebebek":
+        df = ebebek.seri_cek(seri, onbellek=ebebek_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "epdk":
+        df = epdk.seri_cek(seri, onbellek=epdk_onbellek, session=oturum)
     else:
         raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
     return olcekle(df, seri.olcek)
@@ -184,6 +190,12 @@ def main() -> int:
     # değil, kümülatif pencere); 28 seri (12 varlık × ≤3 segment) aynı
     # dosyayı paylaşır (bkz. `ingest.tav.seri_cek`).
     tav_onbellek: dict = {}
+    # ebebek 3 kategoriyi (satış/ziyaretçi/mağaza) paylaşır; 6 seri aynı
+    # ~100 duyuru PDF'ini önbellekler (bkz. `ingest.ebebek.seri_cek`).
+    ebebek_onbellek: dict = {}
+    # EPDK 20 seri (4 ölçüt × 5 ürün) aynı ~8 aylık EK dosyası kümesini
+    # paylaşır (bkz. `ingest.epdk.seri_cek`).
+    epdk_onbellek: dict = {}
 
     with requests.Session() as oturum:
         oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
@@ -211,7 +223,8 @@ def main() -> int:
                     seri, api_key, tgt, oturum,
                     epias_onbellek, osd_onbellek, tim_onbellek, bddk_onbellek,
                     tefas_onbellek, ec_onbellek, tim_il_onbellek, tim_ulke_onbellek,
-                    thy_onbellek, pgsus_onbellek, tav_onbellek,
+                    thy_onbellek, pgsus_onbellek, tav_onbellek, ebebek_onbellek,
+                    epdk_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")

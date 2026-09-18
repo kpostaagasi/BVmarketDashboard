@@ -24,7 +24,8 @@ GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "tim_il", "tim_ulke", "bddk",
     "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus", "thy",
-    "tav",
+    "tav", "ebebek",
+    "epdk",
 }
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
@@ -41,10 +42,21 @@ GECERLI_PGSUS_OLCUTLERI = {
 # THY trafik bülteninin iki ekseni: yolcu segmenti ve ölçüt.
 GECERLI_THY_SEGMENTLERI = {"Toplam", "Yurt İçi", "Yurt Dışı"}
 GECERLI_THY_OLCUTLERI = {"konma", "ask", "doluluk", "yolcu", "kargo"}
-# TAV Havalimanları trafik bülteninin iki ekseni: havalimanı (ya da TAV
-# TOPLAM) ve yolcu segmenti. Yalnızca yolcu verisi kapsanır (uçuş/hareket
-# sayısı kapsam dışı — bkz. ingest/tav.py docstring'i).
+# TAV Havalimanları trafik bülteninin üç ekseni: havalimanı (ya da TAV
+# TOPLAM), yolcu segmenti ve hangi ölçütün (yolcu sayısı mı uçuş sayısı mı)
+# okunacağı. Bkz. ingest/tav.py docstring'i.
 GECERLI_TAV_SEGMENTLERI = {"toplam", "dis-hat", "ic-hat"}
+GECERLI_TAV_OLCUTLERI = {"yolcu", "ucus"}
+# ebebek Mağazacılık'ın aylık KAP Özel Durum Açıklamalarından çekilen altı
+# operasyonel ölçüt. Bkz. ingest/ebebek.py docstring'i.
+GECERLI_EBEBEK_METRIKLERI = {
+    "satis_adedi", "magaza_ziyaretci", "web_ziyaret",
+    "toplam_magaza", "standart_magaza", "mega_magaza",
+}
+# EPDK petrol piyasası aylık sektör raporunun iki ekseni: ölçüt (üretim/
+# satış/dış ticaret yönü) ve ürün grubu. Bkz. ingest/epdk.py docstring'i.
+GECERLI_EPDK_OLCUTLERI = {"rafineri-uretimi", "yurtici-satis", "ithalat", "ihracat"}
+GECERLI_EPDK_URUNLERI = {"benzin", "motorin", "fuel-oil", "havacilik", "denizcilik"}
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
 # listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
@@ -112,6 +124,14 @@ KAYNAK_ALANLARI = {
     },
     "tav": {
         "zorunlu": ("tav_varlik", "tav_segment"),
+        "istege_bagli": ("start_date", "tav_olcut"),
+    },
+    "ebebek": {
+        "zorunlu": ("ebebek_metrik",),
+        "istege_bagli": ("start_date",),
+    },
+    "epdk": {
+        "zorunlu": ("epdk_olcut", "epdk_urun"),
         "istege_bagli": ("start_date",),
     },
 }
@@ -207,6 +227,10 @@ class Seri:
     thy_olcut: str | None = None
     tav_varlik: str | None = None
     tav_segment: str | None = None
+    tav_olcut: str | None = None
+    ebebek_metrik: str | None = None
+    epdk_olcut: str | None = None
+    epdk_urun: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -377,6 +401,9 @@ def serileri_yukle() -> tuple[Seri, ...]:
             thy_olcut=ham.get("thy_olcut"),
             tav_varlik=ham.get("tav_varlik"),
             tav_segment=ham.get("tav_segment"),
+            tav_olcut=ham.get("tav_olcut"),
+            epdk_olcut=ham.get("epdk_olcut"),
+            epdk_urun=ham.get("epdk_urun"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -497,6 +524,29 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             raise KatalogHatasi(
                 f"{seri.id}: geçersiz tav_segment '{seri.tav_segment}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_TAV_SEGMENTLERI))})"
+            )
+        # Verilmemişse "yolcu" kabul edilir (ingest/tav.py:seri_cek ile aynı
+        # varsayılan) — mevcut 28 yolcu serisi tav_olcut hiç taşımıyor.
+        if seri.tav_olcut is not None and seri.tav_olcut not in GECERLI_TAV_OLCUTLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz tav_olcut '{seri.tav_olcut}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_TAV_OLCUTLERI))})"
+            )
+    if seri.kaynak_tipi == "ebebek" and seri.ebebek_metrik not in GECERLI_EBEBEK_METRIKLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz ebebek_metrik '{seri.ebebek_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_EBEBEK_METRIKLERI))})"
+        )
+    if seri.kaynak_tipi == "epdk":
+        if seri.epdk_olcut not in GECERLI_EPDK_OLCUTLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz epdk_olcut '{seri.epdk_olcut}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_EPDK_OLCUTLERI))})"
+            )
+        if seri.epdk_urun not in GECERLI_EPDK_URUNLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz epdk_urun '{seri.epdk_urun}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_EPDK_URUNLERI))})"
             )
     if seri.kaynak_tipi in {"tefas", "tefas_fon"}:
         # Yazım hatası adaptörün derinliklerinde KeyError'a dönüşmesin.

@@ -1,4 +1,4 @@
-"""TAV Havalimanları Yatırımcı İlişkileri aylık yolcu trafiği istemcisi.
+"""TAV Havalimanları Yatırımcı İlişkileri aylık yolcu ve uçuş trafiği istemcisi.
 
 Kaynak gerçekleri 2026-09-18'de canlı ölçüldü (sıfırdan yeniden keşfetmeye
 çalışmayın):
@@ -13,10 +13,17 @@ Kaynak gerçekleri 2026-09-18'de canlı ölçüldü (sıfırdan yeniden keşfetm
   dosyalar bunun katı alt kümesi (daha az ay). Bu yüzden yalnızca EN YENİ
   dosya indirilir; `dosya_listesi` dosya adındaki zaman damgasına göre
   yeniden-eskiye sıralar, `seri_cek` yalnızca `[0]`'ı kullanır.
-- Her sayfanın İKİ bloğu var: "Passengers / Yolcu" (yolcu sayısı — bu
-  modülün konusu) ve altında "Air Traffic Movements / Ucus Sayisi" (uçuş
-  sayısı — kapsam dışı, contract yalnızca yolcu alanları tanımlıyor).
-  Bloklar arasında tam boş bir satır var; yolcu bloğu bu satırda durur.
+- Her sayfanın İKİ bloğu var, İKİSİ de kapsamda: "Passengers / Yolcu"
+  (yolcu sayısı — `ölcut="yolcu"`) ve altında (tam boş bir satırın, sonra
+  kendi "Ay/Yıl" + "Chg %" mini-başlığının ardından) "Air Traffic
+  Movements / Ucus Sayisi" (uçuş sayısı — `ölcut="ucus"`). İki bloğun
+  başlık satırı biçimi birebir aynı: varlık/TAV TOTAL satırı + kendi yıl
+  sütunları; `_blok_basligi_satiri` her ikisini de aynı mantıkla (satırın
+  ilk hücresi ilgili önekle başlıyor mu) bulur. Ölçüldü: 64 sayfada uçuş
+  başlığı tam "Air Traffic Movements / Ucus Sayisi", 16 sayfada (2021
+  civarı, sekme kopyalama artığı) "... (2)" son eki taşıyor — bu yüzden
+  eşitlik değil `startswith` kullanılır (yolcu bloğunda "Passengers" için
+  zaten aynı yaklaşım vardı).
 - Her blokta varlık satırını (havalimanı adı ya da "TAV TOTAL") opsiyonel
   olarak "International / Dis Hat" (bazı sayfalarda yalnızca
   "International") + "Domestic / Ic Hat" (bazen yalnızca "Domestic") satır
@@ -24,21 +31,37 @@ Kaynak gerçekleri 2026-09-18'de canlı ölçüldü (sıfırdan yeniden keşfetm
   Ankara, Milas - Bodrum, Gazipasa Alanya, Almaty, Madinah / Medine ve TAV
   TOTAL'ın kırılımı var; Georgia / Gürcistan, Tunisia / Tunus, North
   Macedonia / Kuzey Makedonya, Zagreb'in YOK (tek satır, yalnızca toplam).
-  Madinah/Medine'nin kırılımı da TÜM geçmişte yok: Aralık 2022 ve Ocak
-  2023 sayfalarında tek satır, Temmuz-Ağustos 2026'da kırılımlı — TAV bu
-  havalimanı için ayrımı sonradan yayımlamaya başlamış. Bu yüzden
-  dis-hat/ic-hat segmentleri sabit bir varlık kümesine değil, HER SAYFADA
-  GERÇEKTEN GÖRÜLEN satırlara göre üretilir.
+  Bu aynı kırılım deseni uçuş bloğunda da geçerli (Ağustos 2026'da
+  ölçüldü): karşılık gelen 7 havalimanı + TAV TOTAL kırılımlı, aynı 4
+  varlık kırılımsız. Madinah/Medine'nin kırılımı da TÜM geçmişte yok:
+  Aralık 2022 ve Ocak 2023 sayfalarında tek satır, Temmuz-Ağustos 2026'da
+  kırılımlı — TAV bu havalimanı için ayrımı sonradan yayımlamaya
+  başlamış. Bu yüzden dis-hat/ic-hat segmentleri sabit bir varlık kümesine
+  değil, HER SAYFADA GERÇEKTEN GÖRÜLEN satırlara göre üretilir.
+- **Uçuş bloğunun varlık adları yolcu bloğuyla AYNI DEĞİL** (aynı fiziksel
+  havalimanı farklı yazılıyor) — ölçüldü, Ağustos 2026 Sheet1:
+  Antalya → "Antalya Airport", Izmir → "Izmir Airport",
+  Ankara → "Esenboga Airport", Milas - Bodrum → "Milas-Bodrum",
+  Gazipasa Alanya → "Gazipaşa Airport", Almaty → "Almaty Airport",
+  Georgia / Gürcistan → "Georgia (Tbilisi&Batumi)",
+  Madinah / Medine → "Madinah", Tunisia / Tunus →
+  "Tunisia (Monastir&Enfidha)", North Macedonia / Kuzey Makedonya →
+  "N. Macedonia (Skopje&Ohrid)", Zagreb → "Zagreb Airport". Yalnızca
+  "TAV TOTAL" iki blokta da aynı (baştaki/sondaki boşluklar hariç).
+  `tav_varlik` bu yüzden `tav_olcut`e göre BLOĞUN KENDİ metnini taşımalı;
+  aynı katalog id'sinin iki ekseni farklı `tav_varlik` değeri kullanır.
 - "TAV TOTAL" satırının değeri zaten dosyada var (havalimanlarının
-  toplamı elle üretilmiyor): Ağustos 2026 Sheet1 satır 30-32 → Toplam
-  14.742.288, Dış Hat 10.521.657, İç Hat 4.220.631 —
-  marketvisuals.net/tav_traffic.html'in `TAVHL Toplam` kartlarıyla
-  birebir eşleşiyor.
-- Aylık değer, o sayfanın kendi "Passengers / Yolcu" başlık satırında
-  RAPORLANAN YILA (başlıktan çözülür) eşit hücrenin bulunduğu sütundur.
-  Bu sütunun konumu sayfadan sayfaya DEĞİŞİR (bazı sayfalar 2 karşılaştırma
-  yılı gösterir → C sütunu, bazıları 3 yıl → D sütunu) — bu yüzden sabit
-  sütun harfi yerine "başlık satırında raporlanan yıla eşit ilk hücre"
+  toplamı elle üretilmiyor): Ağustos 2026 Sheet1 satır 30-32 (yolcu) →
+  Toplam 14.742.288, Dış Hat 10.521.657, İç Hat 4.220.631; satır 61-63
+  (uçuş) → Toplam 91.426, Dış Hat 65.447, İç Hat 25.979 —
+  marketvisuals.net/tav_traffic.html'in `TAVHL Toplam` (Yolcu ve Uçuş)
+  kartlarıyla birebir eşleşiyor (canlı ölçüldü 2026-09-18).
+- Aylık değer, o sayfanın kendi bloğunun (Passengers YA DA Air Traffic
+  Movements) başlık satırında RAPORLANAN YILA (sayfa başlığından çözülür)
+  eşit hücrenin bulunduğu sütundur. Bu sütunun konumu sayfadan sayfaya VE
+  bloktan bloğa DEĞİŞİR (bazı sayfalar 2 karşılaştırma yılı gösterir → C
+  sütunu, bazıları 3 yıl → D sütunu) — bu yüzden sabit sütun harfi yerine
+  "başlık satırında raporlanan yıla eşit ilk hücre" her blok için ayrı ayrı
   dinamik olarak aranır. YTD (Ocak-X) bloğu aynı yılı bir kez daha taşır;
   ilk (en soldaki) eşleşme her zaman AYLIK bloktur, YTD değil.
 - Sayfa adı (`Sheet1`, `MMYY`) yerine sayfanın KENDİ başlık metni
@@ -50,16 +73,18 @@ Kaynak gerçekleri 2026-09-18'de canlı ölçüldü (sıfırdan yeniden keşfetm
   2023 sayfasının İngilizce kısmı "Apil 2023" yazıyor (eksik harf) — bu
   yüzden İngilizce ay adı eşleşmezse Türkçe ada (`Nisan`) düşülüyor.
   Ölçüldü: 80 sayfadan 79'u (Şubat 2020 - Ağustos 2026) bu şekilde
-  sorunsuz çözülüyor.
+  sorunsuz çözülüyor. Bu tarih çözümü her iki blok için de ortak (bloktan
+  bağımsız, sayfa başlığından gelir).
 - TEK bilinen istisna: `0120` (Ocak 2020) sayfasının başlığı "January
-  2020" olarak sorunsuz çözülüyor, ama "Passengers / Yolcu" başlık
-  satırındaki karşılaştırma sütunları 2018/2019 — raporlanan yılın
-  (2020) kendi sütunu YOK (muhtemelen önceki bir şablondan kopyalanıp
-  güncellenmemiş kalıntı). Bu TEK sayfa "yıl sütunu bulunamadı" olarak
-  atlanır (`_sayfa_noktalari` → None); diğer 79 ay etkilenmez. Bu, adı
-  ya da tarihi çözülemeyen bir sayfa değil — RuntimeError'a çıkan diğer
-  tüm yollar (başlık yok, başlık ay/yıl içermiyor, "Passengers" satırı
-  yok, sayısal olmayan hücre, yinelenen varlık/anahtar) hâlâ geçerli.
+  2020" olarak sorunsuz çözülüyor, ama HEM "Passengers" HEM "Air Traffic
+  Movements" başlık satırındaki karşılaştırma sütunları 2018/2019 —
+  raporlanan yılın (2020) kendi sütunu YOK (muhtemelen önceki bir
+  şablondan kopyalanıp güncellenmemiş kalıntı). Bu TEK sayfa, ilgili blok
+  için "yıl sütunu bulunamadı" olarak atlanır (`_sayfa_noktalari` → None);
+  diğer 79 ay etkilenmez. Bu, adı ya da tarihi çözülemeyen bir sayfa
+  değil — RuntimeError'a çıkan diğer tüm yollar (başlık yok, başlık
+  ay/yıl içermiyor, blok başlığı yok, sayısal olmayan hücre, yinelenen
+  varlık/anahtar) hâlâ geçerli.
 """
 
 from __future__ import annotations
@@ -71,13 +96,14 @@ import openpyxl
 import pandas as pd
 import requests
 
-from core.catalog import GECERLI_TAV_SEGMENTLERI
+from core.catalog import GECERLI_TAV_OLCUTLERI, GECERLI_TAV_SEGMENTLERI
 
 LISTE_SAYFASI = "https://ir.tav.aero/en-EN/financials-and-operationals"
 ZAMAN_ASIMI = 60
 
 _BASLIK_ISARETI = "TAV Traffic Figures"
 _YOLCU_ONEKI = "Passengers"
+_UCUS_ONEKI = "Air Traffic Movements"
 _DOSYA_ADI = re.compile(r"Documents(\d{2})(\d{2})(\d{4})(\d{2})(\d{2})(\d{2})_")
 
 AY_EN = (
@@ -101,6 +127,12 @@ _ALT_ETIKETLER = {
     "Domestic": "ic-hat",
 }
 assert set(_ALT_ETIKETLER.values()) | {"toplam"} == GECERLI_TAV_SEGMENTLERI
+
+# Ölçüt (yolcu/uçuş) → o bloğun başlık satırındaki önek. Bkz. modül
+# docstring'i: iki blok da aynı satır biçimini (varlık + kendi yıl
+# sütunları) taşıyor, yalnızca bu önek ve varlık adları farklı.
+_BLOK_ONEKLERI = {"yolcu": _YOLCU_ONEKI, "ucus": _UCUS_ONEKI}
+assert set(_BLOK_ONEKLERI) == GECERLI_TAV_OLCUTLERI
 
 
 def dosya_listesi(session=None) -> list[str]:
@@ -167,10 +199,10 @@ def _sayfa_tarihi(sayfa_adi: str, baslik: str) -> tuple[int, int]:
     return bulunan.pop()
 
 
-def _yolcu_basligi_satiri(satirlar: list[tuple]) -> int | None:
+def _blok_basligi_satiri(satirlar: list[tuple], onek: str) -> int | None:
     for i, satir in enumerate(satirlar):
         deger = satir[0] if satir else None
-        if isinstance(deger, str) and deger.strip().startswith(_YOLCU_ONEKI):
+        if isinstance(deger, str) and deger.strip().startswith(onek):
             return i
     return None
 
@@ -200,13 +232,15 @@ def _hucre_oku(satir: tuple, sutun: int, baglam: str) -> float | None:
     return float(hucre)
 
 
-def _sayfa_noktalari(sayfa) -> dict[tuple[str, str], tuple[str, float]] | None:
-    """Bir sayfanın `{(varlık, segment): (tarih, değer)}` noktalarını çıkarır.
+def _sayfa_noktalari(sayfa, olcut: str) -> dict[tuple[str, str], tuple[str, float]] | None:
+    """Bir sayfanın verilen ölçüt ("yolcu"|"ucus") bloğundaki
+    `{(varlık, segment): (tarih, değer)}` noktalarını çıkarır.
 
-    Sayfanın ay/yıl başlığı ve "Passengers" satırı çözülemezse RuntimeError
-    (sessiz eksik veri yasak). Yalnızca raporlanan yılın kendi sütunu
-    başlıkta YOKSA (tek bilinen örnek: 0120/Ocak 2020) None döner — bu ay
-    atlanır, diğerleri etkilenmez (bkz. modül docstring'i).
+    Sayfanın ay/yıl başlığı ve ilgili blok başlık satırı çözülemezse
+    RuntimeError (sessiz eksik veri yasak). Yalnızca raporlanan yılın kendi
+    sütunu o blokta YOKSA (tek bilinen örnek: 0120/Ocak 2020, her iki blok
+    için de geçerli) None döner — bu ay atlanır, diğerleri etkilenmez
+    (bkz. modül docstring'i).
     """
     satirlar = list(sayfa.iter_rows(values_only=True))
     baslik = _sayfa_basligi(satirlar)
@@ -215,9 +249,10 @@ def _sayfa_noktalari(sayfa) -> dict[tuple[str, str], tuple[str, float]] | None:
     yil, ay = _sayfa_tarihi(sayfa.title, baslik)
     tarih = f"{yil}-{ay:02d}-01"
 
-    hdr_idx = _yolcu_basligi_satiri(satirlar)
+    onek = _BLOK_ONEKLERI[olcut]
+    hdr_idx = _blok_basligi_satiri(satirlar, onek)
     if hdr_idx is None:
-        raise RuntimeError(f"TAV trafik bülteni ({tarih}): 'Passengers' başlık satırı bulunamadı")
+        raise RuntimeError(f"TAV trafik bülteni ({tarih}): {onek!r} başlık satırı bulunamadı")
     sutun = _yil_sutunu(satirlar[hdr_idx], yil)
     if sutun is None:
         return None  # Ölçüldü: yalnızca 0120 — bkz. modül docstring'i.
@@ -228,7 +263,7 @@ def _sayfa_noktalari(sayfa) -> dict[tuple[str, str], tuple[str, float]] | None:
     while i < len(satirlar):
         ham_ad = satirlar[i][0] if satirlar[i] else None
         if ham_ad is None:
-            break  # yolcu bloğu bitti (Air Traffic Movements'tan önceki boş satır)
+            break  # blok bitti (bir sonraki blok/notlardan önceki boş satır)
         ad = str(ham_ad).strip()
         if ad in _ALT_ETIKETLER:
             raise RuntimeError(
@@ -265,8 +300,9 @@ def _sayfa_noktalari(sayfa) -> dict[tuple[str, str], tuple[str, float]] | None:
     return noktalar
 
 
-def yolcu_noktalari(baytlar: bytes) -> dict[tuple[str, str], dict[str, float]]:
-    """XLSX baytlarından `{(varlık, segment): {"YYYY-MM-01": değer}}` çıkarır.
+def _noktalari_cek(baytlar: bytes, olcut: str) -> dict[tuple[str, str], dict[str, float]]:
+    """XLSX baytlarından verilen ölçüt bloğunun
+    `{(varlık, segment): {"YYYY-MM-01": değer}}` noktalarını çıkarır.
 
     `Sheet1` (son ay) + tüm `MMYY` sayfaları işlenir; `disclaimer` hariç.
     Aynı (varlık, segment, tarih) iki farklı sayfadan üretilirse (şablon
@@ -279,7 +315,7 @@ def yolcu_noktalari(baytlar: bytes) -> dict[tuple[str, str], dict[str, float]]:
         for ad in kitap.sheetnames:
             if ad == "disclaimer":
                 continue
-            sayfa_noktalari = _sayfa_noktalari(kitap[ad])
+            sayfa_noktalari = _sayfa_noktalari(kitap[ad], olcut)
             if sayfa_noktalari is None:
                 continue
             herhangi_sayfa_ok = True
@@ -297,6 +333,21 @@ def yolcu_noktalari(baytlar: bytes) -> dict[tuple[str, str], dict[str, float]]:
         kitap.close()
 
 
+def yolcu_noktalari(baytlar: bytes) -> dict[tuple[str, str], dict[str, float]]:
+    """XLSX baytlarından "Passengers / Yolcu" bloğunun
+    `{(varlık, segment): {"YYYY-MM-01": değer}}` noktalarını çıkarır."""
+    return _noktalari_cek(baytlar, "yolcu")
+
+
+def ucus_noktalari(baytlar: bytes) -> dict[tuple[str, str], dict[str, float]]:
+    """XLSX baytlarından "Air Traffic Movements / Ucus Sayisi" bloğunun
+    `{(varlık, segment): {"YYYY-MM-01": değer}}` noktalarını çıkarır.
+
+    Varlık adları `yolcu_noktalari`den FARKLIDIR (aynı havalimanı iki
+    blokta farklı yazılır, bkz. modül docstring'i)."""
+    return _noktalari_cek(baytlar, "ucus")
+
+
 def _dosya_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
@@ -308,19 +359,35 @@ def _dosya_indir(url: str, session=None) -> bytes:
 def seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
     """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı).
 
-    `onbellek` verilirse dosya listesi + ayrıştırma sonucu koşu boyunca
-    paylaşılır: 28 seri aynı tek dosyayı okuduğu için yoksa 28 indirme +
-    28 dosya-listesi kazıması olurdu.
+    `onbellek` verilirse dosya listesi + indirilen baytlar + ayrıştırma
+    sonucu koşu boyunca paylaşılır: 56 seri (28 yolcu + 28 uçuş) aynı
+    dosyaları okuduğu için yoksa 56 indirme olurdu.
+
+    TÜM dosyalar okunur, yalnızca en yenisi değil: ölçüm (2026-09-18) en
+    yeni dosyanın YOLCU geçmişini 79 aya taşıdığını ama UÇUŞ bloğunun
+    yalnızca son aylarda bulunduğunu gösterdi (uçuş serileri 11 noktada
+    kalıyordu, referans 4 yıl gösteriyor). Eski dosyalarda uçuş bloğu da
+    var; noktalar eskiden yeniye birleştirilir, yeni dosya eskisini ezer
+    (revizyon kazanır).
     """
     onbellek = {} if onbellek is None else onbellek
-    if "noktalar" not in onbellek:
+    olcut = getattr(seri, "tav_olcut", None) or "yolcu"
+    onbellek_anahtari = f"noktalar_{olcut}"
+    if onbellek_anahtari not in onbellek:
         dosyalar = onbellek.get("dosyalar")
         if dosyalar is None:
             dosyalar = dosya_listesi(session)
             onbellek["dosyalar"] = dosyalar
-        baytlar = _dosya_indir(dosyalar[0], session)
-        onbellek["noktalar"] = yolcu_noktalari(baytlar)
-    noktalar = onbellek["noktalar"]
+        baytlar_listesi = onbellek.get("baytlar_listesi")
+        if baytlar_listesi is None:
+            baytlar_listesi = [_dosya_indir(yol, session) for yol in dosyalar]
+            onbellek["baytlar_listesi"] = baytlar_listesi
+        birlesik: dict = {}
+        for baytlar in reversed(baytlar_listesi):
+            for ikili, aylik in _noktalari_cek(baytlar, olcut).items():
+                birlesik.setdefault(ikili, {}).update(aylik)
+        onbellek[onbellek_anahtari] = birlesik
+    noktalar = onbellek[onbellek_anahtari]
 
     anahtar = (seri.tav_varlik, seri.tav_segment)
     if anahtar not in noktalar:

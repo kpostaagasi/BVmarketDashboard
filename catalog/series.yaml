@@ -34764,3 +34764,366 @@
   freq: monthly
   monthly_agg: sum
   charts: [seasonality, level]
+- id: havacilik/tav-toplam-ucus-toplam
+  title: TAV Toplam Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "TAV TOTAL"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-toplam-ucus-dis-hat
+  title: TAV Toplam Dış Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "TAV TOTAL"
+  tav_segment: dis-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-toplam-ucus-ic-hat
+  title: TAV Toplam İç Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "TAV TOTAL"
+  tav_segment: ic-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-antalya-ucus-toplam
+  title: TAV Antalya Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Antalya Airport"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-antalya-ucus-dis-hat
+  title: TAV Antalya Dış Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Antalya Airport"
+  tav_segment: dis-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-antalya-ucus-ic-hat
+  title: TAV Antalya İç Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Antalya Airport"
+  tav_segment: ic-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-izmir-ucus-toplam
+  title: TAV İzmir Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Izmir Airport"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-izmir-ucus-dis-hat
+  title: TAV İzmir Dış Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Izmir Airport"
+  tav_segment: dis-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-izmir-ucus-ic-hat
+  title: TAV İzmir İç Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Izmir Airport"
+  tav_segment: ic-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-ankara-ucus-toplam
+  title: TAV Ankara Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Esenboga Airport"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-ankara-ucus-dis-hat
+  title: TAV Ankara Dış Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Esenboga Airport"
+  tav_segment: dis-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-ankara-ucus-ic-hat
+  title: TAV Ankara İç Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Esenboga Airport"
+  tav_segment: ic-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-milas-bodrum-ucus-toplam
+  title: TAV Milas-Bodrum Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Milas-Bodrum"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-milas-bodrum-ucus-dis-hat
+  title: TAV Milas-Bodrum Dış Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Milas-Bodrum"
+  tav_segment: dis-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-milas-bodrum-ucus-ic-hat
+  title: TAV Milas-Bodrum İç Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Milas-Bodrum"
+  tav_segment: ic-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-gazipasa-alanya-ucus-toplam
+  title: TAV Gazipaşa Alanya Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Gazipaşa Airport"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-gazipasa-alanya-ucus-dis-hat
+  title: TAV Gazipaşa Alanya Dış Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Gazipaşa Airport"
+  tav_segment: dis-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-gazipasa-alanya-ucus-ic-hat
+  title: TAV Gazipaşa Alanya İç Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Gazipaşa Airport"
+  tav_segment: ic-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-almaty-ucus-toplam
+  title: TAV Almaty Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Almaty Airport"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-almaty-ucus-dis-hat
+  title: TAV Almaty Dış Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Almaty Airport"
+  tav_segment: dis-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-almaty-ucus-ic-hat
+  title: TAV Almaty İç Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Almaty Airport"
+  tav_segment: ic-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-medine-ucus-toplam
+  title: TAV Medine Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Madinah"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-medine-ucus-dis-hat
+  title: TAV Medine Dış Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Madinah"
+  tav_segment: dis-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-medine-ucus-ic-hat
+  title: TAV Medine İç Hat Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Madinah"
+  tav_segment: ic-hat
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-gurcistan-ucus-toplam
+  title: TAV Gürcistan Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Georgia (Tbilisi&Batumi)"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-tunus-ucus-toplam
+  title: TAV Tunus Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Tunisia (Monastir&Enfidha)"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-kuzey-makedonya-ucus-toplam
+  title: TAV Kuzey Makedonya Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "N. Macedonia (Skopje&Ohrid)"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: havacilik/tav-zagreb-ucus-toplam
+  title: TAV Zagreb Uçuş (Aylık)
+  category: havacilik
+  kaynak: { name: TAV Havalimanları Yatırımcı İlişkileri, url: "https://ir.tav.aero/en-EN/financials-and-operationals" }
+  kaynak_tipi: tav
+  tav_varlik: "Zagreb Airport"
+  tav_segment: toplam
+  tav_olcut: ucus
+  unit: "Uçuş"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]

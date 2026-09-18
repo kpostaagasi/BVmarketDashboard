@@ -1,12 +1,13 @@
-"""TAV Havalimanları aylık yolcu trafiği istemcisi testleri.
+"""TAV Havalimanları aylık yolcu ve uçuş trafiği istemcisi testleri.
 
 Bülten baytları testte openpyxl ile üretilir: gerçek dosyanın aynı şablonu
 (A1 hücresinde "TAV Traffic Figures – <Ay> <Yıl>\\nTAV Havalimanları Yolcu
 Sayıları – <Türkçe Ay> <Yıl>" başlığı, "Passengers / Yolcu" başlık satırı +
 yıl sütunları, ardından varlık satırları ve opsiyonel International/
-Domestic alt satır çifti). Gerçek dosyada ölçülen iki gerçek şablon
-tuhaflığı (sekme adı "1212"in aslında Aralık 2022 olması, bir başlıkta
-"Apil" yazım hatası) regresyon testi olarak sabitlenmiştir.
+Domestic alt satır çifti; altında aynı şablonda "Air Traffic Movements /
+Ucus Sayisi" bloğu). Gerçek dosyada ölçülen iki gerçek şablon tuhaflığı
+(sekme adı "1212"in aslında Aralık 2022 olması, bir başlıkta "Apil" yazım
+hatası) regresyon testi olarak sabitlenmiştir.
 """
 
 import io
@@ -15,7 +16,15 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
-from ingest.tav import LISTE_SAYFASI, AY_EN, AY_TR, dosya_listesi, seri_cek, yolcu_noktalari
+from ingest.tav import (
+    LISTE_SAYFASI,
+    AY_EN,
+    AY_TR,
+    dosya_listesi,
+    seri_cek,
+    ucus_noktalari,
+    yolcu_noktalari,
+)
 
 
 def _baslik(yil: int, ay_no: int) -> str:
@@ -68,6 +77,29 @@ def _satir(ad, aylik_deger, uc_yil_kaydirmali):
     return (ad, aylik_deger * 0.9, aylik_deger, aylik_deger * 0.05, ytd * 0.9, ytd, aylik_deger * 0.05)
 
 
+def _ucus_govdesi(yil, ay_no, onceki_yil=None, varliklar=None):
+    """Gerçekçi bir 'Air Traffic Movements / Ucus Sayisi' bloğu üretir —
+    `_yolcu_govdesi` ile aynı satır şablonu, yalnızca blok başlığı ve
+    varsayılan varlıklar farklı. Sayfanın kendi 'Passengers' başlığına
+    ihtiyaç duymaz; `_blok_basligi_satiri` öneki nerede olursa bulur."""
+    onceki_yil = onceki_yil if onceki_yil is not None else yil - 1
+    if varliklar is None:
+        varliklar = [
+            ("Antalya Airport", 10.0, 7.0, 3.0),
+            ("Zagreb Airport", 2.0, None, None),
+            ("TAV TOTAL", 12.0, 7.0, 5.0),
+        ]
+    satirlar = [
+        ("Air Traffic Movements / Ucus Sayisi", onceki_yil, yil, None, onceki_yil, yil, None),
+    ]
+    for ad, toplam, dis, ic in varliklar:
+        satirlar.append(_satir(ad, toplam, False))
+        if dis is not None:
+            satirlar.append(_satir("International", dis, False))
+            satirlar.append(_satir("Domestic", ic, False))
+    return satirlar
+
+
 def _kitap_baytlari(sayfalar: dict) -> bytes:
     kitap = openpyxl.Workbook()
     kitap.remove(kitap.active)
@@ -96,6 +128,7 @@ def tav_seri(**kwargs):
         tav_varlik="Antalya",
         tav_segment="toplam",
         start_date=None,
+        tav_olcut=None,
     )
     varsayilan.update(kwargs)
     return SimpleNamespace(**varsayilan)
@@ -307,6 +340,61 @@ def test_yolcu_noktalari_birden_fazla_sayfa_birlestirir():
     assert noktalar[("Antalya", "toplam")] == {"2026-07-01": 900.0, "2026-08-01": 1000.0}
 
 
+# --- ucus_noktalari: yolcu bloğuyla karışmama, varsayılan ölçüt, eksik blok ---
+
+
+def test_ucus_noktalari_yolcu_blogundan_karismaz():
+    """Aynı 'TAV TOTAL' adı iki blokta da geçiyor ama değerleri FARKLI —
+    ucus_noktalari yalnızca uçuş bloğunu, yolcu_noktalari yalnızca yolcu
+    bloğunu okumalı, ikisi birbirine sızmamalı."""
+    govde = (
+        _yolcu_govdesi(2026, 8, varliklar=[("Antalya", 1000.0, None, None), ("TAV TOTAL", 1200.0, None, None)])
+        + [(None,)]
+        + _ucus_govdesi(2026, 8, varliklar=[("Antalya Airport", 50.0, None, None), ("TAV TOTAL", 90.0, None, None)])
+    )
+    baytlar = _kitap_baytlari({"Sheet1": govde})
+    yolcu = yolcu_noktalari(baytlar)
+    ucus = ucus_noktalari(baytlar)
+    assert yolcu[("TAV TOTAL", "toplam")] == {"2026-08-01": 1200.0}
+    assert ucus[("TAV TOTAL", "toplam")] == {"2026-08-01": 90.0}
+    assert ("Antalya Airport", "toplam") not in yolcu
+    assert ("Antalya", "toplam") not in ucus
+
+
+def test_ucus_blogu_yoksa_hata():
+    """Sayfa çözülüyor ama 'Air Traffic Movements' başlık satırı hiç yok."""
+    govde = _yolcu_govdesi(2026, 8, varliklar=[("Antalya", 1000.0, None, None)])
+    with pytest.raises(RuntimeError, match="Air Traffic Movements"):
+        ucus_noktalari(_kitap_baytlari({"Sheet1": govde}))
+
+
+def test_seri_cek_tav_olcut_verilmeyince_yolcu_okunur():
+    """`tav_olcut` belirtilmezse (mevcut 28 yolcu serisindeki gibi) yolcu
+    bloğu okunmalı — aynı ada rağmen ucus bloğundaki farklı değer değil."""
+    govde = (
+        _yolcu_govdesi(2026, 8, varliklar=[("Antalya", 1000.0, None, None)])
+        + [(None,)]
+        + _ucus_govdesi(2026, 8, varliklar=[("Antalya", 77.0, None, None)])
+    )
+    oturum = SahteOturum(xlsx_baytlar=_kitap_baytlari({"Sheet1": govde}))
+    df = seri_cek(tav_seri(tav_varlik="Antalya", tav_segment="toplam"), onbellek={}, session=oturum)
+    assert df["value"].iloc[0] == 1000.0
+
+
+def test_seri_cek_tav_olcut_ucus_ile_ucus_blogu_okunur():
+    govde = (
+        _yolcu_govdesi(2026, 8, varliklar=[("Antalya", 1000.0, None, None)])
+        + [(None,)]
+        + _ucus_govdesi(2026, 8, varliklar=[("Antalya", 77.0, None, None)])
+    )
+    oturum = SahteOturum(xlsx_baytlar=_kitap_baytlari({"Sheet1": govde}))
+    df = seri_cek(
+        tav_seri(tav_varlik="Antalya", tav_segment="toplam", tav_olcut="ucus"),
+        onbellek={}, session=oturum,
+    )
+    assert df["value"].iloc[0] == 77.0
+
+
 # --- dosya_listesi ---
 
 
@@ -350,16 +438,23 @@ def test_seri_cek_dogru_deger_dondurur():
 
 
 def test_seri_cek_onbellegi_paylasir():
-    """28 seri aynı tek dosyayı paylaşır; ikinci/üçüncü seri ağdan hiç
-    indirmemeli (liste sayfası + xlsx toplam 2 çağrı, kaç seri çekilirse
-    çekilsin)."""
+    """56 seri aynı dosya kümesini paylaşır: ilk seri dosyaları indirir,
+    sonraki seriler ağdan hiç okumaz.
+
+    Tüm dosyalar okunur (yalnızca en yenisi değil): ölçüm, en yeni dosyada
+    uçuş bloğunun yalnızca son aylar için bulunduğunu, tam geçmişin eski
+    dosyalarda olduğunu gösterdi.
+    """
     govde = _yolcu_govdesi(2026, 8, varliklar=[("Antalya", 1000.0, 700.0, 300.0)])
     oturum = SahteOturum(xlsx_baytlar=_kitap_baytlari({"Sheet1": govde}))
     onbellek = {}
     seri_cek(tav_seri(tav_varlik="Antalya", tav_segment="toplam"), onbellek=onbellek, session=oturum)
+    ilk_cagri = len(oturum.calls)
     seri_cek(tav_seri(tav_varlik="Antalya", tav_segment="dis-hat"), onbellek=onbellek, session=oturum)
     seri_cek(tav_seri(tav_varlik="Antalya", tav_segment="ic-hat"), onbellek=onbellek, session=oturum)
-    assert len(oturum.calls) == 2  # 1 liste sayfası + 1 xlsx indirme
+    assert len(oturum.calls) == ilk_cagri, "sonraki seriler ağa çıkmamalı"
+    assert oturum.calls[0].endswith("financials-and-operationals")
+    assert ilk_cagri == 1 + len(onbellek["dosyalar"])
 
 
 def test_seri_cek_bilinmeyen_kombinasyonda_hata():
