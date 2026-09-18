@@ -63,7 +63,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          tim_onbellek: dict | None = None,
          bddk_onbellek: dict | None = None,
          tefas_onbellek: dict | None = None,
-         ec_onbellek: dict | None = None):
+         ec_onbellek: dict | None = None,
+         tim_il_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
         df = evds.seri_cek(seri, api_key, session=oturum)
@@ -75,6 +76,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = osd.seri_cek(seri, onbellek=osd_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tim":
         df = tim.seri_cek(seri, onbellek=tim_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "tim_il":
+        df = tim.il_seri_cek(seri, onbellek=tim_il_onbellek, session=oturum)
     elif seri.kaynak_tipi == "bddk":
         df = bddk.seri_cek(seri, onbellek=bddk_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tefas":
@@ -153,6 +156,9 @@ def main() -> int:
     tefas_onbellek: dict = {}
     # EUROCONTROL'ün üç JSON dosyası (2–5 MB) koşu başına bir kez inilir.
     ec_onbellek: dict = {}
+    # İl×sektör bülteni AYLIKTIR (yıllık değil): 741 seri aynı ~40 aylık
+    # dosyayı paylaşır, önbelleksiz her seri kendi ayını yeniden indirir.
+    tim_il_onbellek: dict = {}
 
     with requests.Session() as oturum:
         oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
@@ -179,7 +185,7 @@ def main() -> int:
                 df = _cek(
                     seri, api_key, tgt, oturum,
                     epias_onbellek, osd_onbellek, tim_onbellek, bddk_onbellek,
-                    tefas_onbellek, ec_onbellek,
+                    tefas_onbellek, ec_onbellek, tim_il_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")

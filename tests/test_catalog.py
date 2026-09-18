@@ -33,6 +33,7 @@ def test_kategori_sirasi():
         "elektrik",
         "otomotiv",
         "beklentiler",
+        "ihracat-il",
     ]
 
 
@@ -197,9 +198,14 @@ def test_her_kategori_panosunu_acik_tanimlar():
 
     `pano` boş bırakılırsa `kpi_satiri` katalogdaki ilk dördü gösterir;
     o zaman `series.yaml`'daki sıra değişince sayfanın KPI'ları sessizce
-    değişir. Her kategori panosunu açıkça yazar.
+    değişir. Her kategori panosunu açıkça yazar — kategorinin henüz hiç
+    serisi yoksa (ör. `ihracat-il`, seriler ayrı adımda eklenir) bu kural
+    uygulanmaz: gösterilecek hiçbir şey olmadığında sessiz KPI kayması da
+    olmaz.
     """
     for kategori in kategorileri_yukle():
+        if not seri_listele(kategori.slug):
+            continue
         assert kategori.pano, kategori.slug
 
 

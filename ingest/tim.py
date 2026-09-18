@@ -29,6 +29,7 @@ Değerler bültende Bin USD cinsindedir; Milyon USD'ye çevirim katalogdaki
 
 from __future__ import annotations
 
+import calendar
 import io
 from datetime import date
 
@@ -46,6 +47,16 @@ IL_GENEL_TOPLAM = "GENEL TOPLAM"
 # Modern (xlsx) yayının başladığı dosya. 2019'un tamamı bu dosyada.
 ILK_YIL = 2019
 ILK_AY = 12
+
+# İl×sektör karşılaştırma dosyası AYLIKTIR (yıllık değil): sektörel bülten
+# gibi tek dosyada 12 ay taşımaz, bu yüzden tam pencere için her ay ayrı
+# indirilir. Kaynak 2023 Ocak'tan itibaren mevcut.
+ILK_IL_YIL = 2023
+ILK_IL_AY = 1
+AY_ADLARI = (
+    "OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN",
+    "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK",
+)
 
 TOPLAM_ETIKETI = "TOPLAM"
 ANA_GRUPLAR = ("I. TARIM", "II. SANAYİ", "III. MADENCİLİK")
@@ -159,26 +170,45 @@ def il_sektor_noktalari(
             "SEKTÖR", "ILLER",
         ):
             raise RuntimeError(f"TİM il bülteni {anahtar}: SEKTÖR/ILLER başlığı yok")
-        donemler = [sektor_adini_normalize(h) for h in gruplar if h is not None and str(h).strip()]
-        yillar = (str(yil - 1), str(yil), "DEĞ.")
-        bloklar = [yillar, (str(yil), "DEĞ."), yillar]
-        if len(donemler) == 4:
-            bloklar.insert(0, yillar)
-        beklenen = tuple(h for blok in bloklar for h in blok)
-        okunan = tuple(sektor_adini_normalize(h) for h in basliklar[2:])
-        # Sonda yalnızca biçimlendirme için ayrılmış boş sütunlar olabilir.
-        while okunan and not okunan[-1]:
-            okunan = okunan[:-1]
-        if len(donemler) not in (3, 4) or okunan != beklenen:
-            raise RuntimeError(f"TİM il bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları")
-        etiketler = [
-            f"{donem} / {baslik}"
-            for donem, blok in zip(donemler, bloklar)
-            for baslik in blok
+        # Dönem blokları sabit şablondan değil başlık satırının KENDİ
+        # yapısından türetilir: 2023 dosyalarında blok sırası değişiyor
+        # (ör. 2023.01: '31 OCAK' | '1 - 31 OCAK' | '1 - 31 ARALıK') ve
+        # sabit şablon bunları "bilinmeyen dönem/yıl başlıkları" diye
+        # reddediyordu. Grup etiketi satırı bazı dosyalarda sütunlarıyla
+        # hizalı değil, o yüzden hizaya değil SIRAYA güvenilir: 'DEĞ.'
+        # sütunu bir bloğu kapatır, blok içinde yıl tekrarı yeni blok
+        # başlatır. Yıl/DEĞ. dışı başlık hâlâ hata — şablon kayması
+        # sessizce geçmemeli.
+        donemler = [
+            sektor_adini_normalize(h)
+            for h in gruplar if h is not None and str(h).strip()
         ]
-        if len(set(etiketler)) != len(etiketler):
+        gecerli = {str(yil - 1), str(yil), "DEĞ."}
+        okunan = [(sutun, sektor_adini_normalize(h))
+                  for sutun, h in enumerate(basliklar[2:], start=2)
+                  if sektor_adini_normalize(h)]
+        if any(baslik not in gecerli for _, baslik in okunan) or not okunan:
+            raise RuntimeError(
+                f"TİM il bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları"
+            )
+        bloklar: list[list[tuple[int, str]]] = [[]]
+        for sutun, baslik in okunan:
+            simdiki = bloklar[-1]
+            if simdiki and (baslik in {b for _, b in simdiki}
+                            or simdiki[-1][1] == "DEĞ."):
+                bloklar.append([])
+            bloklar[-1].append((sutun, baslik))
+        if len(bloklar) != len(donemler):
+            raise RuntimeError(
+                f"TİM il bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları"
+            )
+        sutunlar = {
+            sutun: f"{donem} / {baslik}"
+            for donem, blok in zip(donemler, bloklar)
+            for sutun, baslik in blok
+        }
+        if len(set(sutunlar.values())) != len(sutunlar):
             raise RuntimeError(f"TİM il bülteni {anahtar}: yinelenen dönem başlığı")
-        sutunlar = dict(enumerate(etiketler, start=2))
 
         noktalar = {}
         for satir in sayfa.iter_rows(min_row=5, values_only=True):
@@ -191,10 +221,6 @@ def il_sektor_noktalari(
                 il = IL_GENEL_TOPLAM
             if not sektor or not il:
                 raise RuntimeError(f"TİM il bülteni {anahtar}: eksik il/sektör anahtarı")
-            if (il, sektor) in noktalar:
-                raise RuntimeError(
-                    f"TİM il bülteni {anahtar}: yinelenen il/sektör {(il, sektor)!r}"
-                )
             degerler = {}
             for sutun, etiket in sutunlar.items():
                 hucre = satir[sutun]
@@ -208,6 +234,22 @@ def il_sektor_noktalari(
                 degerler[etiket] = float(hucre)
             if not degerler:
                 raise RuntimeError(f"TİM il bülteni {anahtar}: boş veri {il}/{sektor}")
+            if (il, sektor) in noktalar:
+                # Ölçüm (2024.10): ADANA/ANTALYA TOPLAM satırı ikinci kez,
+                # aylık sütunları sıfır ama YTD'de küçük bir dilim taşıyan
+                # ek satır olarak geliyor — aynı anahtarın PARÇASI. Parçalar
+                # toplanır; BİREBİR AYNI satır tekrarı ise şablon kaymasıdır
+                # ve toplamak değeri ikiye katlardı, o yüzden hata.
+                if noktalar[il, sektor] == degerler:
+                    raise RuntimeError(
+                        f"TİM il bülteni {anahtar}: yinelenen il/sektör "
+                        f"{(il, sektor)!r}"
+                    )
+                for etiket, deger in degerler.items():
+                    noktalar[il, sektor][etiket] = (
+                        noktalar[il, sektor].get(etiket, 0.0) + deger
+                    )
+                continue
             noktalar[il, sektor] = degerler
         il_sektor_dogrula(noktalar, anahtar)
         return noktalar
@@ -383,6 +425,137 @@ def seri_cek(seri, onbellek: dict | None = None, session=None,
     if not kendi:
         raise RuntimeError(
             f"TİM bültenlerinde hiç nokta bulunamadı: {seri.id}"
+        )
+
+    df = pd.DataFrame(sorted(kendi.items()), columns=["date", "value"])
+    if seri.start_date:
+        df = df[df["date"] >= seri.start_date]
+    return df.reset_index(drop=True)
+
+
+def cekilecek_il_bultenleri(bugun: date) -> list[tuple[int, int]]:
+    """Her ay ayrı dosya: 2023 Ocak'tan bugüne kadar tüm (yıl, ay) çiftleri.
+
+    Sektörel bültenin aksine bu dosya bir yılı değil tek bir ayı taşır,
+    bu yüzden `cekilecek_bultenler`in aksine burada yıl başına tek dosya
+    yetmez — pencere kadar dosya indirilir.
+    """
+    aylar = []
+    yil, ay = ILK_IL_YIL, ILK_IL_AY
+    while (yil, ay) <= (bugun.year, bugun.month):
+        aylar.append((yil, ay))
+        yil, ay = (yil + 1, 1) if ay == 12 else (yil, ay + 1)
+    return aylar
+
+
+def _sadelestir(metin: str) -> str:
+    """Türkçe harf varyantlarını eşitler: bülten 'NİSAN' da 'NISAN' da yazıyor."""
+    esleme = str.maketrans("İIıiĞğÜüŞşÖöÇç", "IIIIGGUUSSOOCC")
+    return metin.translate(esleme).upper()
+
+
+def _aylik_sutun(
+    noktalar: dict[tuple[str, str], dict[str, float]], yil: int, ay: int,
+) -> str:
+    """O ayın tutar sütununun etiketini bültenin kendi başlıklarından bulur.
+
+    Etiket kurulamıyor, ARANIYOR: bülten ay adını iki yazımla ('NİSAN' /
+    'NISAN') ve ayın gün sayısını kendi kuralıyla ('1 - 30 MART') yazıyor,
+    yani `calendar.monthrange` ile kurulan etiket tutmuyor. Aranan sütun
+    '1 - ' ile başlar (YTD '1 OCAK - ' ile başlar), ay adını taşır ve
+    '/ <yıl>' ile biter ('DEĞ.' oran sütunu dışlanır). Bir önceki ayın
+    sütunu da aynı yılı taşıdığı için ay adı eşleşmesi zorunlu.
+    """
+    ay_adi = _sadelestir(AY_ADLARI[ay - 1])
+    adaylar = {
+        etiket
+        for degerler in noktalar.values()
+        for etiket in degerler
+        if etiket.endswith(f"/ {yil}")
+        and (sade := _sadelestir(etiket)).startswith("1 - ")
+        and ay_adi in sade
+    }
+    if len(adaylar) != 1:
+        raise RuntimeError(
+            f"TİM il bülteni {yil}.{ay:02d}: aylık sütun belirlenemedi "
+            f"({len(adaylar)} aday: {sorted(adaylar)})"
+        )
+    return adaylar.pop()
+
+
+def il_seri_cek(seri, onbellek: dict | None = None, session=None,
+                 bugun: date | None = None) -> pd.DataFrame:
+    """İl×sektör karşılaştırma bülteninden tek il/sektörün aylık serisini çeker.
+
+    `onbellek` verilirse ayrıştırılmış `(yıl, ay) -> noktalar` eşlemesi koşu
+    boyunca paylaşılır: 741 seri aynı ~40 aylık dosyayı okuduğu için yoksa
+    741 indirme olurdu. 404 (o ay henüz yayımlanmamış) de önbelleğe `None`
+    olarak yazılır ki iki seri aynı eksik ayı iki kez denemesin.
+
+    `seri.tim_sektor == "TOPLAM"` ise dönen değer bültenin kendi TOPLAM
+    satırı DEĞİL, o ilin TOPLAM-olmayan sektör satırlarının toplamıdır:
+    bülten TOPLAM satırı birlik bazlı bir fazlalık taşır (ölçüm: İstanbul
+    Ağustos 2026 — sektör toplamı 8.679.756,86, bülten TOPLAM satırı
+    8.800.137,83) ve referans siteyle parite için kullanılamaz.
+
+    Aylık sütun etiketi hesaplanarak bulunur: `'1 - <ayın son günü> <AY
+    ADI> / <yıl>'`. Salt "1 - " öneki + "/ <yıl>" soneki YETMEZ: aynı
+    yılın bülteninde bir önceki ayın da kendi sütunu vardır (ör. Ağustos
+    dosyasında "1 - 31 TEMMUZ / 2026" de "/ 2026" ile biter) — bu yüzden
+    ay adı ve gün sayısı da eşleştirilir.
+    """
+    bugun = bugun or date.today()
+    onbellek = {} if onbellek is None else onbellek
+
+    kendi: dict[str, float] = {}
+    for yil, ay in cekilecek_il_bultenleri(bugun):
+        anahtar = (yil, ay)
+        if anahtar in onbellek:
+            noktalar = onbellek[anahtar]
+        else:
+            baytlar = _bulten_indir(il_bazinda_url(yil, ay), session)
+            noktalar = (
+                None if baytlar is None
+                else il_sektor_noktalari(baytlar, f"{yil}.{ay:02d}")
+            )
+            onbellek[anahtar] = noktalar
+        if noktalar is None:
+            continue
+
+        etiket = _aylik_sutun(noktalar, yil, ay)
+
+        if seri.tim_sektor == TOPLAM_ETIKETI:
+            satirlar = [
+                (il, sektor) for il, sektor in noktalar
+                if il == seri.tim_il and sektor != TOPLAM_ETIKETI
+            ]
+            if not satirlar:
+                raise RuntimeError(
+                    f"TİM il bülteni {yil}.{ay:02d}: il bulunamadı: "
+                    f"{seri.tim_il!r}"
+                )
+        else:
+            satirlar = [(seri.tim_il, seri.tim_sektor)]
+            if satirlar[0] not in noktalar:
+                raise RuntimeError(
+                    f"TİM il bülteni {yil}.{ay:02d}: il/sektör bulunamadı: "
+                    f"{satirlar[0]!r}"
+                )
+
+        toplam = 0.0
+        for anahtar_il_sektor in satirlar:
+            degerler = noktalar[anahtar_il_sektor]
+            if etiket not in degerler:
+                raise RuntimeError(
+                    f"TİM il bülteni {yil}.{ay:02d}: aylık sütun bulunamadı: "
+                    f"{anahtar_il_sektor} / {etiket!r}"
+                )
+            toplam += degerler[etiket]
+        kendi[f"{yil}-{ay:02d}-01"] = toplam
+
+    if not kendi:
+        raise RuntimeError(
+            f"TİM il bültenlerinde hiç nokta bulunamadı: {seri.id}"
         )
 
     df = pd.DataFrame(sorted(kendi.items()), columns=["date", "value"])

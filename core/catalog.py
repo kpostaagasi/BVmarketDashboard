@@ -22,8 +22,8 @@ GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition", "fon"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
-    "evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "eurocontrol",
-    "fred", "tefas_fon",
+    "evds", "yahoo", "epias", "osd", "tim", "tim_il", "bddk", "tefas",
+    "eurocontrol", "fred", "tefas_fon",
 }
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
@@ -60,6 +60,10 @@ KAYNAK_ALANLARI = {
     "tim": {
         "zorunlu": ("tim_sektor",),
         "istege_bagli": ("start_date", "tim_eski_adlar"),
+    },
+    "tim_il": {
+        "zorunlu": ("tim_il", "tim_sektor"),
+        "istege_bagli": ("start_date",),
     },
     "bddk": {
         "zorunlu": ("bddk_kalem",),
@@ -155,6 +159,7 @@ class Seri:
     osd_eski_adlar: tuple[str, ...] | None = None
     tim_sektor: str | None = None
     tim_eski_adlar: tuple[str, ...] | None = None
+    tim_il: str | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
     bddk_kalem: str | None = None
@@ -317,6 +322,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             tim_eski_adlar=(
                 tuple(ham["tim_eski_adlar"]) if "tim_eski_adlar" in ham else None
             ),
+            tim_il=ham.get("tim_il"),
             bddk_kalem=ham.get("bddk_kalem"),
             bddk_taraf=(
                 str(ham["bddk_taraf"]) if "bddk_taraf" in ham else None

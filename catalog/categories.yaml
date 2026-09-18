@@ -183,3 +183,12 @@
     etiketler. Mevsimsellik grafiği bilinçli olarak yok — beklenti serisinin
     mevsimi değil, patikası okunur. Cari denge beklentisinde negatif değer
     açık demektir.
+- slug: ihracat-il
+  title: İhracat (İl × Sektör)
+  note: >-
+    Kaynak TİM il×sektör karşılaştırma bülteni; değerler Bin USD ve
+    AYLIKTIR (o ayın 1'inden son gününe). Bir ilin "Toplam" serisi
+    bültenin kendi TOPLAM satırı DEĞİL, o ilin sektör satırlarının
+    toplamıdır — bülten TOPLAM satırı birlik bazlı bir fazlalık taşır ve
+    referans site parite ölçütü sektör toplamıdır.
+
