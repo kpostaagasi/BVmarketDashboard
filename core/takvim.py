@@ -30,7 +30,7 @@ import pandas as pd
 from core.catalog import SIKLIK_ETIKETLERI, Seri, seri_listele
 from core.data import VeriYokHatasi, genis_csv_oku, seri_csv_oku, seri_yolu
 
-ESIKLER = {"daily": 5, "weekly": 14, "monthly": 50, "quarterly": 120}
+ESIKLER = {"daily": 5, "weekly": 14, "monthly": 50, "quarterly": 120, "yearly": 430}
 
 GUNCEL = "güncel"
 BEKLENIYOR = "bekleniyor"
@@ -57,6 +57,8 @@ def donem_sonu(etiket: date, freq: str) -> date:
     ayı" demektir, "1 temmuz" değil. Tazeliği etiketten ölçmek aylık serilere
     bir aylık sahte gecikme ekliyordu.
     """
+    if freq == "yearly":
+        return etiket.replace(month=12, day=31)
     if freq == "quarterly":
         ay = (etiket.month - 1) // 3 * 3 + 3
         return etiket.replace(month=ay, day=monthrange(etiket.year, ay)[1])

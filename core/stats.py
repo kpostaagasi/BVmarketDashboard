@@ -119,7 +119,17 @@ def gorunum_uygula(
     if gorunum == VARSAYILAN:
         return df
     if gorunum == YOY:
-        return _seri_ceyrek_degisim(df, 4) if freq == "quarterly" else seri_yoy(df)
+        if freq == "quarterly":
+            return _seri_ceyrek_degisim(df, 4)
+        return seri_yoy(df)
     if gorunum == MOM:
-        return _seri_ceyrek_degisim(df, 1) if freq == "quarterly" else seri_mom(df)
+        if freq == "quarterly":
+            return _seri_ceyrek_degisim(df, 1)
+        if freq == "yearly":
+            # Yıllık seride aylık değişim TANIMSIZ. `_onceki_degerler` bir ay
+            # geriye bakıp en yakın eski noktayı bulduğu için sessizce bir
+            # önceki YILI döndürür, yani MoM görünümü YoY ile aynı sayıyı
+            # gösterir — yanıltıcı. Boş seri döndürmek dürüst davranış.
+            return pd.DataFrame({"value": np.nan}, index=df.index)
+        return seri_mom(df)
     raise ValueError(f"Bilinmeyen görünüm: {gorunum}")

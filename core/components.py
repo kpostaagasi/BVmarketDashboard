@@ -63,6 +63,8 @@ def grafik_agg(seri: Seri, gorunum: str) -> str:
 
 def donem_etiketi(tarih: pd.Timestamp, freq: str) -> str:
     """Günlük ve haftalık serilerde gün gösterilir — bayatlık ancak böyle görülür."""
+    if freq == "yearly":
+        return f"{tarih.year}"
     if freq == "quarterly":
         return f"{tarih.year}-Ç{tarih.quarter}"
     return f"{tarih:%Y-%m}" if freq == "monthly" else f"{tarih:%Y-%m-%d}"

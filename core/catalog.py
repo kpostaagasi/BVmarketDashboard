@@ -17,7 +17,7 @@ import yaml
 KOK = Path(__file__).resolve().parent.parent
 KATALOG_DIZINI = KOK / "catalog"
 
-GECERLI_FREKANSLAR = {"daily", "weekly", "monthly", "quarterly"}
+GECERLI_FREKANSLAR = {"daily", "weekly", "monthly", "quarterly", "yearly"}
 GECERLI_EVDS_FREKANSLARI = {"1", "2", "5"}
 GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition", "fon"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
@@ -25,12 +25,18 @@ GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "tim_il", "tim_ulke", "bddk",
     "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus", "thy",
     "tav", "ebebek",
-    "epdk",
+    "epdk", "epdk_dogalgaz",
     "turkcell", "ttkom",
     "odmd",
-    "eib", "usk",
+    "eib", "usk", "turkbesd",
+    "worldbank", "ifo",
+    "tsb",
+    "eurostat",
 }
-SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
+SIKLIK_ETIKETLERI = {
+    "daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK",
+    "quarterly": "ÇEYREKLİK", "yearly": "YILLIK",
+}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
 # fon tipi ve hangi toplulaştırmanın istendiği.
 GECERLI_TEFAS_TIPLERI = {"YAT", "EMK"}
@@ -119,6 +125,35 @@ GECERLI_USK_KALEMLERI = {
     "yonca-fiyati", "saman-fiyati", "yem-maliyeti-toplam", "diger-giderler",
     "buzagi-geliri", "net-maliyet-baz",
 }
+# TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği) yıllık ürün kırılımının
+# iki ekseni: ölçüt (iç satış/üretim/ihracat/ithalat) ve ürün (6 ana beyaz
+# eşya kalemi). Bkz. ingest/turkbesd.py docstring'i.
+GECERLI_TURKBESD_OLCUTLERI = {"ic-satis", "uretim", "ihracat", "ithalat"}
+GECERLI_TURKBESD_URUNLERI = {
+    "buzdolabi", "derin-dondurucu", "camasir-makinesi", "bulasik-makinesi",
+    "firin", "kurutucu",
+}
+# Dünya Bankası "Pink Sheet" emtia fiyat verisinde okunan üç seri
+# (ingest/worldbank.py::SERI_TANIMLARI ile birebir).
+GECERLI_WB_SERILERI = {"gubre-endeksi", "urea", "dap"}
+# ifo Institute "ifo Business Climate Germany" Excel'inde okunan üç endeks
+# (ingest/ifo.py::SERI_ETIKETLERI ile birebir).
+GECERLI_IFO_SERILERI = {"iklim", "durum", "beklenti"}
+# EPDK doğal gaz piyasası aylık sektör raporunun tek ekseni: 9 ölçüt
+# (dağıtım/toptan/ithalat/depolama kırılımı). Bkz. ingest/epdk.py
+# docstring'i (doğal gaz bölümü).
+GECERLI_EPDK_DOGALGAZ_OLCUTLERI = {
+    "ahgaz-tuketim", "ahgaz-abone", "ahgaz-serbest",
+    "ntgaz-hacim", "aygaz-hacim",
+    "botas-ithalat", "ozel-ithalatci-ithalat",
+    "depolama-borugazi", "depolama-lng",
+}
+# Eurostat elektrik fiyatı istatistiğinin (nrg_pc_204 hane, nrg_pc_205
+# sanayi) iki ekseni: coğrafya ve para birimi. `tax`/`nrg_cons` katalogda
+# EKSEN DEĞİL — tüm serilerde sabit (I_TAX, TOT_KWH), bkz. ingest/eurostat.py.
+GECERLI_EUROSTAT_DATASETLERI = {"nrg_pc_204", "nrg_pc_205"}
+GECERLI_EUROSTAT_GEO = {"TR", "EU27_2020"}
+GECERLI_EUROSTAT_PARA_BIRIMLERI = {"EUR", "NAC"}
 
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
@@ -219,6 +254,30 @@ KAYNAK_ALANLARI = {
         "zorunlu": ("usk_kalem",),
         "istege_bagli": ("start_date",),
     },
+    "turkbesd": {
+        "zorunlu": ("turkbesd_olcut", "turkbesd_urun"),
+        "istege_bagli": ("start_date",),
+    },
+    "worldbank": {
+        "zorunlu": ("wb_seri",),
+        "istege_bagli": ("start_date",),
+    },
+    "ifo": {
+        "zorunlu": ("ifo_seri",),
+        "istege_bagli": ("start_date",),
+    },
+    "tsb": {
+        "zorunlu": ("tsb_alt_kategori", "tsb_rapor", "tsb_sheet", "tsb_sirket_kodu"),
+        "istege_bagli": ("start_date",),
+    },
+    "epdk_dogalgaz": {
+        "zorunlu": ("epdk_dogalgaz_olcut",),
+        "istege_bagli": ("start_date",),
+    },
+    "eurostat": {
+        "zorunlu": ("eurostat_dataset", "eurostat_geo", "eurostat_currency"),
+        "istege_bagli": ("start_date",),
+    },
 }
 
 # Tipe değil, kataloğa ait alanlar: kaynak tipi ne olursa olsun
@@ -287,7 +346,7 @@ class Seri:
     evds_frequency: str | None = None
     yahoo_symbol: str | None = None
     epias_ucu: str | None = None
-    epias_alani: str | None = None
+    epias_alani: str | tuple[str, ...] | None = None
     epias_bilesenler: dict[str, tuple[str, ...]] | None = None
     epias_havza: str | None = None
     osd_firma: str | None = None
@@ -327,6 +386,18 @@ class Seri:
     eib_kalem: str | None = None
     eib_olcut: str | None = None
     usk_kalem: str | None = None
+    turkbesd_olcut: str | None = None
+    turkbesd_urun: str | None = None
+    wb_seri: str | None = None
+    ifo_seri: str | None = None
+    tsb_alt_kategori: str | None = None
+    tsb_rapor: str | None = None
+    tsb_sheet: str | None = None
+    tsb_sirket_kodu: int | None = None
+    epdk_dogalgaz_olcut: str | None = None
+    eurostat_dataset: str | None = None
+    eurostat_geo: str | None = None
+    eurostat_currency: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -516,6 +587,16 @@ def serileri_yukle() -> tuple[Seri, ...]:
             eib_kalem=ham.get("eib_kalem"),
             eib_olcut=ham.get("eib_olcut"),
             usk_kalem=ham.get("usk_kalem"),
+            turkbesd_olcut=ham.get("turkbesd_olcut"),
+            turkbesd_urun=ham.get("turkbesd_urun"),
+            wb_seri=ham.get("wb_seri"),
+            ifo_seri=ham.get("ifo_seri"),
+            tsb_alt_kategori=ham.get("tsb_alt_kategori"),
+            tsb_rapor=ham.get("tsb_rapor"),
+            tsb_sheet=ham.get("tsb_sheet"),
+            tsb_sirket_kodu=(
+                int(ham["tsb_sirket_kodu"]) if "tsb_sirket_kodu" in ham else None
+            ),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),

@@ -115,3 +115,21 @@ def test_ceyreklik_degisim_eksik_ceyregi_atlamaz_ve_yili_eslestirir():
     yoy_serisi = gorunum_uygula(df, "YoY %", "quarterly")
     assert yoy_serisi.loc["2025-03-31", "value"] == pytest.approx(50.0)
     assert yoy(df.iloc[1:], "quarterly") is None
+
+
+def test_yillik_seride_aylik_gorunum_yoy_ile_ayni_sayiyi_gostermez():
+    """Yıllık seride MoM tanımsızdır.
+
+    `_onceki_degerler` bir ay geriye bakıp en yakın eski noktayı bulur; yıllık
+    veride bu bir önceki YILDIR, yani korumasız MoM görünümü YoY ile birebir
+    aynı yüzdeyi gösterir (sessiz yanlış temsil). Beklenen: NaN.
+    """
+    df = pd.DataFrame(
+        {"value": [100.0, 110.0, 121.0]},
+        index=pd.to_datetime(["2023-01-01", "2024-01-01", "2025-01-01"]),
+    )
+    yoy_serisi = gorunum_uygula(df, "YoY %", "yearly")
+    assert yoy_serisi.loc["2024-01-01", "value"] == pytest.approx(10.0)
+    assert yoy(df, "yearly") == pytest.approx(10.0)
+    mom_serisi = gorunum_uygula(df, "MoM %", "yearly")
+    assert mom_serisi["value"].isna().all()
