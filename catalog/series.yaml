@@ -35458,3 +35458,497 @@
   monthly_agg: sum
   olcek: 0.001
   charts: [seasonality, level]
+- id: enflasyon/cekirdek-b
+  title: Çekirdek Enflasyon (B Endeksi)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  evds_code: TP.FE25.OKTG03
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/cekirdek-d
+  title: Çekirdek Enflasyon (D Endeksi)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  evds_code: TP.FE25.OKTG05
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/cekirdek-e
+  title: Çekirdek Enflasyon (E Endeksi)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  evds_code: TP.FE25.OKTG06
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/yiufe-nace-b-madencilik
+  title: Yİ-ÜFE · Madencilik ve Taşocakçılığı (NACE B)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TUFE1YI.T2
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/yiufe-nace-c-imalat
+  title: Yİ-ÜFE · İmalat (NACE C)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TUFE1YI.T15
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/yiufe-nace-d-elektrik-gaz
+  title: Yİ-ÜFE · Elektrik, Gaz, Buhar ve İklimlendirme (NACE D)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TUFE1YI.T118
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/yiufe-nace-e-su-atik
+  title: Yİ-ÜFE · Su Temini, Kanalizasyon, Atık Yönetimi (NACE E)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TUFE1YI.T123
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/yiufe-imalat-gida
+  title: Yİ-ÜFE · İmalat · Gıda Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TUFE1YI.T16
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/yiufe-imalat-icecekler
+  title: Yİ-ÜFE · İmalat · İçecekler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TUFE1YI.T26
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/yiufe-imalat-tutun
+  title: Yİ-ÜFE · İmalat · Tütün Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TUFE1YI.T28
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/yiufe-imalat-tekstil
+  title: Yİ-ÜFE · İmalat · Tekstil Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.TUFE1YI.T30
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-genel
+  title: Yurt Dışı Üretici Fiyat Endeksi (YD-ÜFE)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD01
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-madencilik
+  title: YD-ÜFE · Madencilik ve Taşocakçılığı
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD02
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat
+  title: YD-ÜFE · İmalat
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD05
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-gida
+  title: YD-ÜFE · İmalat · Gıda Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD06
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-icecekler
+  title: YD-ÜFE · İmalat · İçecekler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD07
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-tutun
+  title: YD-ÜFE · İmalat · Tütün Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD08
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-tekstil
+  title: YD-ÜFE · İmalat · Tekstil Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD09
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-giyim
+  title: YD-ÜFE · İmalat · Giyim Eşyası
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD10
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-deri
+  title: YD-ÜFE · İmalat · Deri ve İlgili Ürünler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD11
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-ana-metaller
+  title: YD-ÜFE · İmalat · Ana Metaller
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD19
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-fabrikasyon-metal
+  title: YD-ÜFE · İmalat · Fabrikasyon Metal Ürünler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD20
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-mineral
+  title: YD-ÜFE · İmalat · Metalik Olmayan Diğer Mineral Ürünler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD18
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-madencilik-metal-cevherleri
+  title: YD-ÜFE · Madencilik · Metal Cevherleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD03
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-madencilik-diger
+  title: YD-ÜFE · Madencilik · Diğer Madencilik ve Taşocakçılığı Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD04
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-kok-petrol
+  title: YD-ÜFE · İmalat · Kok ve Rafine Petrol Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD14
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-kimyasallar
+  title: YD-ÜFE · İmalat · Kimyasallar ve Kimyasal Ürünler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD15
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-eczacilik
+  title: YD-ÜFE · İmalat · Temel Eczacılık Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD16
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-kaucuk-plastik
+  title: YD-ÜFE · İmalat · Kauçuk ve Plastik Ürünler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD17
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-kagit
+  title: YD-ÜFE · İmalat · Kağıt ve Kağıt Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD13
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-motorlu-tasit
+  title: YD-ÜFE · İmalat · Motorlu Kara Taşıtları
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD24
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-diger-ulasim
+  title: YD-ÜFE · İmalat · Diğer Ulaşım Araçları
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD25
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-makine-ekipman
+  title: YD-ÜFE · İmalat · Makine ve Ekipmanlar
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD23
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-bilgisayar-elektronik
+  title: YD-ÜFE · İmalat · Bilgisayar, Elektronik ve Optik Ürünler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD21
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-elektrikli-techizat
+  title: YD-ÜFE · İmalat · Elektrikli Teçhizat
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD22
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-agac-mantar
+  title: YD-ÜFE · İmalat · Ağaç ve Mantar Ürünleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD12
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-basim-kayit
+  title: YD-ÜFE · İmalat · Basım ve Kayıt Hizmetleri
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD131
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-mobilya
+  title: YD-ÜFE · İmalat · Mobilya
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD26
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ydufe-imalat-diger-mamul
+  title: YD-ÜFE · İmalat · Diğer Mamul Eşyalar
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.UFEYD27
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/hizmet-ufe-genel
+  title: Hizmet Üretici Fiyat Endeksi (H-N-X-K Genel)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks"
+  freq: monthly
+  evds_code: TP.HUFE.GK378119440
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ito-genel
+  title: İstanbul Tüketici Fiyat Endeksi (İTO Genel)
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2023=100)"
+  freq: monthly
+  evds_code: TP.FG.IST1.23
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ito-gida
+  title: İTO · Gıda ve Alkolsüz İçecekler
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2023=100)"
+  freq: monthly
+  evds_code: TP.FG.IST2.23
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ito-konut
+  title: İTO · Konut
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2023=100)"
+  freq: monthly
+  evds_code: TP.FG.IST5.23
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ito-ulastirma
+  title: İTO · Ulaştırma
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2023=100)"
+  freq: monthly
+  evds_code: TP.FG.IST8.23
+  evds_frequency: "5"
+  charts: [seasonality, level]
+
+- id: enflasyon/ito-lokanta
+  title: İTO · Lokanta ve Oteller
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Endeks (2023=100)"
+  freq: monthly
+  evds_code: TP.FG.IST12.23
+  evds_frequency: "5"
+  charts: [seasonality, level]

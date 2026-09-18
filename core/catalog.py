@@ -57,6 +57,16 @@ GECERLI_EBEBEK_METRIKLERI = {
 # satış/dış ticaret yönü) ve ürün grubu. Bkz. ingest/epdk.py docstring'i.
 GECERLI_EPDK_OLCUTLERI = {"rafineri-uretimi", "yurtici-satis", "ithalat", "ihracat"}
 GECERLI_EPDK_URUNLERI = {"benzin", "motorin", "fuel-oil", "havacilik", "denizcilik"}
+# EPİAŞ Şeffaflık baraj doluluk servisinin (dams-data/active-fullness) canlı
+# döndürdüğü 17 havza (bkz. GET /v1/dams/data/basin-list, ölçüldü 2026-09-18).
+# Bu uç tarih parametresini yok sayar — her zaman bugünün anlık görüntüsünü
+# döner, geriye dönük veri yoktur (bkz. ingest/epias.py baraj_doluluk_cek).
+GECERLI_EPIAS_HAVZALARI = {
+    "Doğu Akdeniz", "Ceyhan", "Batı Karadeniz", "Antalya", "Van Gölü",
+    "Seyhan", "Marmara", "Batı Akdeniz", "Yeşilırmak", "Asi", "Susurluk",
+    "Kuzey Ege", "Doğu Karadeniz", "Sakarya", "Kızılırmak", "Büyük Menderes",
+    "Gediz",
+}
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
 # listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
@@ -76,7 +86,7 @@ KAYNAK_ALANLARI = {
     },
     "epias": {
         "zorunlu": ("epias_ucu",),
-        "istege_bagli": ("epias_alani", "epias_bilesenler", "start_date"),
+        "istege_bagli": ("epias_alani", "epias_bilesenler", "epias_havza", "start_date"),
     },
     "osd": {
         "zorunlu": ("osd_firma",),
@@ -204,6 +214,7 @@ class Seri:
     epias_ucu: str | None = None
     epias_alani: str | None = None
     epias_bilesenler: dict[str, tuple[str, ...]] | None = None
+    epias_havza: str | None = None
     osd_firma: str | None = None
     osd_eski_adlar: tuple[str, ...] | None = None
     tim_sektor: str | None = None
@@ -374,6 +385,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
                 if "epias_bilesenler" in ham
                 else None
             ),
+            epias_havza=ham.get("epias_havza"),
             osd_firma=ham.get("osd_firma"),
             osd_eski_adlar=(
                 tuple(ham["osd_eski_adlar"]) if "osd_eski_adlar" in ham else None
@@ -465,12 +477,37 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
     if "fon" in seri.charts and seri.charts != ("fon",):
         raise KatalogHatasi(f"{seri.id}: fon tek başına olmalı, başka grafikle birleştirilemez")
     if seri.kaynak_tipi == "epias":
-        # Tek alan mı, bileşen grubu mu: biri ya da diğeri, ikisi birden değil.
-        if bool(seri.epias_alani) == bool(seri.epias_bilesenler):
-            raise KatalogHatasi(
-                f"{seri.id}: epias serisi ya epias_alani ya epias_bilesenler "
-                "taşımalı (ikisi birden ya da hiçbiri değil)"
-            )
+        if seri.epias_ucu == "baraj-doluluk":
+            # EPİAŞ'ın baraj doluluk ucu (dams-data/active-fullness +
+            # active-volume + dam-volume) saatlik alan/bileşen değil,
+            # havza/ülke bazında kapasite ağırlıklı tek bir günlük değerdir
+            # (bkz. ingest/epias.py baraj_doluluk_cek) — epias_alani ve
+            # epias_bilesenler bu uçta anlamsızdır.
+            if seri.epias_alani or seri.epias_bilesenler:
+                raise KatalogHatasi(
+                    f"{seri.id}: baraj-doluluk serisi epias_alani/"
+                    "epias_bilesenler taşıyamaz"
+                )
+            if (
+                seri.epias_havza is not None
+                and seri.epias_havza not in GECERLI_EPIAS_HAVZALARI
+            ):
+                raise KatalogHatasi(
+                    f"{seri.id}: geçersiz epias_havza '{seri.epias_havza}' "
+                    f"(geçerli: {', '.join(sorted(GECERLI_EPIAS_HAVZALARI))})"
+                )
+        else:
+            if seri.epias_havza is not None:
+                raise KatalogHatasi(
+                    f"{seri.id}: epias_havza yalnızca baraj-doluluk "
+                    "serisinde kullanılır"
+                )
+            # Tek alan mı, bileşen grubu mu: biri ya da diğeri, ikisi birden değil.
+            if bool(seri.epias_alani) == bool(seri.epias_bilesenler):
+                raise KatalogHatasi(
+                    f"{seri.id}: epias serisi ya epias_alani ya epias_bilesenler "
+                    "taşımalı (ikisi birden ya da hiçbiri değil)"
+                )
     if bool(seri.epias_bilesenler) != ("composition" in seri.charts):
         raise KatalogHatasi(
             f"{seri.id}: epias_bilesenler ile composition grafiği birlikte "

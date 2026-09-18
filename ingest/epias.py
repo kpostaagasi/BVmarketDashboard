@@ -6,9 +6,14 @@ eklenir. Ticket ~2 saat geçerlidir; ingest koşusu dakikalar sürdüğü için
 tazeleme mantığı yoktur.
 
 Endpoint yolları UCLAR sözlüğünde toplanmıştır: EPİAŞ yol değiştirirse tek
-yerde düzelir. Baraj doluluk serisi bu istemcinin kapsamı dışındadır: ilgili
-uç ("dams-active-fullness") 404 dönüyor ve zaten baraj/havza bazlı veriyor,
-ulusal toplam yayınlamıyor.
+yerde düzelir. Baraj doluluk `seri_cek`'in saatlik-alan-indirgeme desenine
+UYMAZ (bkz. `baraj_doluluk_cek`): doğru yol `/v1/dams/data/active-fullness`
+değil (önceki not "dams-active-fullness" 404 veriyor diyordu — yanlış yol
+denenmişti); gerçek uç canlı ölçüldü ve 200 döndü, ama `date` gövde alanını
+YOK SAYIYOR — her istekte yalnızca bugünün anlık görüntüsünü veriyor,
+geriye dönük veri yok. Havza/ülke toplamı da yayınlamıyor: 80-116 barajlık
+ham liste dönüyor, kapasite ağırlıklı toplam `baraj_doluluk_cek` içinde
+`active-volume` + `dam-volume` uçlarıyla hesaplanıyor.
 
 Yanıt zarfı `{"items": [...]}`; her kayıt "date" (ISO, +03:00 ofsetli) ve
 seriye özgü bir değer alanı taşır (PTF için "price", üretim için "total").
@@ -33,6 +38,13 @@ UCLAR = {
     "uretim": "/electricity-service/v1/generation/data/realtime-generation",
     "ptf": "/electricity-service/v1/markets/dam/data/mcp",
 }
+
+# Baraj doluluk `UCLAR`e girmiyor: `seri_cek`in tek-uç/hourly-alan deseni
+# yerine `baraj_doluluk_cek` iki uçtan (hacim + kapasite) canlı anlık
+# görüntüyü çekip kendi başına birleştiriyor (bkz. modül docstring'i).
+BARAJ_AKTIF_HACIM_YOLU = "/electricity-service/v1/dams/data/active-volume"
+BARAJ_HACIM_YOLU = "/electricity-service/v1/dams/data/dam-volume"
+HAVZA_LISTESI_YOLU = "/electricity-service/v1/dams/data/basin-list"
 
 # EPİAŞ elektrik uçları TEK istekte en fazla 3 aylık pencereye izin veriyor
 # (canlı API'de doğrulandı: pencere aşılınca HTTP 400 "(BUS)SEF1117 —
@@ -256,3 +268,117 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
     gunluk = df.groupby("date", as_index=False)[gruplar].agg(toplama)
     gunluk = gunluk.sort_values("date").reset_index(drop=True)
     return gunluk
+
+
+def havza_listesi_cek(tgt: str, session: requests.Session | None = None) -> list[str]:
+    """Saf GET: EPİAŞ'ın tanıdığı havza adlarını döner (bkz. HAVZA_LISTESI_YOLU).
+
+    Canlı ölçüldü (2026-09-18): 17 havza. Katalog doğrulaması
+    `core.catalog.GECERLI_EPIAS_HAVZALARI` ile bu listeyi statik tutuyor —
+    EPİAŞ yeni bir havza eklerse bu fonksiyon onu görür ama katalog sabiti
+    de elle güncellenmeli (sessiz uyuşmazlık yerine `_dogrula` hata verir).
+    """
+    http = session or requests
+    yanit = http.get(
+        TABAN + HAVZA_LISTESI_YOLU,
+        headers={"TGT": tgt, "Accept": "application/json"},
+        timeout=ZAMAN_ASIMI,
+    )
+    if yanit.status_code != 200:
+        raise RuntimeError(f"EPİAŞ havza listesi HTTP {yanit.status_code}")
+    return yanit.json()
+
+
+def _kapasite_agirlikli_doluluk(
+    aktif_hacimler: dict, kapasiteler: dict, havza_by_id: dict, havza: str | None
+) -> float:
+    """Saf: Σ(aktif hacim) / Σ(aktif kapasite) * 100 — istenirse tek havzaya
+    süzülür (`havza=None` → Türkiye geneli, tüm barajlar).
+
+    Kapasite ağırlıklı ortalama, her barajın doluluk yüzdesini kendi
+    kapasitesiyle tartmakla matematiksel olarak özdeştir (doluluk% =
+    hacim/kapasite*100 olduğundan); toplamları bölmek tek barajlık
+    yuvarlama hatalarını biriktirmeden aynı sonucu verir.
+
+    Kapasitesi (dam-volume'da) olmayan bir baraj varsa o baraj sessizce
+    atlanır — hacmi olup kapasitesi olmayan bir baraj payda dışı kalırsa
+    payı da dışarıda tutulmalı, aksi halde pay/payda tutarsızlaşır.
+    """
+    toplam_hacim = 0.0
+    toplam_kapasite = 0.0
+    for dam_id, hacim in aktif_hacimler.items():
+        if havza is not None and havza_by_id.get(dam_id) != havza:
+            continue
+        kapasite = kapasiteler.get(dam_id)
+        if kapasite is None:
+            continue
+        toplam_hacim += hacim
+        toplam_kapasite += kapasite
+    if toplam_kapasite <= 0:
+        etiket = havza or "Türkiye geneli"
+        raise RuntimeError(f"EPİAŞ baraj doluluk: '{etiket}' için kapasite verisi yok")
+    return toplam_hacim / toplam_kapasite * 100
+
+
+def baraj_doluluk_cek(
+    seri: Seri, tgt: str, session: requests.Session | None = None,
+    bugun: date | None = None, onbellek: dict | None = None,
+) -> pd.DataFrame:
+    """EPİAŞ'ın baraj doluluk ucundan CANLI anlık görüntüyü çeker.
+
+    `seri_cek`teki pencereli-yeniden-çekme deseni burada UYGULANAMAZ:
+    `active-volume`/`dam-volume` `date` gövde alanını yok sayar — canlı
+    ölçümde 5 farklı tarihle (bugün, dün, ay başı, geçen yıl bugün) hepsi
+    aynı "bugün" anlık görüntüsünü döndürdü. Bu yüzden bu fonksiyon TEK bir
+    günlük satır döner; çok günlük geçmiş oluşturmak yalnızca bu fonksiyonu
+    her gün ayrı çalıştırıp sonucu birikimli biçimde saklamakla mümkündür
+    (mevcut `seriyi_yaz`in tam-üzerine-yazma sözleşmesiyle UYUŞMAZ — bu
+    yüzden `ingest.run`'a henüz bağlanmadı; bkz. rapor).
+
+    Türkiye geneli (kapasite ağırlıklı) = Σ(aktif hacim) / Σ(aktif kapasite)
+    * 100 (`seri.epias_havza is None`); havza verilmişse yalnızca o
+    havzanın barajları toplanır. Kapasite = maksimum işletme hacmi -
+    minimum işletme hacmi (`dam-volume`); aktif hacim `active-volume`'dan.
+
+    Aynı koşuda 18 seri (17 havza + ülke geneli) aynı iki uçtan aynı yanıtı
+    paylaşır — `onbellek` verilirse (uretim/uretim-kompozisyon ile aynı
+    desen) 36 istek yerine 2 istek yapılır.
+    """
+    bugun = bugun or date.today()
+    http = session or requests
+    govdeler = {}
+    for anahtar, yol in (
+        ("aktif_hacim", BARAJ_AKTIF_HACIM_YOLU), ("kapasite", BARAJ_HACIM_YOLU),
+    ):
+        if onbellek is not None and yol in onbellek:
+            govdeler[anahtar] = onbellek[yol]
+            continue
+        yanit = http.post(
+            TABAN + yol,
+            headers={"Content-Type": "application/json", "TGT": tgt},
+            json={"date": f"{bugun.isoformat()}T00:00:00+03:00"},
+            timeout=ZAMAN_ASIMI,
+        )
+        if yanit.status_code != 200:
+            raise RuntimeError(f"EPİAŞ HTTP {yanit.status_code} ({seri.id})")
+        govde = yanit.json()
+        govdeler[anahtar] = govde
+        if onbellek is not None:
+            onbellek[yol] = govde
+
+    aktif_hacimler = {
+        kayit["damId"]: float(kayit["activeVolume"])
+        for kayit in govdeler["aktif_hacim"].get("items") or []
+    }
+    kapasiteler = {}
+    havza_by_id = {}
+    for kayit in govdeler["kapasite"].get("items") or []:
+        havza_by_id[kayit["id"]] = kayit["basinName"]
+        kapasiteler[kayit["id"]] = float(kayit["maxVolume"]) - float(kayit["minVolume"])
+    if not aktif_hacimler:
+        raise RuntimeError(f"EPİAŞ baraj doluluk boş döndü ({seri.id})")
+
+    deger = _kapasite_agirlikli_doluluk(
+        aktif_hacimler, kapasiteler, havza_by_id, seri.epias_havza
+    )
+    return pd.DataFrame({"date": [bugun.isoformat()], "value": [deger]})
