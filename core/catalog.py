@@ -24,6 +24,7 @@ GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "tim_il", "tim_ulke", "bddk",
     "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus", "thy",
+    "tav",
 }
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
@@ -40,6 +41,10 @@ GECERLI_PGSUS_OLCUTLERI = {
 # THY trafik bülteninin iki ekseni: yolcu segmenti ve ölçüt.
 GECERLI_THY_SEGMENTLERI = {"Toplam", "Yurt İçi", "Yurt Dışı"}
 GECERLI_THY_OLCUTLERI = {"konma", "ask", "doluluk", "yolcu", "kargo"}
+# TAV Havalimanları trafik bülteninin iki ekseni: havalimanı (ya da TAV
+# TOPLAM) ve yolcu segmenti. Yalnızca yolcu verisi kapsanır (uçuş/hareket
+# sayısı kapsam dışı — bkz. ingest/tav.py docstring'i).
+GECERLI_TAV_SEGMENTLERI = {"toplam", "dis-hat", "ic-hat"}
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
 # listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
@@ -103,6 +108,10 @@ KAYNAK_ALANLARI = {
     },
     "thy": {
         "zorunlu": ("thy_segment", "thy_olcut"),
+        "istege_bagli": ("start_date",),
+    },
+    "tav": {
+        "zorunlu": ("tav_varlik", "tav_segment"),
         "istege_bagli": ("start_date",),
     },
 }
@@ -196,6 +205,8 @@ class Seri:
     pgsus_olcut: str | None = None
     thy_segment: str | None = None
     thy_olcut: str | None = None
+    tav_varlik: str | None = None
+    tav_segment: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -364,6 +375,8 @@ def serileri_yukle() -> tuple[Seri, ...]:
             pgsus_olcut=ham.get("pgsus_olcut"),
             thy_segment=ham.get("thy_segment"),
             thy_olcut=ham.get("thy_olcut"),
+            tav_varlik=ham.get("tav_varlik"),
+            tav_segment=ham.get("tav_segment"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -478,6 +491,12 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             raise KatalogHatasi(
                 f"{seri.id}: geçersiz thy_olcut '{seri.thy_olcut}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_THY_OLCUTLERI))})"
+            )
+    if seri.kaynak_tipi == "tav":
+        if seri.tav_segment not in GECERLI_TAV_SEGMENTLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz tav_segment '{seri.tav_segment}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_TAV_SEGMENTLERI))})"
             )
     if seri.kaynak_tipi in {"tefas", "tefas_fon"}:
         # Yazım hatası adaptörün derinliklerinde KeyError'a dönüşmesin.

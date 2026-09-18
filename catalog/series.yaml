@@ -34291,3 +34291,141 @@
   unit: "Ton"
   freq: monthly
   charts: [seasonality, level]
+
+- id: insaat/konut-satis-istanbul
+  title: "İstanbul · Toplam Konut Satışı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.AKONUTSAT1.KTR100
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: insaat/konut-satis-ankara
+  title: "Ankara · Toplam Konut Satışı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.AKONUTSAT1.KTR510
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: insaat/konut-satis-izmir
+  title: "İzmir · Toplam Konut Satışı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.AKONUTSAT1.KTR310
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: insaat/konut-satis-antalya
+  title: "Antalya · Toplam Konut Satışı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.AKONUTSAT1.KTR611
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: insaat/konut-satis-bursa
+  title: "Bursa · Toplam Konut Satışı"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.AKONUTSAT1.KTR411
+  evds_frequency: "5"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: sanayi/sue-toplam
+  title: "SUE · Toplam Sanayi (arındırılmış)"
+  category: sanayi
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TSANAYMT2021.BCD
+  evds_frequency: "5"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  monthly_agg: mean
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+
+- id: sanayi/sue-imalat
+  title: "SUE · İmalat"
+  category: sanayi
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TSANAYMT2021.C
+  evds_frequency: "5"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  monthly_agg: mean
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+
+- id: sanayi/sue-ana-metal
+  title: "SUE · Ana Metal"
+  category: sanayi
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TSANAYMT2021.C24
+  evds_frequency: "5"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  monthly_agg: mean
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+
+- id: sanayi/sue-fabrikasyon-metal
+  title: "SUE · Fabrikasyon Metal"
+  category: sanayi
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TSANAYMT2021.C25
+  evds_frequency: "5"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  monthly_agg: mean
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+
+- id: sanayi/sue-makine-ekipman
+  title: "SUE · Makine & Ekipman"
+  category: sanayi
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TSANAYMT2021.C28
+  evds_frequency: "5"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  monthly_agg: mean
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+
+- id: sanayi/sue-mineral
+  title: "SUE · Metalik Olmayan Mineral"
+  category: sanayi
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TSANAYMT2021.C23
+  evds_frequency: "5"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  monthly_agg: mean
+  gecikme_gunu: 25
+  charts: [seasonality, level]
