@@ -212,4 +212,33 @@
     AYLIKTIR (o ayın 1'inden son gününe). Bir ülkenin "Toplam" serisi
     bültenin kendi TOPLAM satırı DEĞİL (böyle bir satır ülke başına hiç
     yayımlanmıyor), o ülkenin sektör satırlarının toplamıdır.
+- slug: perakende
+  title: Perakende (Şirket Operasyonel Verileri)
+  pano:
+    [
+      perakende/ebebek-satis-adedi,
+      perakende/ebebek-magaza-ziyaretci,
+      perakende/ebebek-web-ziyaret,
+      perakende/ebebek-toplam-magaza,
+    ]
+  note: >-
+    Kaynak ebebek Yatırımcı İlişkileri'nin aylık KAP Özel Durum
+    Açıklamaları (Satış Adedi / Ziyaretçi Sayısı / Mağaza Sayısı).
+    "Mega Mağaza" kırılımı Ağustos 2026 bildiriminden itibaren ayrı
+    raporlanıyor; öncesinde standart mağaza içindeydi (sınıflandırma
+    değişikliği, gerçek kapanış değil).
+- slug: petrol-piyasasi
+  title: Petrol Piyasası (EPDK)
+  pano:
+    [
+      petrol-piyasasi/rafineri-uretimi-motorin,
+      petrol-piyasasi/yurtici-satis-motorin,
+      petrol-piyasasi/rafineri-uretimi-benzin,
+      petrol-piyasasi/yurtici-satis-benzin,
+    ]
+  note: >-
+    Kaynak EPDK Aylık Sektör Raporu'nun çok tablolu EK dosyası. Bu dosya
+    biçimi Ocak 2026'da başladı; öncesinde ek yalnızca il bazında teslim
+    matrisi taşıyor, ürün grubu toplamı yok — seriler bu yüzden 2026'dan
+    başlar. Değerler bin ton.
 

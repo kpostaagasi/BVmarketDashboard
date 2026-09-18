@@ -35127,3 +35127,334 @@
   freq: monthly
   monthly_agg: sum
   charts: [seasonality, level]
+
+- id: perakende/ebebek-satis-adedi
+  title: ebebek Satış Adedi (Aylık)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/yatirimci-duyurulari" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: satis_adedi
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: perakende/ebebek-magaza-ziyaretci
+  title: ebebek Mağaza Ziyaretçi Sayısı (Aylık)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/yatirimci-duyurulari" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: magaza_ziyaretci
+  unit: "Kişi"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: perakende/ebebek-web-ziyaret
+  title: ebebek.com Web Ziyaret Sayısı (Aylık)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/yatirimci-duyurulari" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: web_ziyaret
+  unit: "Ziyaret"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: perakende/ebebek-toplam-magaza
+  title: ebebek Toplam Mağaza Sayısı (Türkiye)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/yatirimci-duyurulari" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: toplam_magaza
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: last
+  charts: [level]
+
+- id: perakende/ebebek-standart-magaza
+  title: ebebek Standart Mağaza Sayısı (Türkiye)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/yatirimci-duyurulari" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: standart_magaza
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: last
+  charts: [level]
+  yayin_notu: >-
+    Ağustos 2026'dan önce "geleneksel", sonrasında "standart" olarak
+    etiketlenir — aynı kavramın kesintisiz devamıdır.
+
+- id: perakende/ebebek-mega-magaza
+  title: ebebek Mega Mağaza Sayısı (Türkiye)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/yatirimci-duyurulari" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: mega_magaza
+  start_date: "2026-08-01"
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: last
+  charts: [level]
+  yayin_notu: >-
+    "Mega mağaza" Ağustos 2026 KAP bildiriminden itibaren ayrı bir kırılım
+    olarak raporlanmaya başladı; öncesinde standart mağaza sayısının
+    içindeydi (gerçek bir açılış değil, sınıflandırma değişikliği).
+
+- id: petrol-piyasasi/rafineri-uretimi-benzin
+  title: "Rafineri Üretimi · Benzin"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: rafineri-uretimi
+  epdk_urun: benzin
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/rafineri-uretimi-motorin
+  title: "Rafineri Üretimi · Motorin"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: rafineri-uretimi
+  epdk_urun: motorin
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/rafineri-uretimi-fuel-oil
+  title: "Rafineri Üretimi · Fuel Oil"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: rafineri-uretimi
+  epdk_urun: fuel-oil
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/rafineri-uretimi-havacilik
+  title: "Rafineri Üretimi · Havacılık Yakıtları"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: rafineri-uretimi
+  epdk_urun: havacilik
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/rafineri-uretimi-denizcilik
+  title: "Rafineri Üretimi · Denizcilik Yakıtları"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: rafineri-uretimi
+  epdk_urun: denizcilik
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/yurtici-satis-benzin
+  title: "Yurt İçi Satış · Benzin"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: yurtici-satis
+  epdk_urun: benzin
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/yurtici-satis-motorin
+  title: "Yurt İçi Satış · Motorin"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: yurtici-satis
+  epdk_urun: motorin
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/yurtici-satis-fuel-oil
+  title: "Yurt İçi Satış · Fuel Oil"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: yurtici-satis
+  epdk_urun: fuel-oil
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/yurtici-satis-havacilik
+  title: "Yurt İçi Satış · Havacılık Yakıtları"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: yurtici-satis
+  epdk_urun: havacilik
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/yurtici-satis-denizcilik
+  title: "Yurt İçi Satış · Denizcilik Yakıtları"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: yurtici-satis
+  epdk_urun: denizcilik
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ithalat-benzin
+  title: "İthalat · Benzin"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ithalat
+  epdk_urun: benzin
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ithalat-motorin
+  title: "İthalat · Motorin"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ithalat
+  epdk_urun: motorin
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ithalat-fuel-oil
+  title: "İthalat · Fuel Oil"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ithalat
+  epdk_urun: fuel-oil
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ithalat-havacilik
+  title: "İthalat · Havacılık Yakıtları"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ithalat
+  epdk_urun: havacilik
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ithalat-denizcilik
+  title: "İthalat · Denizcilik Yakıtları"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ithalat
+  epdk_urun: denizcilik
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ihracat-benzin
+  title: "İhracat · Benzin"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ihracat
+  epdk_urun: benzin
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ihracat-motorin
+  title: "İhracat · Motorin"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ihracat
+  epdk_urun: motorin
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ihracat-fuel-oil
+  title: "İhracat · Fuel Oil"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ihracat
+  epdk_urun: fuel-oil
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ihracat-havacilik
+  title: "İhracat · Havacılık Yakıtları"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ihracat
+  epdk_urun: havacilik
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: petrol-piyasasi/ihracat-denizcilik
+  title: "İhracat · Denizcilik Yakıtları"
+  category: petrol-piyasasi
+  kaynak: { name: EPDK Aylık Sektör Raporu, url: "https://www.epdk.gov.tr/Detay/Icerik/3-0-104-1008/petrolaylik-sektor-raporu" }
+  kaynak_tipi: epdk
+  epdk_olcut: ihracat
+  epdk_urun: denizcilik
+  unit: "Bin ton"
+  freq: monthly
+  monthly_agg: sum
+  olcek: 0.001
+  charts: [seasonality, level]

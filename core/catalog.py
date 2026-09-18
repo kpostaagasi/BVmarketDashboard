@@ -404,6 +404,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             tav_olcut=ham.get("tav_olcut"),
             epdk_olcut=ham.get("epdk_olcut"),
             epdk_urun=ham.get("epdk_urun"),
+            ebebek_metrik=ham.get("ebebek_metrik"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),

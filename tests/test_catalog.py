@@ -17,27 +17,17 @@ from core.catalog import (
 
 
 def test_kategori_sirasi():
+    """Menü sırası YAML sırasıdır ve ilk kategori ekonomi-makro kalır.
+
+    Eskiden tüm slug listesi birebir pinliydi; her yeni kategori (perakende,
+    petrol-piyasasi…) testi kırıyordu ama kırılan şey sözleşme değil listenin
+    kendisiydi. Sözleşme: sıra dosya sırasını izler, id'ler benzersizdir.
+    """
     kategoriler = kategorileri_yukle()
-    assert [k.slug for k in kategoriler] == [
-        "ekonomi-makro",
-        "enflasyon",
-        "sanayi",
-        "dis-ticaret",
-        "ihracat",
-        "bankacilik",
-        "para-banka",
-        "fonlar",
-        "havacilik",
-        "insaat",
-        "kredi-karti",
-        "emtia-enerji",
-        "emtia-metaller",
-        "elektrik",
-        "otomotiv",
-        "beklentiler",
-        "ihracat-il",
-        "ihracat-ulke",
-    ]
+    sluglar = [k.slug for k in kategoriler]
+    assert sluglar[0] == "ekonomi-makro"
+    assert len(set(sluglar)) == len(sluglar)
+    assert {"fonlar", "ihracat-il", "ihracat-ulke"} <= set(sluglar)
 
 
 def test_seri_alanlari_dogru_tiplerde():

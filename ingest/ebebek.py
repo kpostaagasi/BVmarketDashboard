@@ -26,10 +26,11 @@ halde önceki aylarda RuntimeError alınır.
 
 Bilinen kaynak hatası: "Nisan 2025 Ziyaretçi Sayıları" başlıklı duyurunun PDF
 içeriği aslında "Nisan 2025 Mağaza Sayısı" metnidir (ebebek IR sitesindeki
-yanlış dosya eşlemesi) — beklenen ziyaretçi rakamları o ayda hiç yok, bu yüzden
-`magaza_ziyaretci`/`web_ziyaret` serilerinin tam pencere çekimi o ay için
-RuntimeError verir. Sessizce atlanmıyor (kaynak tarafı gerçek bir hata,
-uydurma/vekil değer yasak); düzeltme ebebek IR'ın kendi sitesinde yapılmalı.
+yanlış dosya eşlemesi; 2026-09-18'de canlı doğrulandı). Bu TEK ay
+`BOZUK_DUYURULAR`da açıkça listelenir ve atlanır — sessiz atlama DEĞİL:
+beklenen rakamın bulunamadığı başka bir ay hâlâ RuntimeError verir. Aksi
+halde kaynak tarafındaki tek dosya hatası 34 ayın tamamını kullanılamaz
+kılıyordu. Kaynak düzeltilince liste boşaltılmalı.
 
 Bazı aylar aynı (ay, yıl, kategori) için İKİ duyuru içerir (ör. Aralık 2024
 Mağaza Sayısı, Eylül 2024 Ziyaretçi Sayıları) — ikisi de aynı değeri taşıyorsa
@@ -55,6 +56,12 @@ AY_ADLARI = (
     "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
 )
 AY_INDEKS = {ad: i + 1 for i, ad in enumerate(AY_ADLARI)}
+
+# Kaynakta içeriği başlığıyla uyuşmayan duyurular (duyuru başlığı, kategori).
+# Liste AÇIK tutulur: buraya yazılmayan bir uyuşmazlık hâlâ hata verir.
+# "Nisan 2025 Ziyaretçi Sayıları" PDF'i gerçekte mağaza sayısı metni taşıyor
+# (2026-09-18'de canlı doğrulandı; referans platform da o ayı boş gösteriyor).
+BOZUK_DUYURULAR = {("Nisan 2025 Ziyaretçi Sayıları", "ziyaret")}
 _AY_DESENI = "|".join(AY_ADLARI)
 
 # Başlık kalıpları. "ebebek " öneki bazı eski duyurularda var (ör. "ebebek
@@ -149,22 +156,48 @@ def satis_noktalari(session=None) -> dict[str, int]:
     return sonuc
 
 
+def _icerik_donemi(metin: str, baslik: str, url: str, kategori: str) -> str:
+    """Dönemi PDF METNİNDEN okur; başlık güvenilmez.
+
+    Ölçüm (2026-09-18): iki duyuru da "Eylül 2024 Ziyaretçi Sayıları"
+    başlığını taşıyor ama birinin içeriği Eylül 2025'e ait (referans
+    platform da Eylül 2024'ü boş, Eylül 2025'i 4.597.348 gösteriyor).
+    Başlığa güvenmek iki farklı ayı aynı anahtara yazıp "çelişen yinelenen
+    duyuru" hatası üretiyordu. İki kalıp ölçüldü: gövdede "<Ay> <Yıl>
+    ayında/ayı" ve (yeni şablonda) başlık satırında "<Ay> <Yıl>
+    <kategori>". Serbest ilk tarih eşleşmesi KULLANILMAZ: PDF'ler
+    yayım tarihini ("01 Temmuz 2025") ve geçen yıl karşılaştırmasını da
+    yazıyor, ilk eşleşme yanlış ayı verir.
+    """
+    for desen in (
+        rf"({_AY_DESENI})\s+(\d{{4}})\s+ay[ıi]",
+        rf"({_AY_DESENI})\s+(\d{{4}})\s+{kategori.split()[0]}",
+    ):
+        eslesme = re.search(desen, metin)
+        if eslesme is not None:
+            return _tarih(*eslesme.groups())
+    raise RuntimeError(
+        f"ebebek: '{kategori}' PDF içeriğinde dönem bulunamadı ({baslik}: {url})"
+    )
+
+
 def ziyaret_noktalari(session=None) -> dict[str, tuple[int, int]]:
     """(mağaza ziyaretçi, web ziyaret) çiftleri."""
     sonuc: dict[str, tuple[int, int]] = {}
     for baslik, url in duyuru_listesi(session):
-        eslesme = _ZIYARET_BASLIK.match(baslik)
-        if not eslesme:
+        if not _ZIYARET_BASLIK.match(baslik):
             continue
-        tarih = _tarih(*eslesme.groups())
         metin = _pdf_metni(url, session)
         magaza_eslesme = _MAGAZA_ZIYARETCI_DEGER.search(metin)
         web_eslesme = _WEB_ZIYARET_DEGER.search(metin)
         if not magaza_eslesme or not web_eslesme:
+            if (baslik, "ziyaret") in BOZUK_DUYURULAR:
+                continue  # kaynak tarafı dosya eşleme hatası; docstring'de belgeli
             raise RuntimeError(
                 f"ebebek: 'Ziyaretçi Sayısı' rakamları ayıklanamadı ({baslik}: {url}) "
                 "— PDF içeriği başlıkla uyuşmuyor olabilir"
             )
+        tarih = _icerik_donemi(metin, baslik, url, "Ziyaretçi Sayısı")
         deger = (_sayi(magaza_eslesme.group(1)), _sayi(web_eslesme.group(1)))
         _tekillestir(sonuc, tarih, deger, baslik, url, "Ziyaretçi Sayısı")
     if not sonuc:

@@ -245,11 +245,29 @@ def test_ziyaret_noktalari_iki_degeri_ayirir(monkeypatch):
     assert noktalar == {"2026-08-01": (4_992_875, 10_978_359)}
 
 
-def test_ziyaret_noktalari_baslikla_uyusmayan_icerikte_hata(monkeypatch):
-    """Regresyon: gerçek ebebek IR sitesinde 'Nisan 2025 Ziyaretçi
-    Sayıları' başlıklı duyurunun PDF'i yanlışlıkla Mağaza Sayısı içeriği
-    taşıyor — sessizce atlanmamalı, RuntimeError vermeli."""
-    kayitlar = [("Nisan 2025 Ziyaretçi Sayıları", "https://x/a.pdf")]
+def test_ziyaret_noktalari_bilinen_bozuk_duyuruyu_atlar(monkeypatch):
+    """Gerçek ebebek IR sitesinde "Nisan 2025 Ziyaretçi Sayıları" başlıklı
+    duyurunun PDF'i Mağaza Sayısı içeriği taşıyor. Bu TEK duyuru
+    `BOZUK_DUYURULAR`da açıkça listeli olduğu için atlanır — kaynak
+    tarafındaki bir dosya hatası 34 ayın tamamını düşürmemeli."""
+    kayitlar = [
+        ("Nisan 2025 Ziyaretçi Sayıları", "https://x/nisan.pdf"),
+        ("Ağustos 2026 Ziyaretçi Sayısı", "https://x/agustos.pdf"),
+    ]
+    metinler = {
+        "https://x/nisan.pdf": _NISAN_2025_YANLIS_ESLESEN_ICERIK,
+        "https://x/agustos.pdf": _ZIYARET_AGUSTOS_2026,
+    }
+    monkeypatch.setattr(ebebek, "duyuru_listesi", lambda session=None: kayitlar)
+    monkeypatch.setattr(ebebek, "_pdf_metni", lambda url, session=None: metinler[url])
+
+    assert ziyaret_noktalari() == {"2026-08-01": (4_992_875, 10_978_359)}
+
+
+def test_ziyaret_noktalari_listede_olmayan_uyusmazlikta_hata(monkeypatch):
+    """Listeye yazılmamış bir başlık/içerik uyuşmazlığı hâlâ hata verir:
+    istisna listesi açık tutulur, genel sessiz atlama yoktur."""
+    kayitlar = [("Mart 2025 Ziyaretçi Sayıları", "https://x/mart.pdf")]
     monkeypatch.setattr(ebebek, "duyuru_listesi", lambda session=None: kayitlar)
     monkeypatch.setattr(
         ebebek, "_pdf_metni", lambda url, session=None: _NISAN_2025_YANLIS_ESLESEN_ICERIK
