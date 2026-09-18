@@ -24007,3 +24007,597 @@
   freq: monthly
   monthly_agg: sum
   charts: [seasonality, level]
+
+- id: sanayi/kko-imalat-sanayi-geneli-mevsimsellikten-arindirilmis
+  title: "KKO · İmalat Sanayi Geneli (Mevsimsellikten Arındırılmış)"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO.MA
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-buyukluk-grubu-2
+  title: "KKO · Büyüklük Grubu 2"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.S2
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-buyukluk-grubu-3
+  title: "KKO · Büyüklük Grubu 3"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.S3
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-buyukluk-grubu-4
+  title: "KKO · Büyüklük Grubu 4"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.S4
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-ara-mallari
+  title: "KKO · Ara Malları"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.INTM
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-tuketim-mallari
+  title: "KKO · Tüketim Malları"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.CONS
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-yatirim-mallari
+  title: "KKO · Yatırım Malları"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.INVE
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-dayanikli-tuketim
+  title: "KKO · Dayanıklı Tüketim"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.CDUR
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-dayaniksiz-tuketim
+  title: "KKO · Dayanıksız Tüketim"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.CNDU
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-gida-ve-icecek
+  title: "KKO · Gıda ve İçecek"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.FOBE
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-gida-urunleri-imalati
+  title: "KKO · Gıda Ürünleri İmalatı"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.10
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-icecek-imalati
+  title: "KKO · İçecek İmalatı"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.11
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-tutun-urunleri-imalati
+  title: "KKO · Tütün Ürünleri İmalatı"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.12
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-tekstil
+  title: "KKO · Tekstil"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.13
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-giyim-esyasi
+  title: "KKO · Giyim Eşyası"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.14
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-deri-ve-ilgili-urunler
+  title: "KKO · Deri ve İlgili Ürünler"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.15
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-agac-ve-mantar-urunleri
+  title: "KKO · Ağaç ve Mantar Ürünleri"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.16
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-kagit-ve-kagit-urunleri
+  title: "KKO · Kağıt ve Kağıt Ürünleri"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.17
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-basim-ve-cogaltim
+  title: "KKO · Basım ve Çoğaltım"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.18
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-kok-ve-rafine-petrol
+  title: "KKO · Kok ve Rafine Petrol"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.19
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-kimyasal-urunler
+  title: "KKO · Kimyasal Ürünler"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.20
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-eczacilik-urunleri
+  title: "KKO · Eczacılık Ürünleri"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.21
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-kaucuk-ve-plastik
+  title: "KKO · Kauçuk ve Plastik"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.22
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-metalik-olmayan-mineraller
+  title: "KKO · Metalik Olmayan Mineraller"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.23
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-ana-metal
+  title: "KKO · Ana Metal"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.24
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-fabrikasyon-metal-urunler
+  title: "KKO · Fabrikasyon Metal Ürünler"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.25
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-elektronik-ve-optik
+  title: "KKO · Elektronik ve Optik"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.26
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-elektrikli-techizat
+  title: "KKO · Elektrikli Teçhizat"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.27
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-makine-ve-ekipman
+  title: "KKO · Makine ve Ekipman"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.28
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-motorlu-kara-tasitlari
+  title: "KKO · Motorlu Kara Taşıtları"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.29
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-diger-ulasim-araclari
+  title: "KKO · Diğer Ulaşım Araçları"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.30
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-mobilya-imalati
+  title: "KKO · Mobilya İmalatı"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.31
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-diger-imalatlar
+  title: "KKO · Diğer İmalatlar"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.32
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: sanayi/kko-makine-ve-ekipman-onarimi
+  title: "KKO · Makine ve Ekipman Onarımı"
+  category: sanayi
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKO2.IS.33
+  evds_frequency: "5"
+  unit: "%"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-alkollu-icecekler-ve-tutun
+  title: "TÜFE · Alkollü İçecekler ve Tütün"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.02
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-giyim-ve-ayakkabi
+  title: "TÜFE · Giyim ve Ayakkabı"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.03
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-konut-su-elektrik-gaz
+  title: "TÜFE · Konut, Su, Elektrik, Gaz"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.04
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-ev-esyasi-ve-rutin-bakim
+  title: "TÜFE · Ev Eşyası ve Rutin Bakım"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.05
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-saglik
+  title: "TÜFE · Sağlık"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.06
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-ulastirma
+  title: "TÜFE · Ulaştırma"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.07
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-haberlesme
+  title: "TÜFE · Haberleşme"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.08
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-eglence-ve-kultur
+  title: "TÜFE · Eğlence ve Kültür"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.09
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-egitim
+  title: "TÜFE · Eğitim"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.10
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-lokanta-ve-oteller
+  title: "TÜFE · Lokanta ve Oteller"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.11
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: enflasyon/tufe-cesitli-mal-ve-hizmetler
+  title: "TÜFE · Çeşitli Mal ve Hizmetler"
+  category: enflasyon
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TUKFIY2025.12
+  evds_frequency: "5"
+  unit: "Endeks (2025=100)"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/kfe-ankara
+  title: "KFE · Ankara"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KFE.TR51
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/kfe-izmir
+  title: "KFE · İzmir"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KFE.TR31
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/ykke-istanbul
+  title: "YKKE · İstanbul"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.YKKE.TR10
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/ykke-ankara
+  title: "YKKE · Ankara"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.YKKE.TR51
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/ykke-izmir
+  title: "YKKE · İzmir"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.YKKE.TR31
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/ykke-bursa-eskisehir
+  title: "YKKE · Bursa/Eskişehir"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.YKKE.TR41
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/ykke-kocaeli-bolgesi
+  title: "YKKE · Kocaeli Bölgesi"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.YKKE.TR42
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/ykke-antalya-bolgesi
+  title: "YKKE · Antalya Bölgesi"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.YKKE.TR61
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: insaat/ykke-konya-karaman
+  title: "YKKE · Konya/Karaman"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.YKKE.TR52
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
