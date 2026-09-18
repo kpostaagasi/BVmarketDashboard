@@ -33921,3 +33921,203 @@
   freq: monthly
   monthly_agg: sum
   charts: [seasonality, level]
+- id: havacilik/pgsus-toplam-misafir
+  title: Pegasus Toplam Milyon Misafir (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Toplam"
+  pgsus_olcut: misafir
+  unit: "Milyon misafir"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-toplam-konma
+  title: Pegasus Toplam Konma (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Toplam"
+  pgsus_olcut: konma
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-toplam-koltuk
+  title: Pegasus Toplam Koltuk Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Toplam"
+  pgsus_olcut: koltuk
+  unit: "Milyon koltuk"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-toplam-doluluk
+  title: Pegasus Toplam Doluluk Oranı (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Toplam"
+  pgsus_olcut: doluluk
+  unit: "%"
+  freq: monthly
+  olcek: 100
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-toplam-ask
+  title: Pegasus Toplam ASK (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Toplam"
+  pgsus_olcut: ask
+  unit: "Milyon km"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-toplam-konma-basina-misafir
+  title: Pegasus Toplam Konma Başına Misafir (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Toplam"
+  pgsus_olcut: konma-basina-misafir
+  unit: "Misafir"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-ic-hat-misafir
+  title: Pegasus İç Hat Milyon Misafir (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "İç Hat"
+  pgsus_olcut: misafir
+  unit: "Milyon misafir"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-ic-hat-konma
+  title: Pegasus İç Hat Konma (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "İç Hat"
+  pgsus_olcut: konma
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-ic-hat-koltuk
+  title: Pegasus İç Hat Koltuk Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "İç Hat"
+  pgsus_olcut: koltuk
+  unit: "Milyon koltuk"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-ic-hat-doluluk
+  title: Pegasus İç Hat Doluluk Oranı (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "İç Hat"
+  pgsus_olcut: doluluk
+  unit: "%"
+  freq: monthly
+  olcek: 100
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-ic-hat-ask
+  title: Pegasus İç Hat ASK (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "İç Hat"
+  pgsus_olcut: ask
+  unit: "Milyon km"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-ic-hat-konma-basina-misafir
+  title: Pegasus İç Hat Konma Başına Misafir (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "İç Hat"
+  pgsus_olcut: konma-basina-misafir
+  unit: "Misafir"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-dis-hat-misafir
+  title: Pegasus Dış Hat Milyon Misafir (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Dış Hat"
+  pgsus_olcut: misafir
+  unit: "Milyon misafir"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-dis-hat-konma
+  title: Pegasus Dış Hat Konma (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Dış Hat"
+  pgsus_olcut: konma
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-dis-hat-koltuk
+  title: Pegasus Dış Hat Koltuk Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Dış Hat"
+  pgsus_olcut: koltuk
+  unit: "Milyon koltuk"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-dis-hat-doluluk
+  title: Pegasus Dış Hat Doluluk Oranı (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Dış Hat"
+  pgsus_olcut: doluluk
+  unit: "%"
+  freq: monthly
+  olcek: 100
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-dis-hat-ask
+  title: Pegasus Dış Hat ASK (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Dış Hat"
+  pgsus_olcut: ask
+  unit: "Milyon km"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/pgsus-dis-hat-konma-basina-misafir
+  title: Pegasus Dış Hat Konma Başına Misafir (Aylık)
+  category: havacilik
+  kaynak: { name: Pegasus Yatırımcı İlişkileri, url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/trafik-bilgileri" }
+  kaynak_tipi: pgsus
+  pgsus_segment: "Dış Hat"
+  pgsus_olcut: konma-basina-misafir
+  unit: "Misafir"
+  freq: monthly
+  charts: [seasonality, level]

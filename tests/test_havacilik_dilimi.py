@@ -26,8 +26,12 @@ YENI_HAVALIMANLARI = {
 
 def test_havacilik_kategorisi_14_eurocontrol_serisi_barindirir():
     """Referans aviation_airports.html 9 havalimanı + 3 havayolu + Türkiye
-    + SunExpress gösterir; katalogda 14 varlık kartı olmalı."""
-    havadaki = seri_listele("havacilik")
+    + SunExpress gösterir; katalogda 14 EUROCONTROL kartı olmalı.
+
+    Kategori sayısı değil KAYNAK sayısı pinlenir: aynı kategoriye sonradan
+    THY/Pegasus trafik serileri eklendi ve toplam sayı sözleşmeyi taşımıyor.
+    """
+    havadaki = [s for s in seri_listele("havacilik") if s.kaynak_tipi == "eurocontrol"]
     assert len(havadaki) == 14
 
 
