@@ -679,13 +679,20 @@ def test_evds_serisi_osd_firma_tasiyamaz():
         _dogrula_ham(_ham_seri(osd_firma="FORD OTOSAN"))
 
 
-def test_otomotiv_kategorisi_on_uc_seri_icerir():
+def test_otomotiv_serileri_kaynak_alanlarini_tasir():
+    """Otomotiv ailesi iki kaynaktan beslenir: OSD üretim/ihracat bülteni ve
+    ODMD perakende satış raporu. Sayı değil sözleşme pinlenir — yeni marka
+    eklenmesi testi kırmamalı, eksik zorunlu alan kırmalı."""
     from core.catalog import seri_listele
 
     seriler = seri_listele("otomotiv")
-    assert len(seriler) == 13
-    assert all(s.kaynak_tipi == "osd" for s in seriler)
-    assert all(s.osd_firma for s in seriler)
+    assert seriler
+    assert {s.kaynak_tipi for s in seriler} <= {"osd", "odmd"}
+    for s in seriler:
+        if s.kaynak_tipi == "osd":
+            assert s.osd_firma, s.id
+        else:
+            assert s.odmd_marka and s.odmd_kategori, s.id
 
 
 def test_otomotiv_panosu_portfoy_firmalarini_gosterir():

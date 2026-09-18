@@ -37130,3 +37130,1156 @@
   charts:
   - seasonality
   - level
+
+- id: otomotiv/toaso-stellantis-toplam
+  title: TOASO+Stellantis Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - FIAT
+  - PEUGEOT
+  - CITROEN
+  - OPEL
+  - JEEP
+  - ALFA ROMEO
+  - DS
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-stellantis-dagitim
+  title: TOASO Stellantis Dağıtım Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - PEUGEOT
+  - CITROEN
+  - OPEL
+  - JEEP
+  - ALFA ROMEO
+  - DS
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-otomobil-toplam
+  title: TOASO+Stellantis Perakende Otomobil Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - FIAT
+  - PEUGEOT
+  - CITROEN
+  - OPEL
+  - JEEP
+  - ALFA ROMEO
+  - DS
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-hafif-ticari-toplam
+  title: TOASO+Stellantis Perakende Hafif Ticari Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - FIAT
+  - PEUGEOT
+  - CITROEN
+  - OPEL
+  odmd_kategori: hafif_ticari
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-fiat-toplam
+  title: Fiat Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - FIAT
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-fiat-otomobil
+  title: Fiat Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - FIAT
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-fiat-hafif-ticari
+  title: Fiat Perakende Hafif Ticari
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - FIAT
+  odmd_kategori: hafif_ticari
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-peugeot-toplam
+  title: Peugeot Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - PEUGEOT
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-peugeot-otomobil
+  title: Peugeot Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - PEUGEOT
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-peugeot-hafif-ticari
+  title: Peugeot Perakende Hafif Ticari
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - PEUGEOT
+  odmd_kategori: hafif_ticari
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-citroen-toplam
+  title: Citroën Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - CITROEN
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-citroen-otomobil
+  title: Citroën Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - CITROEN
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-citroen-hafif-ticari
+  title: Citroën Perakende Hafif Ticari
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - CITROEN
+  odmd_kategori: hafif_ticari
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-opel-toplam
+  title: Opel Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - OPEL
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-opel-otomobil
+  title: Opel Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - OPEL
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-opel-hafif-ticari
+  title: Opel Perakende Hafif Ticari
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - OPEL
+  odmd_kategori: hafif_ticari
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-jeep-otomobil
+  title: Jeep Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - JEEP
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-alfa-romeo-otomobil
+  title: Alfa Romeo Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - ALFA ROMEO
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-ds-otomobil
+  title: DS Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - DS
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/toaso-bursa-ihracat-toplam
+  title: Tofaş Bursa Fabrika Toplam İhracat (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: TOFAŞ
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_veri_tipi: ihracat
+- id: otomotiv/toaso-fiat-egea-uretim
+  title: Fiat Egea Aylık Üretim (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: TOFAŞ
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: OTOMOBİL
+- id: otomotiv/toaso-fiat-egea-ihracat
+  title: Fiat Egea Aylık İhracat (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: TOFAŞ
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: OTOMOBİL
+  osd_veri_tipi: ihracat
+- id: otomotiv/toaso-fiat-professional-uretim
+  title: Fiat Professional Aylık Üretim (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: TOFAŞ
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYONET
+- id: otomotiv/toaso-fiat-professional-ihracat
+  title: Fiat Professional Aylık İhracat (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: TOFAŞ
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYONET
+  osd_veri_tipi: ihracat
+- id: otomotiv/doas-vwgroup-toplam
+  title: DOAS VW Group Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - VOLKSWAGEN
+  - AUDI
+  - CUPRA
+  - PORSCHE
+  - SEAT
+  - BENTLEY
+  - LAMBORGHINI
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  odmd_yarim_marka:
+  - SKODA
+- id: otomotiv/doas-vwgroup-otomobil
+  title: DOAS VW Group Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - VOLKSWAGEN
+  - AUDI
+  - CUPRA
+  - PORSCHE
+  - SEAT
+  - BENTLEY
+  - LAMBORGHINI
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  odmd_yarim_marka:
+  - SKODA
+- id: otomotiv/doas-vwgroup-hafif-ticari
+  title: DOAS VW Group Perakende Hafif Ticari
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - VOLKSWAGEN
+  odmd_kategori: hafif_ticari
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-volkswagen-toplam
+  title: Volkswagen Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - VOLKSWAGEN
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-volkswagen-otomobil
+  title: Volkswagen Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - VOLKSWAGEN
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-volkswagen-hafif-ticari
+  title: Volkswagen Perakende Hafif Ticari
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - VOLKSWAGEN
+  odmd_kategori: hafif_ticari
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-audi-otomobil
+  title: Audi Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - AUDI
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-skoda-toplam
+  title: Škoda Perakende Toplam (Doğuş payı ½, ölçeklendi)
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - SKODA
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  olcek: 0.5
+- id: otomotiv/doas-cupra-otomobil
+  title: Cupra Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - CUPRA
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-porsche-otomobil
+  title: Porsche Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - PORSCHE
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-seat-otomobil
+  title: Seat Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - SEAT
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-bentley-otomobil
+  title: Bentley Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - BENTLEY
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/doas-lamborghini-otomobil
+  title: Lamborghini Perakende Otomobil
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - LAMBORGHINI
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/froto-turkiye-ihracat-toplam
+  title: Ford Otosan Türkiye Toplam İhracat (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: FORD OTOSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_veri_tipi: ihracat
+- id: otomotiv/froto-turkiye-uretim-minibus
+  title: Ford Otosan Türkiye Üretim - Minibüs (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: FORD OTOSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİNİBÜS
+- id: otomotiv/froto-turkiye-uretim-kamyonet
+  title: Ford Otosan Türkiye Üretim - Kamyonet (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: FORD OTOSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYONET
+- id: otomotiv/froto-turkiye-uretim-kamyon
+  title: Ford Otosan Türkiye Üretim - Kamyon ve Çekici (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: FORD OTOSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: B.KAMYON
+- id: otomotiv/froto-turkiye-ihracat-minibus
+  title: Ford Otosan Türkiye İhracat - Minibüs (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: FORD OTOSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİNİBÜS
+  osd_veri_tipi: ihracat
+- id: otomotiv/froto-turkiye-ihracat-kamyonet
+  title: Ford Otosan Türkiye İhracat - Kamyonet (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: FORD OTOSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYONET
+  osd_veri_tipi: ihracat
+- id: otomotiv/froto-turkiye-ihracat-kamyon
+  title: Ford Otosan Türkiye İhracat - Kamyon ve Çekici (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: FORD OTOSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYON
+  osd_veri_tipi: ihracat
+- id: otomotiv/froto-perakende-toplam
+  title: Ford Perakende Toplam
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - FORD
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/froto-perakende-binek
+  title: Ford Perakende Binek Araç
+  category: otomotiv
+  kaynak:
+    name: ODMD
+    url: https://www.odmd.org.tr
+  kaynak_tipi: odmd
+  odmd_marka:
+  - FORD
+  odmd_kategori: otomobil
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+- id: otomotiv/asuzu-hafif-kamyon-uretim
+  title: Anadolu Isuzu Hafif Kamyon Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: K.KAMYON
+- id: otomotiv/asuzu-kamyonet-uretim
+  title: Anadolu Isuzu Kamyonet Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYONET
+- id: otomotiv/asuzu-otobus-uretim
+  title: Anadolu Isuzu Otobüs Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: OTOBÜS
+- id: otomotiv/asuzu-midibus-uretim
+  title: Anadolu Isuzu Midibüs Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİDİBÜS
+- id: otomotiv/asuzu-toplam-ihracat
+  title: Anadolu Isuzu Toplam İhracat (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_veri_tipi: ihracat
+- id: otomotiv/asuzu-hafif-kamyon-ihracat
+  title: Anadolu Isuzu Hafif Kamyon İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYON
+  osd_veri_tipi: ihracat
+- id: otomotiv/asuzu-kamyonet-ihracat
+  title: Anadolu Isuzu Kamyonet İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYONET
+  osd_veri_tipi: ihracat
+- id: otomotiv/asuzu-otobus-ihracat
+  title: Anadolu Isuzu Otobüs İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: OTOBÜS
+  osd_veri_tipi: ihracat
+- id: otomotiv/asuzu-midibus-ihracat
+  title: Anadolu Isuzu Midibüs İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: A.I.O.S.
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİDİBÜS
+  osd_veri_tipi: ihracat
+- id: otomotiv/otokar-kamyon-uretim
+  title: Otokar Kamyon Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: K.KAMYON
+- id: otomotiv/otokar-otobus-uretim
+  title: Otokar Otobüs Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: OTOBÜS
+- id: otomotiv/otokar-midibus-uretim
+  title: Otokar Midibüs Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİDİBÜS
+- id: otomotiv/otokar-kamyonet-uretim
+  title: Otokar Kamyonet Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYONET
+- id: otomotiv/otokar-toplam-ihracat
+  title: Otokar Toplam İhracat (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_veri_tipi: ihracat
+- id: otomotiv/otokar-kamyon-ihracat
+  title: Otokar Kamyon İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYON
+  osd_veri_tipi: ihracat
+- id: otomotiv/otokar-otobus-ihracat
+  title: Otokar Otobüs İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: OTOBÜS
+  osd_veri_tipi: ihracat
+- id: otomotiv/otokar-midibus-ihracat
+  title: Otokar Midibüs İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİDİBÜS
+  osd_veri_tipi: ihracat
+- id: otomotiv/otokar-kamyonet-ihracat
+  title: Otokar Kamyonet İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: OTOKAR
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: KAMYONET
+  osd_veri_tipi: ihracat
+- id: otomotiv/karsan-otobus-uretim
+  title: Karsan Otobüs Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: KARSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: OTOBÜS
+- id: otomotiv/karsan-minibus-uretim
+  title: Karsan Minibüs Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: KARSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİNİBÜS
+- id: otomotiv/karsan-midibus-uretim
+  title: Karsan Midibüs Üretimi (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: KARSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİDİBÜS
+- id: otomotiv/karsan-toplam-ihracat
+  title: Karsan Toplam İhracat (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: KARSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_veri_tipi: ihracat
+- id: otomotiv/karsan-otobus-ihracat
+  title: Karsan Otobüs İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: KARSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: OTOBÜS
+  osd_veri_tipi: ihracat
+- id: otomotiv/karsan-minibus-ihracat
+  title: Karsan Minibüs İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: KARSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİNİBÜS
+  osd_veri_tipi: ihracat
+- id: otomotiv/karsan-midibus-ihracat
+  title: Karsan Midibüs İhracatı (OSD)
+  category: otomotiv
+  kaynak:
+    name: OSD
+    url: https://www.osd.org.tr
+  kaynak_tipi: osd
+  osd_firma: KARSAN
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts:
+  - seasonality
+  - level
+  osd_arac_tipi: MİDİBÜS
+  osd_veri_tipi: ihracat
