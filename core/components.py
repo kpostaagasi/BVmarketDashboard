@@ -11,6 +11,7 @@ import streamlit as st
 from core.catalog import SIKLIK_ETIKETLERI, Seri
 from core.charts import (
     fon_donem_figuru,
+    karsilastirma_figuru,
     gunluk_mevsimsellik_figuru,
     hareketli_ortalama_uygula,
     kompozisyon_figuru,
@@ -253,6 +254,33 @@ def kompozisyon_karti(seri: Seri) -> None:
             st.dataframe(gosterilecek, width="stretch")
 
 
+ONS_GRAM = 31.1034768
+
+
+def _yuze_endeksle(seri: pd.Series) -> pd.Series:
+    return seri / seri.iloc[0] * 100
+
+
+def _fon_karsilastirma(fiyat: pd.Series) -> pd.DataFrame:
+    """Fon ile BIST 100, Dolar/TL ve gram altını aynı pencerede endeksler.
+
+    Gram altın katalogda yok: ons altın (USD) × USD/TRY ÷ 31,1035 ile
+    türetilir — iki seri de günlük ve katalogda mevcut.
+    """
+    olcutler = {"Fon": fiyat}
+    try:
+        bist = load_series("ekonomi-makro/bist100")["value"]
+        usd = load_series("ekonomi-makro/usd-try")["value"]
+        ons = load_series("emtia-metaller/altin")["value"]
+    except VeriYokHatasi:
+        return pd.DataFrame(olcutler).pipe(lambda d: d.assign(Fon=_yuze_endeksle(d["Fon"])))
+    gram_altin = (ons * usd / ONS_GRAM).dropna()
+    for ad, seri in (("BIST 100", bist), ("Dolar/TL", usd), ("Gram Altın", gram_altin)):
+        # Fonun yayın günlerine hizala: ölçütün tatil günü fonun gününü silmesin.
+        olcutler[ad] = seri.reindex(fiyat.index, method="ffill")
+    return pd.DataFrame(olcutler).dropna().apply(_yuze_endeksle)
+
+
 def fon_karti(seri: Seri) -> None:
     """Fon fiyatı, dönem sonu büyüklüğü ve hesap değişimlerini gösterir."""
     st.subheader(seri.title)
@@ -303,7 +331,13 @@ def fon_karti(seri: Seri) -> None:
     dusus = (fiyat / fiyat.cummax() - 1) * 100
     st.plotly_chart(seviye_figuru(dusus.to_frame("value"), "%", "daily"),
                     width="stretch", key=f"{seri.id}-dusus")
-    st.info("BIST 100, Dolar/TL ve gram altın karşılaştırması henüz kaynak bazında doğrulanmadı.")
+    st.markdown("**Karşılaştırma (100'e endeksli)**")
+    st.caption(
+        "Gram altın ons altın × USD/TRY ÷ 31,1035 ile türetilir; ölçütler fonun "
+        "yayın günlerine ileri doldurma ile hizalanır."
+    )
+    st.plotly_chart(karsilastirma_figuru(_fon_karsilastirma(fiyat), "Endeks (ilk gün=100)"),
+                    width="stretch", key=f"{seri.id}-karsilastirma")
     with st.expander("Fon verisi"):
         st.dataframe(df.rename(columns={"fiyat": "Fiyat (TL)", "pay": "Pay",
                      "hesap": "Hesap", "buyukluk": "Büyüklük (TL)"}), width="stretch")

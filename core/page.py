@@ -21,7 +21,7 @@ from core.catalog import (
     seri_getir,
     seri_listele,
 )
-from core.components import grafik_karti, kompozisyon_karti, kpi_satiri
+from core.components import fon_karti, grafik_karti, kompozisyon_karti, kpi_satiri
 from core.stats import GORUNUMLER, VARSAYILAN
 from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
 
@@ -123,9 +123,6 @@ def _izgara_ciz(seriler: list[Seri], gorunum: str, sutun_sayisi: int = 2) -> Non
     Tam genişlik kart aynı zamanda doğru hiyerarşi: sayfanın baş aktörü
     şirketin kendi verisi, bağlam serileri yanında değil altında durur.
     """
-    fonlar = [seri for seri in seriler if "fon" in seri.charts]
-    for seri in fonlar:
-        grafik_karti(seri, gorunum)
     seriler = [seri for seri in seriler if "fon" not in seri.charts]
     if not seriler:
         return
@@ -269,6 +266,31 @@ def genel_bakis_yap(
                 st.caption(f"{len(seri_listele(kategori.slug))} seri")
 
     return sayfa
+
+
+def fon_sayfasi() -> None:
+    """Fon sayfası: 958 fonun kartı tek sayfada yığılmaz, fon seçilir.
+
+    Referans platform fon başına ayrı sayfa yayımlıyor; burada aynı kart
+    kümesi tek sayfada fon seçiciyle veriliyor — 958 menü girdisi yerine
+    yazarak arama, `arama_sayfasi` ile aynı desen.
+    """
+    fonlar = [seri for seri in seri_listele() if "fon" in seri.charts]
+    st.title("Fonlar")
+    st.caption(f"{len(fonlar)} TEFAS fonu · yazarak süzün")
+    if not fonlar:
+        st.warning("Katalogda fon serisi yok")
+        return
+    indeks = {seri.id: seri for seri in fonlar}
+    secim = st.selectbox(
+        "Fon",
+        list(indeks),
+        format_func=lambda seri_id: indeks[seri_id].title,
+        key="fon_secim",
+        label_visibility="collapsed",
+    )
+    st.divider()
+    fon_karti(indeks[secim])
 
 
 def veri_takvimi_sayfasi() -> None:

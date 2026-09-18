@@ -312,3 +312,25 @@ def fon_donem_figuru(degerler: pd.Series, birim: str) -> go.Figure:
     fig.update_xaxes(tickformat="%m.%Y")
     fig.update_yaxes(rangemode="tozero")
     return fig
+
+
+def karsilastirma_figuru(df: pd.DataFrame, birim: str) -> go.Figure:
+    """Fon ile ölçütleri aynı eksende: ilk gün 100'e endeksli çizgiler.
+
+    `kompozisyon_figuru` renkleri grup ADINA `RENKLER["kategorik"]`ten
+    seçer; o palet elektrik kaynak gruplarına aittir ve burada KeyError
+    verir. Ölçüt sayısı sabit (fon + üç ölçüt), bu yüzden `seri` paleti
+    artı vurgu rengi yeterli.
+    """
+    renkler = [RENKLER["vurgu"], *RENKLER["seri"]]
+    fig = go.Figure()
+    for sira, sutun in enumerate(df.columns):
+        fig.add_trace(go.Scatter(
+            x=list(df.index), y=list(df[sutun]), name=sutun, mode="lines",
+            line={"color": renkler[sira % len(renkler)],
+                  "width": 2.5 if sira == 0 else 1.5},
+            hovertemplate=f"{sutun}: %{{y:,.1f}}<extra></extra>",
+        ))
+    _temayi_uygula(fig, birim)
+    fig.update_xaxes(tickformat="%m.%Y")
+    return fig
