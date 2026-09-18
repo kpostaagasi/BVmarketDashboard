@@ -34121,3 +34121,173 @@
   unit: "Misafir"
   freq: monthly
   charts: [seasonality, level]
+- id: havacilik/thyao-toplam-konma
+  title: THY Toplam Konma Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Toplam"
+  thy_olcut: konma
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-toplam-ask
+  title: THY Toplam Arzedilen Koltuk Km (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Toplam"
+  thy_olcut: ask
+  unit: "Milyon km"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-toplam-doluluk
+  title: THY Toplam Yolcu Doluluk Oranı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Toplam"
+  thy_olcut: doluluk
+  unit: "%"
+  freq: monthly
+  olcek: 100
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-toplam-yolcu
+  title: THY Toplam Yolcu Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Toplam"
+  thy_olcut: yolcu
+  unit: "Kişi"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-toplam-kargo
+  title: THY Toplam Kargo + Posta (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Toplam"
+  thy_olcut: kargo
+  unit: "Ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-ici-konma
+  title: THY Yurt İçi Konma Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt İçi"
+  thy_olcut: konma
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-ici-ask
+  title: THY Yurt İçi Arzedilen Koltuk Km (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt İçi"
+  thy_olcut: ask
+  unit: "Milyon km"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-ici-doluluk
+  title: THY Yurt İçi Yolcu Doluluk Oranı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt İçi"
+  thy_olcut: doluluk
+  unit: "%"
+  freq: monthly
+  olcek: 100
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-ici-yolcu
+  title: THY Yurt İçi Yolcu Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt İçi"
+  thy_olcut: yolcu
+  unit: "Kişi"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-ici-kargo
+  title: THY Yurt İçi Kargo + Posta (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt İçi"
+  thy_olcut: kargo
+  unit: "Ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-disi-konma
+  title: THY Yurt Dışı Konma Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt Dışı"
+  thy_olcut: konma
+  unit: "Adet"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-disi-ask
+  title: THY Yurt Dışı Arzedilen Koltuk Km (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt Dışı"
+  thy_olcut: ask
+  unit: "Milyon km"
+  freq: monthly
+  olcek: 0.001
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-disi-doluluk
+  title: THY Yurt Dışı Yolcu Doluluk Oranı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt Dışı"
+  thy_olcut: doluluk
+  unit: "%"
+  freq: monthly
+  olcek: 100
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-disi-yolcu
+  title: THY Yurt Dışı Yolcu Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt Dışı"
+  thy_olcut: yolcu
+  unit: "Kişi"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: havacilik/thyao-yurt-disi-kargo
+  title: THY Yurt Dışı Kargo + Posta (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Yurt Dışı"
+  thy_olcut: kargo
+  unit: "Ton"
+  freq: monthly
+  charts: [seasonality, level]

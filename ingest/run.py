@@ -18,7 +18,7 @@ from urllib3.util.retry import Retry
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import bddk, epias, eurocontrol, evds, fred, osd, pgsus, tefas, tim, yahoo
+from ingest import bddk, epias, eurocontrol, evds, fred, osd, pgsus, tefas, thy, tim, yahoo
 
 # Koşu başına tek oturum tüm adaptörlere geçiyor; retry politikası bu yüzden
 # tek yerde tanımlanabiliyor (devredilen iş #1). Ölçüm: 111 serilik bir tam
@@ -66,6 +66,7 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          ec_onbellek: dict | None = None,
          tim_il_onbellek: dict | None = None,
          tim_ulke_onbellek: dict | None = None,
+         thy_onbellek: dict | None = None,
          pgsus_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
@@ -97,6 +98,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = fred.seri_cek(seri, session=oturum)
     elif seri.kaynak_tipi == "pgsus":
         df = pgsus.seri_cek(seri, onbellek=pgsus_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "thy":
+        df = thy.seri_cek(seri, onbellek=thy_onbellek, session=oturum)
     else:
         raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
     return olcekle(df, seri.olcek)
@@ -171,6 +174,9 @@ def main() -> int:
     # Pegasus tek dosyada 2019'dan bugüne tüm geçmişi taşır; 18 seri (3
     # segment × 6 ölçüt) aynı dosyayı paylaşır (bkz. `ingest.pgsus.seri_cek`).
     pgsus_onbellek: dict = {}
+    # THY 15 seri (3 segment × 5 ölçüt) aynı ~5 dosyalık kümeyi paylaşır
+    # (bkz. `ingest.thy.seri_cek`).
+    thy_onbellek: dict = {}
 
     with requests.Session() as oturum:
         oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
@@ -198,7 +204,7 @@ def main() -> int:
                     seri, api_key, tgt, oturum,
                     epias_onbellek, osd_onbellek, tim_onbellek, bddk_onbellek,
                     tefas_onbellek, ec_onbellek, tim_il_onbellek, tim_ulke_onbellek,
-                    pgsus_onbellek,
+                    thy_onbellek, pgsus_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")

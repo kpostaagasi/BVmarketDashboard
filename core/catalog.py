@@ -23,7 +23,7 @@ GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition",
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "tim_il", "tim_ulke", "bddk",
-    "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus",
+    "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus", "thy",
 }
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
@@ -37,6 +37,9 @@ GECERLI_PGSUS_SEGMENTLERI = {"Toplam", "İç Hat", "Dış Hat"}
 GECERLI_PGSUS_OLCUTLERI = {
     "misafir", "konma", "koltuk", "doluluk", "ask", "konma-basina-misafir",
 }
+# THY trafik bülteninin iki ekseni: yolcu segmenti ve ölçüt.
+GECERLI_THY_SEGMENTLERI = {"Toplam", "Yurt İçi", "Yurt Dışı"}
+GECERLI_THY_OLCUTLERI = {"konma", "ask", "doluluk", "yolcu", "kargo"}
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
 # listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
@@ -96,6 +99,10 @@ KAYNAK_ALANLARI = {
     },
     "pgsus": {
         "zorunlu": ("pgsus_segment", "pgsus_olcut"),
+        "istege_bagli": ("start_date",),
+    },
+    "thy": {
+        "zorunlu": ("thy_segment", "thy_olcut"),
         "istege_bagli": ("start_date",),
     },
 }
@@ -187,6 +194,8 @@ class Seri:
     fred_code: str | None = None
     pgsus_segment: str | None = None
     pgsus_olcut: str | None = None
+    thy_segment: str | None = None
+    thy_olcut: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -353,6 +362,8 @@ def serileri_yukle() -> tuple[Seri, ...]:
             fred_code=ham.get("fred_code"),
             pgsus_segment=ham.get("pgsus_segment"),
             pgsus_olcut=ham.get("pgsus_olcut"),
+            thy_segment=ham.get("thy_segment"),
+            thy_olcut=ham.get("thy_olcut"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -456,6 +467,17 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             raise KatalogHatasi(
                 f"{seri.id}: geçersiz pgsus_olcut '{seri.pgsus_olcut}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_PGSUS_OLCUTLERI))})"
+            )
+    if seri.kaynak_tipi == "thy":
+        if seri.thy_segment not in GECERLI_THY_SEGMENTLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz thy_segment '{seri.thy_segment}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_THY_SEGMENTLERI))})"
+            )
+        if seri.thy_olcut not in GECERLI_THY_OLCUTLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz thy_olcut '{seri.thy_olcut}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_THY_OLCUTLERI))})"
             )
     if seri.kaynak_tipi in {"tefas", "tefas_fon"}:
         # Yazım hatası adaptörün derinliklerinde KeyError'a dönüşmesin.
