@@ -12,6 +12,7 @@ import os
 import sys
 from datetime import date
 
+import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -77,7 +78,12 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
     elif seri.kaynak_tipi == "yahoo":
         df = yahoo.seri_cek(seri, session=oturum)
     elif seri.kaynak_tipi == "epias":
-        df = epias.seri_cek(seri, tgt, session=oturum, onbellek=epias_onbellek)
+        if seri.epias_ucu == "baraj-doluluk":
+            df = epias.baraj_doluluk_cek(
+                seri, tgt, session=oturum, onbellek=epias_onbellek,
+            )
+        else:
+            df = epias.seri_cek(seri, tgt, session=oturum, onbellek=epias_onbellek)
     elif seri.kaynak_tipi == "osd":
         df = osd.seri_cek(seri, onbellek=osd_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tim":
@@ -115,8 +121,24 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
 
 
 def seriyi_yaz(seri: Seri, df) -> int:
+    """Tam üzerine yazar; yalnızca anlık-görüntü kaynakları BİRİKTİRİR.
+
+    Kural: CSV'ler her koşuda baştan yazılır (revizyonlar yakalanmalı).
+    Tek istisna EPİAŞ baraj doluluğu: uç `date` alanını yok sayıp yalnızca
+    BUGÜNÜN anlık görüntüsünü döndürüyor (canlı ölçüldü, bkz.
+    `epias.baraj_doluluk_cek`), yani geriye dönük çekim mümkün değil.
+    Üzerine yazmak her koşuda geçmişi silerdi; bu yüzden mevcut satırlar
+    korunur, aynı günün değeri yenisiyle güncellenir.
+    """
     yol = seri_yolu(seri.id)
     yol.parent.mkdir(parents=True, exist_ok=True)
+    if seri.epias_ucu == "baraj-doluluk" and yol.exists():
+        df = (
+            pd.concat([pd.read_csv(yol), df], ignore_index=True)
+            .drop_duplicates("date", keep="last")
+            .sort_values("date")
+            .reset_index(drop=True)
+        )
     if seri.kaynak_tipi == "tefas_fon":
         df.to_csv(yol, index=False)
     else:

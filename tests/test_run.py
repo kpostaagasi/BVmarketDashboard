@@ -25,6 +25,7 @@ def tum_adaptorleri_stubla(monkeypatch, haric=()):
         (run.bddk, "seri_cek"), (run.tefas, "seri_cek"),
         (run.tefas, "fon_tam_gecmisi"), (run.eurocontrol, "seri_cek"),
         (run.fred, "seri_cek"),
+        (run.epias, "baraj_doluluk_cek"),
     }
     if hasattr(run.tim, "ulke_seri_cek"):
         adaptorler.add((run.tim, "ulke_seri_cek"))

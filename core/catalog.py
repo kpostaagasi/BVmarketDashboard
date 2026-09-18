@@ -26,6 +26,8 @@ GECERLI_KAYNAK_TIPLERI = {
     "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus", "thy",
     "tav", "ebebek",
     "epdk",
+    "turkcell", "ttkom",
+    "odmd",
 }
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
@@ -67,6 +69,35 @@ GECERLI_EPIAS_HAVZALARI = {
     "Kuzey Ege", "Doğu Karadeniz", "Sakarya", "Kızılırmak", "Büyük Menderes",
     "Gediz",
 }
+# Turkcell Yatırımcı İlişkileri'nin çeyreklik "Financial and Operational
+# Data" Excel'inden çekilen 27 operasyonel/finansal ölçüt. Bkz.
+# ingest/turkcell.py docstring'i.
+GECERLI_TURKCELL_METRIKLERI = {
+    "mobil-postpaid-abone", "fiber-abone", "superbox-abone",
+    "mobil-prepaid-abone", "mobil-m2m-abone", "iptv-abone",
+    "resell-sabit-genisbant-abone", "mobil-churn", "sabit-churn",
+    "mobil-arpu-m2m-haric", "residential-fiber-arpu", "mobil-arpu-blended",
+    "postpaid-arpu-m2m-haric", "prepaid-arpu",
+    "turkiye-segment-geliri", "techfin-segment-geliri",
+    "turkiye-segment-favok", "techfin-segment-favok",
+    "tuketici-geliri", "kurumsal-geliri", "toptan-geliri",
+    "paycell-geliri", "financell-geliri",
+    "kktc-geliri", "kktc-abone", "best-geliri", "best-abone",
+}
+# Türk Telekom Yatırımcı İlişkileri'nin çeyreklik "Özet Finansal ve
+# Operasyonel Veriler" Excel'inden çekilen 6 ölçüt. Bkz. ingest/ttkom.py
+# docstring'i.
+GECERLI_TTKOM_METRIKLERI = {
+    "mobil-toplam-abone", "sabit-genisbant-abone", "tv-abone", "sabit-ses-abone",
+    "sabit-genisbant-arpu-buyume", "mobil-karma-arpu-buyume",
+}
+# ODMD (Otomotiv Distribütörleri ve Mobilite Derneği) aylık marka bazında
+# perakende satış dosyasının okunan üç sütunu. Bkz. ingest/odmd.py.
+GECERLI_ODMD_KATEGORILERI = {"otomobil", "hafif_ticari", "toplam"}
+# OSD kaynağının hangi belgeden okunacağı: "uretim" (Aylık Üretim Bülteni,
+# varsayılan) ya da "ihracat" (Aylık Değerlendirme Raporu'nun "Dış
+# Satışlar" bölümü). Bkz. ingest/osd.py.
+GECERLI_OSD_VERI_TIPLERI = {"uretim", "ihracat"}
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
 # listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
@@ -90,7 +121,9 @@ KAYNAK_ALANLARI = {
     },
     "osd": {
         "zorunlu": ("osd_firma",),
-        "istege_bagli": ("start_date", "osd_eski_adlar"),
+        "istege_bagli": (
+            "start_date", "osd_eski_adlar", "osd_arac_tipi", "osd_veri_tipi",
+        ),
     },
     "tim": {
         "zorunlu": ("tim_sektor",),
@@ -143,6 +176,18 @@ KAYNAK_ALANLARI = {
     "epdk": {
         "zorunlu": ("epdk_olcut", "epdk_urun"),
         "istege_bagli": ("start_date",),
+    },
+    "turkcell": {
+        "zorunlu": ("turkcell_metrik",),
+        "istege_bagli": ("start_date",),
+    },
+    "ttkom": {
+        "zorunlu": ("ttkom_metrik",),
+        "istege_bagli": ("start_date",),
+    },
+    "odmd": {
+        "zorunlu": ("odmd_marka", "odmd_kategori"),
+        "istege_bagli": ("odmd_yarim_marka", "start_date"),
     },
 }
 
@@ -217,6 +262,8 @@ class Seri:
     epias_havza: str | None = None
     osd_firma: str | None = None
     osd_eski_adlar: tuple[str, ...] | None = None
+    osd_arac_tipi: str | None = None
+    osd_veri_tipi: str | None = None
     tim_sektor: str | None = None
     tim_eski_adlar: tuple[str, ...] | None = None
     tim_il: str | None = None
@@ -242,6 +289,11 @@ class Seri:
     ebebek_metrik: str | None = None
     epdk_olcut: str | None = None
     epdk_urun: str | None = None
+    turkcell_metrik: str | None = None
+    ttkom_metrik: str | None = None
+    odmd_marka: tuple[str, ...] | None = None
+    odmd_yarim_marka: tuple[str, ...] | None = None
+    odmd_kategori: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -390,6 +442,8 @@ def serileri_yukle() -> tuple[Seri, ...]:
             osd_eski_adlar=(
                 tuple(ham["osd_eski_adlar"]) if "osd_eski_adlar" in ham else None
             ),
+            osd_arac_tipi=ham.get("osd_arac_tipi"),
+            osd_veri_tipi=ham.get("osd_veri_tipi"),
             tim_sektor=ham.get("tim_sektor"),
             tim_eski_adlar=(
                 tuple(ham["tim_eski_adlar"]) if "tim_eski_adlar" in ham else None
@@ -416,6 +470,15 @@ def serileri_yukle() -> tuple[Seri, ...]:
             tav_olcut=ham.get("tav_olcut"),
             epdk_olcut=ham.get("epdk_olcut"),
             epdk_urun=ham.get("epdk_urun"),
+            turkcell_metrik=ham.get("turkcell_metrik"),
+            ttkom_metrik=ham.get("ttkom_metrik"),
+            odmd_marka=(
+                tuple(ham["odmd_marka"]) if "odmd_marka" in ham else None
+            ),
+            odmd_yarim_marka=(
+                tuple(ham["odmd_yarim_marka"]) if "odmd_yarim_marka" in ham else None
+            ),
+            odmd_kategori=ham.get("odmd_kategori"),
             ebebek_metrik=ham.get("ebebek_metrik"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
@@ -585,6 +648,39 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             raise KatalogHatasi(
                 f"{seri.id}: geçersiz epdk_urun '{seri.epdk_urun}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_EPDK_URUNLERI))})"
+            )
+    if seri.kaynak_tipi == "turkcell" and seri.turkcell_metrik not in GECERLI_TURKCELL_METRIKLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz turkcell_metrik '{seri.turkcell_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TURKCELL_METRIKLERI))})"
+        )
+    if seri.kaynak_tipi == "ttkom" and seri.ttkom_metrik not in GECERLI_TTKOM_METRIKLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz ttkom_metrik '{seri.ttkom_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TTKOM_METRIKLERI))})"
+        )
+    if (
+        seri.kaynak_tipi == "osd"
+        and seri.osd_veri_tipi is not None
+        and seri.osd_veri_tipi not in GECERLI_OSD_VERI_TIPLERI
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz osd_veri_tipi '{seri.osd_veri_tipi}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_OSD_VERI_TIPLERI))})"
+        )
+    if seri.kaynak_tipi == "odmd":
+        if seri.odmd_kategori not in GECERLI_ODMD_KATEGORILERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz odmd_kategori '{seri.odmd_kategori}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_ODMD_KATEGORILERI))})"
+            )
+        if not seri.odmd_marka:
+            raise KatalogHatasi(f"{seri.id}: odmd_marka en az bir marka içermeli")
+        cakisan = set(seri.odmd_marka) & set(seri.odmd_yarim_marka or ())
+        if cakisan:
+            raise KatalogHatasi(
+                f"{seri.id}: {', '.join(sorted(cakisan))} hem odmd_marka hem "
+                "odmd_yarim_marka içinde olamaz"
             )
     if seri.kaynak_tipi in {"tefas", "tefas_fon"}:
         # Yazım hatası adaptörün derinliklerinde KeyError'a dönüşmesin.

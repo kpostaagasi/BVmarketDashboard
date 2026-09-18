@@ -349,7 +349,12 @@ def test_tek_alanli_epias_serileri_epias_alani_tasir_bilesen_tasimaz():
     serileri_yukle.cache_clear()
     seriler = serileri_yukle()
     tek_alanlilar = [
-        s for s in seriler if s.kaynak_tipi == "epias" and s.epias_bilesenler is None
+        s for s in seriler
+        if s.kaynak_tipi == "epias" and s.epias_bilesenler is None
+        # Baraj doluluğu tek bir yanıt ALANI okumaz: iki uçtan (aktif hacim
+        # + kapasite) kapasite ağırlıklı oran hesaplanır, bu yüzden
+        # `epias_alani` taşımaz (bkz. epias.baraj_doluluk_cek).
+        and s.epias_ucu != "baraj-doluluk"
     ]
     assert tek_alanlilar, "katalogda tek alanlı epias serisi yok"
     for s in tek_alanlilar:

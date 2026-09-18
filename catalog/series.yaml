@@ -35952,3 +35952,241 @@
   evds_code: TP.FG.IST12.23
   evds_frequency: "5"
   charts: [seasonality, level]
+- id: elektrik/baraj-doluluk-turkiye
+  title: Baraj Doluluk Oranı (Türkiye Geneli, Kapasite Ağırlıklı)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-dogu-akdeniz
+  title: Baraj Doluluk Oranı (Doğu Akdeniz Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Doğu Akdeniz"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-yesilirmak
+  title: Baraj Doluluk Oranı (Yeşilırmak Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Yeşilırmak"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-asi
+  title: Baraj Doluluk Oranı (Asi Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Asi"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-ceyhan
+  title: Baraj Doluluk Oranı (Ceyhan Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Ceyhan"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-sakarya
+  title: Baraj Doluluk Oranı (Sakarya Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Sakarya"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-kizilirmak
+  title: Baraj Doluluk Oranı (Kızılırmak Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Kızılırmak"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-antalya
+  title: Baraj Doluluk Oranı (Antalya Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Antalya"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-van-golu
+  title: Baraj Doluluk Oranı (Van Gölü Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Van Gölü"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-gediz
+  title: Baraj Doluluk Oranı (Gediz Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Gediz"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-susurluk
+  title: Baraj Doluluk Oranı (Susurluk Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Susurluk"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-bati-karadeniz
+  title: Baraj Doluluk Oranı (Batı Karadeniz Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Batı Karadeniz"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-seyhan
+  title: Baraj Doluluk Oranı (Seyhan Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Seyhan"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-dogu-karadeniz
+  title: Baraj Doluluk Oranı (Doğu Karadeniz Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Doğu Karadeniz"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-marmara
+  title: Baraj Doluluk Oranı (Marmara Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Marmara"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-buyuk-menderes
+  title: Baraj Doluluk Oranı (Büyük Menderes Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Büyük Menderes"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-kuzey-ege
+  title: Baraj Doluluk Oranı (Kuzey Ege Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Kuzey Ege"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/baraj-doluluk-bati-akdeniz
+  title: Baraj Doluluk Oranı (Batı Akdeniz Havzası)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: baraj-doluluk
+  epias_havza: "Batı Akdeniz"
+  unit: "%"
+  freq: daily
+  monthly_agg: mean
+  charts: [level]
+
+- id: elektrik/ptf-usd
+  title: Piyasa Takas Fiyatı (PTF, USD/MWh)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: ptf
+  epias_alani: priceUsd
+  unit: "USD/MWh"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+
+- id: elektrik/ptf-eur
+  title: Piyasa Takas Fiyatı (PTF, EUR/MWh)
+  category: elektrik
+  kaynak: { name: EPİAŞ Şeffaflık Platformu, url: "https://seffaflik.epias.com.tr" }
+  kaynak_tipi: epias
+  epias_ucu: ptf
+  epias_alani: priceEur
+  unit: "EUR/MWh"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
