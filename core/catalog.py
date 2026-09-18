@@ -28,6 +28,7 @@ GECERLI_KAYNAK_TIPLERI = {
     "epdk",
     "turkcell", "ttkom",
     "odmd",
+    "eib", "usk",
 }
 SIKLIK_ETIKETLERI = {"daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK", "quarterly": "ÇEYREKLİK"}
 # TEFAS'ın iki ekseni katalogda doğrulanır (core, ingest'i import etmez):
@@ -98,6 +99,27 @@ GECERLI_ODMD_KATEGORILERI = {"otomobil", "hafif_ticari", "toplam"}
 # varsayılan) ya da "ihracat" (Aylık Değerlendirme Raporu'nun "Dış
 # Satışlar" bölümü). Bkz. ingest/osd.py.
 GECERLI_OSD_VERI_TIPLERI = {"uretim", "ihracat"}
+# EİB (Ege İhracatçı Birlikleri) ESÜHMİB aylık ihracat istatistiğinin iki
+# ekseni: kalem (ürün grubu/alt grup ya da hesaplanan toplam) ve ölçüt
+# (dolar değeri ya da ton hacmi). Bkz. ingest/eib.py docstring'i.
+GECERLI_EIB_KALEMLERI = {
+    "SU ÜRÜNLERİ", "LEVREK", "ÇİPURA", "TÜRK SOMONU", "ALABALIK",
+    "KAYA LEVREĞİ", "DİĞER SU ÜRÜNLERİ",
+    "HAYVANSAL_TOPLAM", "KANATLI", "YUMURTA", "SÜT VE SÜT ÜRÜNLERİ",
+    "SOSİS VE BENZERİ ÜRÜNLER (KIRMIZI ET VE KANATLI)", "BAL", "DİĞER",
+    "CANLI HAYVAN", "KIRMIZI ET VE SAKATAT",
+}
+GECERLI_EIB_OLCUTLERI = {"fobusd", "agirlik"}
+# USK (Ulusal Süt Konseyi) çiğ süt tavsiye fiyatı + üretim maliyeti
+# hesabının kalemleri (maliyet PDF'inin granüler alanları yalnızca yeni
+# formatta var). Bkz. ingest/usk.py docstring'i.
+GECERLI_USK_KALEMLERI = {
+    "tavsiye-fiyati", "uretim-maliyeti", "canli-agirlik", "sut-verimi",
+    "buzagi-fiyati", "karma-yem-fiyati", "misir-silaji-fiyati",
+    "yonca-fiyati", "saman-fiyati", "yem-maliyeti-toplam", "diger-giderler",
+    "buzagi-geliri", "net-maliyet-baz",
+}
+
 
 # Hangi kaynak tipi hangi TİPE ÖZGÜ alanı taşıyabilir. Bir alan burada
 # listelenmemişse o kaynak için YASAKTIR: sessizce yok sayılan bir alan
@@ -188,6 +210,14 @@ KAYNAK_ALANLARI = {
     "odmd": {
         "zorunlu": ("odmd_marka", "odmd_kategori"),
         "istege_bagli": ("odmd_yarim_marka", "start_date"),
+    },
+    "eib": {
+        "zorunlu": ("eib_kalem", "eib_olcut"),
+        "istege_bagli": ("start_date",),
+    },
+    "usk": {
+        "zorunlu": ("usk_kalem",),
+        "istege_bagli": ("start_date",),
     },
 }
 
@@ -294,6 +324,9 @@ class Seri:
     odmd_marka: tuple[str, ...] | None = None
     odmd_yarim_marka: tuple[str, ...] | None = None
     odmd_kategori: str | None = None
+    eib_kalem: str | None = None
+    eib_olcut: str | None = None
+    usk_kalem: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
@@ -480,6 +513,9 @@ def serileri_yukle() -> tuple[Seri, ...]:
             ),
             odmd_kategori=ham.get("odmd_kategori"),
             ebebek_metrik=ham.get("ebebek_metrik"),
+            eib_kalem=ham.get("eib_kalem"),
+            eib_olcut=ham.get("eib_olcut"),
+            usk_kalem=ham.get("usk_kalem"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),

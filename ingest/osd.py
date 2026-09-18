@@ -365,7 +365,11 @@ def _dis_satis_indeks_cek(session=None) -> dict[str, str]:
     return degerlendirme_baglantilari(yanit.text)
 
 
-_DIS_SATIS_BASLIK = "Otomotiv Sanayii Dış Satışlar"
+# Bazı bülten yılları (ör. 2023/2024 Aralık) font kodlaması yüzünden "i"
+# harflerini metinden düşürüyor ("Otomotiv Sanayii" -> "Otomotv Sanay",
+# `firma_adini_normalize`'ın \x00 notuyla aynı köken); "Dış Satışlar" bu
+# aylarda da BOZULMADAN geliyor, o yüzden yalnızca bu kısım aranır.
+_DIS_SATIS_BASLIK = "Dış Satışlar"
 # Firma bazlı tabloların (özet tablo hariç) rapordaki sabit sırası.
 DIS_SATIS_TIP_SIRASI = (
     "OTOMOBİL", "KAMYONET", "MİNİBÜS", "KAMYON", "MİDİBÜS", "OTOBÜS", "TRAKTÖR",
@@ -379,15 +383,61 @@ def _dis_satis_sayfalarini_bul(pdf) -> list[int]:
     ]
 
 
+def firma_bazli_dis_satis_tablolarindan(
+    tablolar: list, yil: int,
+) -> list[tuple[str, str, str, float]]:
+    """Firma bazlı tablo listesinden (özet tablo HARİÇ, `DIS_SATIS_TIP_SIRASI`
+    sırasında) `(firma, araç_tipi, "YYYY-MM-01", adet)` üretir.
+
+    Öz-doğrulama: her tablonun kendi "TOPLAM - Total" satırı, o tablodaki
+    firma satırlarının toplamıyla karşılaştırılır; tablo sayısı beklenenden
+    (7) farklıysa da RuntimeError — sayfa şablonu değişmiş olabilir,
+    sessizce eksik/yanlış veri üretmektense ingest kırılmalı. PDF/bayt
+    bağımlılığı yok — `dis_satis_noktalari` bu fonksiyonu sarmalar.
+    """
+    if len(tablolar) != len(DIS_SATIS_TIP_SIRASI):
+        raise RuntimeError(
+            f"OSD Dış Satışlar'da {len(tablolar)} firma tablosu bulundu, "
+            f"beklenen {len(DIS_SATIS_TIP_SIRASI)} — şablon değişmiş olabilir"
+        )
+
+    sonuc: list[tuple[str, str, str, float]] = []
+    for tip, tablo in zip(DIS_SATIS_TIP_SIRASI, tablolar):
+        toplam_satiri = None
+        firma_satirlari: list[tuple[str, list]] = []
+        for satir in tablo[1:]:
+            ad = firma_adini_normalize(satir[0] or "")
+            if not ad:
+                continue
+            if ad.upper().startswith("TOPLAM"):
+                toplam_satiri = satir
+                continue
+            firma_satirlari.append((ad, satir))
+
+        if toplam_satiri is None:
+            raise RuntimeError(f"OSD Dış Satışlar — {tip} tablosunda TOPLAM satırı yok")
+
+        for ay in range(1, 13):
+            beklenen = sayi_parse(toplam_satiri[ay]) or 0.0
+            bulunan = sum(sayi_parse(satir[ay]) or 0.0 for _, satir in firma_satirlari)
+            if abs(bulunan - beklenen) > 0.5:
+                raise RuntimeError(
+                    f"OSD Dış Satışlar öz-doğrulama — {tip} {yil}-{ay:02d}: "
+                    f"firma toplamı {bulunan:,.0f}, TOPLAM satırı {beklenen:,.0f}"
+                )
+
+        for ad, satir in firma_satirlari:
+            for ay in range(1, 13):
+                deger = sayi_parse(satir[ay])
+                if deger is not None:
+                    sonuc.append((ad, tip, f"{yil}-{ay:02d}-01", deger))
+    return sonuc
+
+
 def dis_satis_noktalari(baytlar: bytes) -> list[tuple[str, str, str, float]]:
     """Değerlendirme Raporu'nun "Dış Satışlar" sayfalarından
-    `(firma, araç_tipi, "YYYY-MM-01", adet)` üretir.
-
-    Öz-doğrulama: her firma-bazlı tablonun kendi "TOPLAM - Total" satırı,
-    o tablodaki firma satırlarının toplamıyla karşılaştırılır; tablo sayısı
-    beklenenden (7) farklıysa da RuntimeError — sayfa şablonu değişmiş
-    olabilir, sessizce eksik/yanlış veri üretmektense ingest kırılmalı.
-    """
+    `(firma, araç_tipi, "YYYY-MM-01", adet)` üretir (bkz.
+    `firma_bazli_dis_satis_tablolarindan`)."""
     with pdfplumber.open(io.BytesIO(baytlar)) as pdf:
         sayfalar = _dis_satis_sayfalarini_bul(pdf)
         if len(sayfalar) < 2:
@@ -400,52 +450,21 @@ def dis_satis_noktalari(baytlar: bytes) -> list[tuple[str, str, str, float]]:
             raise RuntimeError("OSD Dış Satışlar sayfasında yıl bulunamadı")
         yil = int(yil_eslesme.group(1))
 
+        # Özet tablo (araç tipi × ay, firma bazlı değil) HER ZAMAN ilk
+        # bulunan sayfanın ilk tablosudur; başlık metniyle eşleştirmek
+        # yerine konumsal atlama tercih edilir — bazı bülten yılları (2023/
+        # 2024 Aralık) font kodlaması başlığı bozuyor ("Araç Tipleri" ->
+        # "Araç Tipler\x00", \x00 temizlense bile sondaki "i" düşüyor) ve
+        # metin eşleşmesi sessizce başarısız olup özet tabloyu firma
+        # tablosu sanabilirdi.
         tablolar: list[list] = []
-        for sayfa_no in sayfalar:
-            for t in pdf.pages[sayfa_no].extract_tables():
-                baslik = firma_adini_normalize(t[0][0] or "") if t and t[0] else ""
-                if baslik.startswith(("Araç Tipleri", "Arac Tipleri")):
-                    continue  # özet tablo — firma bazlı değil, atlanır
-                tablolar.append(t)
+        for sayfa_sirasi, sayfa_no in enumerate(sayfalar):
+            sayfa_tablolari = pdf.pages[sayfa_no].extract_tables()
+            if sayfa_sirasi == 0 and sayfa_tablolari:
+                sayfa_tablolari = sayfa_tablolari[1:]
+            tablolar.extend(sayfa_tablolari)
 
-        if len(tablolar) != len(DIS_SATIS_TIP_SIRASI):
-            raise RuntimeError(
-                f"OSD Dış Satışlar'da {len(tablolar)} firma tablosu bulundu, "
-                f"beklenen {len(DIS_SATIS_TIP_SIRASI)} — şablon değişmiş olabilir"
-            )
-
-        sonuc: list[tuple[str, str, str, float]] = []
-        for tip, tablo in zip(DIS_SATIS_TIP_SIRASI, tablolar):
-            toplam_satiri = None
-            firma_satirlari: list[tuple[str, list]] = []
-            for satir in tablo[1:]:
-                ad = firma_adini_normalize(satir[0] or "")
-                if not ad:
-                    continue
-                if ad.upper().startswith("TOPLAM"):
-                    toplam_satiri = satir
-                    continue
-                firma_satirlari.append((ad, satir))
-
-            if toplam_satiri is None:
-                raise RuntimeError(f"OSD Dış Satışlar — {tip} tablosunda TOPLAM satırı yok")
-
-            for ay in range(1, 13):
-                beklenen = sayi_parse(toplam_satiri[ay]) or 0.0
-                bulunan = sum(sayi_parse(satir[ay]) or 0.0 for _, satir in firma_satirlari)
-                if abs(bulunan - beklenen) > 0.5:
-                    raise RuntimeError(
-                        f"OSD Dış Satışlar öz-doğrulama — {tip} {yil}-{ay:02d}: "
-                        f"firma toplamı {bulunan:,.0f}, TOPLAM satırı {beklenen:,.0f}"
-                    )
-
-            for ad, satir in firma_satirlari:
-                for ay in range(1, 13):
-                    deger = sayi_parse(satir[ay])
-                    if deger is not None:
-                        sonuc.append((ad, tip, f"{yil}-{ay:02d}-01", deger))
-
-    return sonuc
+    return firma_bazli_dis_satis_tablolarindan(tablolar, yil)
 
 
 def _ihracat_cek(

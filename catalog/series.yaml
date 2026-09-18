@@ -36190,3 +36190,943 @@
   freq: daily
   monthly_agg: mean
   charts: [level, seasonality]
+
+
+- id: telekom/tcell-mobil-postpaid-abone
+  title: Turkcell Mobil Postpaid Abone
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon
+  freq: quarterly
+  turkcell_metrik: mobil-postpaid-abone
+  charts: [level]
+
+- id: telekom/tcell-fiber-abone
+  title: Turkcell Fiber Abone
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Bin
+  freq: quarterly
+  turkcell_metrik: fiber-abone
+  charts: [level]
+
+- id: telekom/tcell-superbox-abone
+  title: Turkcell Superbox / 5G Sabit Kablosuz Erişim Abone
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Bin
+  freq: quarterly
+  turkcell_metrik: superbox-abone
+  charts: [level]
+
+- id: telekom/tcell-mobil-prepaid-abone
+  title: Turkcell Mobil Prepaid Abone
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon
+  freq: quarterly
+  turkcell_metrik: mobil-prepaid-abone
+  charts: [level]
+
+- id: telekom/tcell-mobil-m2m-abone
+  title: Turkcell Mobil M2M Abone
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon
+  freq: quarterly
+  turkcell_metrik: mobil-m2m-abone
+  charts: [level]
+
+- id: telekom/tcell-iptv-abone
+  title: Turkcell IPTV Abone
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Bin
+  freq: quarterly
+  turkcell_metrik: iptv-abone
+  charts: [level]
+
+- id: telekom/tcell-resell-sabit-genisbant-abone
+  title: Turkcell Resell Sabit Genişbant Abone (Toplam)
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Bin
+  freq: quarterly
+  turkcell_metrik: resell-sabit-genisbant-abone
+  charts: [level]
+
+- id: telekom/tcell-mobil-churn
+  title: Turkcell Mobil Churn (Aylık Ort.)
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: "%"
+  freq: quarterly
+  turkcell_metrik: mobil-churn
+  olcek: 100
+  charts: [level]
+
+- id: telekom/tcell-sabit-churn
+  title: Turkcell Sabit Churn (Aylık Ort.)
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: "%"
+  freq: quarterly
+  turkcell_metrik: sabit-churn
+  olcek: 100
+  charts: [level]
+
+- id: telekom/tcell-mobil-arpu-m2m-haric
+  title: Turkcell Mobil ARPU (M2M Hariç, IAS29)
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: TL
+  freq: quarterly
+  turkcell_metrik: mobil-arpu-m2m-haric
+  charts: [level]
+
+- id: telekom/tcell-residential-fiber-arpu
+  title: Turkcell Residential Fiber ARPU (IAS29)
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: TL
+  freq: quarterly
+  turkcell_metrik: residential-fiber-arpu
+  charts: [level]
+
+- id: telekom/tcell-mobil-arpu-blended
+  title: Turkcell Mobil ARPU (M2M Dahil, Blended, IAS29)
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: TL
+  freq: quarterly
+  turkcell_metrik: mobil-arpu-blended
+  charts: [level]
+
+- id: telekom/tcell-postpaid-arpu-m2m-haric
+  title: Turkcell Postpaid ARPU (M2M Hariç, IAS29)
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: TL
+  freq: quarterly
+  turkcell_metrik: postpaid-arpu-m2m-haric
+  charts: [level]
+
+- id: telekom/tcell-prepaid-arpu
+  title: Turkcell Prepaid ARPU (IAS29)
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: TL
+  freq: quarterly
+  turkcell_metrik: prepaid-arpu
+  charts: [level]
+
+- id: telekom/tcell-turkiye-segment-geliri
+  title: Turkcell Türkiye Segment Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: turkiye-segment-geliri
+  charts: [level]
+
+- id: telekom/tcell-techfin-segment-geliri
+  title: Turkcell Techfin Segment Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: techfin-segment-geliri
+  charts: [level]
+
+- id: telekom/tcell-turkiye-segment-favok
+  title: Turkcell Türkiye Segment FAVÖK
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: turkiye-segment-favok
+  charts: [level]
+
+- id: telekom/tcell-techfin-segment-favok
+  title: Turkcell Techfin Segment FAVÖK
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: techfin-segment-favok
+  charts: [level]
+
+- id: telekom/tcell-tuketici-geliri
+  title: Turkcell Tüketici (Consumer) Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: tuketici-geliri
+  charts: [level]
+
+- id: telekom/tcell-kurumsal-geliri
+  title: Turkcell Kurumsal (Corporate) Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: kurumsal-geliri
+  charts: [level]
+
+- id: telekom/tcell-toptan-geliri
+  title: Turkcell Toptan (Wholesale) Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: toptan-geliri
+  charts: [level]
+
+- id: telekom/tcell-paycell-geliri
+  title: Turkcell Paycell Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: paycell-geliri
+  charts: [level]
+
+- id: telekom/tcell-financell-geliri
+  title: Turkcell Financell Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: financell-geliri
+  charts: [level]
+
+- id: telekom/tcell-kktc-geliri
+  title: Turkcell Kuzey Kıbrıs Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: kktc-geliri
+  charts: [level]
+
+- id: telekom/tcell-kktc-abone
+  title: Turkcell Kuzey Kıbrıs Abone
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon
+  freq: quarterly
+  turkcell_metrik: kktc-abone
+  charts: [level]
+
+- id: telekom/tcell-best-geliri
+  title: Turkcell BeST (Belarus) Geliri
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon TL
+  freq: quarterly
+  turkcell_metrik: best-geliri
+  charts: [level]
+
+- id: telekom/tcell-best-abone
+  title: Turkcell BeST (Belarus) Abone
+  category: telekom
+  kaynak: { name: Turkcell Yatırımcı İlişkileri, url: "https://www.turkcell.com.tr/en-en/about-us/investor-relations/quarterly-results" }
+  kaynak_tipi: turkcell
+  unit: Milyon
+  freq: quarterly
+  turkcell_metrik: best-abone
+  charts: [level]
+
+
+- id: telekom/ttkom-mobil-toplam-abone
+  title: Türk Telekom Mobil Toplam Abone
+  category: telekom
+  kaynak: { name: Türk Telekom Yatırımcı İlişkileri, url: "https://www.ttyatirimciiliskileri.com.tr/tr-tr/mali-operasyonel-veriler/sayfalar/ceyrek-donem-sonuclari" }
+  kaynak_tipi: ttkom
+  unit: Milyon
+  freq: quarterly
+  ttkom_metrik: mobil-toplam-abone
+  charts: [level]
+
+- id: telekom/ttkom-sabit-genisbant-abone
+  title: Türk Telekom Sabit Genişbant Abone
+  category: telekom
+  kaynak: { name: Türk Telekom Yatırımcı İlişkileri, url: "https://www.ttyatirimciiliskileri.com.tr/tr-tr/mali-operasyonel-veriler/sayfalar/ceyrek-donem-sonuclari" }
+  kaynak_tipi: ttkom
+  unit: Milyon
+  freq: quarterly
+  ttkom_metrik: sabit-genisbant-abone
+  charts: [level]
+
+- id: telekom/ttkom-tv-abone
+  title: Türk Telekom TV Abone
+  category: telekom
+  kaynak: { name: Türk Telekom Yatırımcı İlişkileri, url: "https://www.ttyatirimciiliskileri.com.tr/tr-tr/mali-operasyonel-veriler/sayfalar/ceyrek-donem-sonuclari" }
+  kaynak_tipi: ttkom
+  unit: Milyon
+  freq: quarterly
+  ttkom_metrik: tv-abone
+  charts: [level]
+
+- id: telekom/ttkom-sabit-ses-abone
+  title: Türk Telekom Sabit Ses Abone
+  category: telekom
+  kaynak: { name: Türk Telekom Yatırımcı İlişkileri, url: "https://www.ttyatirimciiliskileri.com.tr/tr-tr/mali-operasyonel-veriler/sayfalar/ceyrek-donem-sonuclari" }
+  kaynak_tipi: ttkom
+  unit: Milyon
+  freq: quarterly
+  ttkom_metrik: sabit-ses-abone
+  charts: [level]
+
+- id: telekom/ttkom-sabit-genisbant-arpu-buyume
+  title: Türk Telekom Sabit Genişbant ARPU Büyümesi (YoY)
+  category: telekom
+  kaynak: { name: Türk Telekom Yatırımcı İlişkileri, url: "https://www.ttyatirimciiliskileri.com.tr/tr-tr/mali-operasyonel-veriler/sayfalar/ceyrek-donem-sonuclari" }
+  kaynak_tipi: ttkom
+  unit: "%"
+  freq: quarterly
+  ttkom_metrik: sabit-genisbant-arpu-buyume
+  charts: [level]
+
+- id: telekom/ttkom-mobil-karma-arpu-buyume
+  title: Türk Telekom Mobil Karma ARPU Büyümesi (YoY)
+  category: telekom
+  kaynak: { name: Türk Telekom Yatırımcı İlişkileri, url: "https://www.ttyatirimciiliskileri.com.tr/tr-tr/mali-operasyonel-veriler/sayfalar/ceyrek-donem-sonuclari" }
+  kaynak_tipi: ttkom
+  unit: "%"
+  freq: quarterly
+  ttkom_metrik: mobil-karma-arpu-buyume
+  charts: [level]
+- id: su-urunleri/toplam-ihracat
+  title: Toplam İhracat
+  category: su-urunleri
+  kaynak: &kaynak001
+    name: EİB (Ege Su Ürünleri ve Hayvansal Mamuller İhr. Birliği)
+    url: https://www.eib.org.tr/Sayfa.Asp?id=AF5247B95C
+  kaynak_tipi: eib
+  eib_kalem: SU ÜRÜNLERİ
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/toplam-hacim
+  title: Toplam Hacim
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: SU ÜRÜNLERİ
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/levrek
+  title: Levrek
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: LEVREK
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/levrek-hacim
+  title: Levrek Hacmi
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: LEVREK
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/cipura
+  title: Çipura
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: ÇİPURA
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/cipura-hacim
+  title: Çipura Hacmi
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: ÇİPURA
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/turk-somonu
+  title: Türk Somonu
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: TÜRK SOMONU
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/turk-somonu-hacim
+  title: Türk Somonu Hacmi
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: TÜRK SOMONU
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/alabalik
+  title: Alabalık
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: ALABALIK
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/alabalik-hacim
+  title: Alabalık Hacmi
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: ALABALIK
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/kaya-levregi
+  title: Kaya Levreği
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: KAYA LEVREĞİ
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/kaya-levregi-hacim
+  title: Kaya Levreği Hacmi
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: KAYA LEVREĞİ
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/diger-su-urunleri
+  title: Diğer Su Ürünleri
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: DİĞER SU ÜRÜNLERİ
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: su-urunleri/diger-su-urunleri-hacim
+  title: Diğer Su Ürünleri Hacmi
+  category: su-urunleri
+  kaynak: *kaynak001
+  kaynak_tipi: eib
+  eib_kalem: DİĞER SU ÜRÜNLERİ
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/toplam
+  title: Toplam İhracat
+  category: hayvansal
+  kaynak: &id002
+    name: EİB (Ege Su Ürünleri ve Hayvansal Mamuller İhr. Birliği)
+    url: https://www.eib.org.tr/Sayfa.Asp?id=AF5247B95C
+  kaynak_tipi: eib
+  eib_kalem: HAYVANSAL_TOPLAM
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/toplam-hacim
+  title: Toplam Hacim
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: HAYVANSAL_TOPLAM
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/kanatli
+  title: Kanatlı
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: KANATLI
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/kanatli-hacim
+  title: Kanatlı Hacmi
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: KANATLI
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/yumurta
+  title: Yumurta
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: YUMURTA
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/yumurta-hacim
+  title: Yumurta Hacmi
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: YUMURTA
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/sut-urunleri
+  title: Süt ve Süt Ürünleri
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: SÜT VE SÜT ÜRÜNLERİ
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/sut-urunleri-hacim
+  title: Süt ve Süt Ürünleri Hacmi
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: SÜT VE SÜT ÜRÜNLERİ
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/sosis
+  title: Sosis ve Benzeri Ürünler
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: SOSİS VE BENZERİ ÜRÜNLER (KIRMIZI ET VE KANATLI)
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/sosis-hacim
+  title: Sosis ve Benzeri Ürünler Hacmi
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: SOSİS VE BENZERİ ÜRÜNLER (KIRMIZI ET VE KANATLI)
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/bal
+  title: Bal
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: BAL
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/bal-hacim
+  title: Bal Hacmi
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: BAL
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/diger
+  title: Diğer Hayvansal Ürünler
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: DİĞER
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/diger-hacim
+  title: Diğer Hayvansal Ürünler Hacmi
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: DİĞER
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/canli-hayvan
+  title: Canlı Hayvan
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: CANLI HAYVAN
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/canli-hayvan-hacim
+  title: Canlı Hayvan Hacmi
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: CANLI HAYVAN
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/kirmizi-et
+  title: Kırmızı Et ve Sakatat
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: KIRMIZI ET VE SAKATAT
+  eib_olcut: fobusd
+  unit: Milyon USD
+  freq: monthly
+  olcek: 1.0e-06
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: hayvansal/kirmizi-et-hacim
+  title: Kırmızı Et ve Sakatat Hacmi
+  category: hayvansal
+  kaynak: *id002
+  kaynak_tipi: eib
+  eib_kalem: KIRMIZI ET VE SAKATAT
+  eib_olcut: agirlik
+  unit: Bin ton
+  freq: monthly
+  olcek: 0.001
+  start_date: '2025-01-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/tavsiye-fiyati
+  title: Çiğ Süt Tavsiye Fiyatı
+  category: sut-fiyatlari
+  kaynak:
+    name: Ulusal Süt Konseyi (Çiğ Süt Tavsiye Fiyatı)
+    url: https://ulusalsutkonseyi.org.tr/yillara-gore-cig-sut-fiyatlari-2194/
+  kaynak_tipi: usk
+  usk_kalem: tavsiye-fiyati
+  unit: TL/litre
+  freq: monthly
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/uretim-maliyeti
+  title: Çiğ Süt Üretim Maliyeti (Türkiye Ort.)
+  category: sut-fiyatlari
+  kaynak: &kaynak002
+    name: Ulusal Süt Konseyi (Çiğ Süt Üretim Maliyeti)
+    url: https://ulusalsutkonseyi.org.tr/bolgelere-gore-1-litre-cig-sut-maliyeti-1637/
+  kaynak_tipi: usk
+  usk_kalem: uretim-maliyeti
+  unit: TL/litre
+  freq: monthly
+  start_date: '2021-01-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/canli-agirlik
+  title: Model Sağmal İnek Canlı Ağırlığı
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: canli-agirlik
+  unit: Kg
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - level
+- id: sut-fiyatlari/sut-verimi
+  title: Model Sağmal İnek Süt Verimi
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: sut-verimi
+  unit: Litre/gün
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - level
+- id: sut-fiyatlari/buzagi-fiyati
+  title: Buzağı Fiyatı
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: buzagi-fiyati
+  unit: TL/baş
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/karma-yem-fiyati
+  title: Karma Yem Birim Fiyatı
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: karma-yem-fiyati
+  unit: TL/kg
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/misir-silaji-fiyati
+  title: Mısır Silajı Birim Fiyatı
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: misir-silaji-fiyati
+  unit: TL/kg
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/yonca-fiyati
+  title: Yonca Birim Fiyatı
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: yonca-fiyati
+  unit: TL/kg
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/saman-fiyati
+  title: Saman Birim Fiyatı
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: saman-fiyati
+  unit: TL/kg
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/yem-maliyeti-toplam
+  title: Günlük Yem Maliyeti (Toplam)
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: yem-maliyeti-toplam
+  unit: TL/gün
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/diger-giderler
+  title: Günlük Diğer Giderler
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: diger-giderler
+  unit: TL/gün
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - seasonality
+  - level
+- id: sut-fiyatlari/buzagi-geliri
+  title: Günlük Buzağı Geliri
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: buzagi-geliri
+  unit: TL/gün
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - level
+- id: sut-fiyatlari/net-maliyet-baz
+  title: Net Maliyet Bazı (Fark)
+  category: sut-fiyatlari
+  kaynak: *kaynak002
+  kaynak_tipi: usk
+  usk_kalem: net-maliyet-baz
+  unit: TL/gün
+  freq: monthly
+  start_date: '2026-03-01'
+  charts:
+  - seasonality
+  - level

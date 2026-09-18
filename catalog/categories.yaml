@@ -241,4 +241,56 @@
     biçimi Ocak 2026'da başladı; öncesinde ek yalnızca il bazında teslim
     matrisi taşıyor, ürün grubu toplamı yok — seriler bu yüzden 2026'dan
     başlar. Değerler bin ton.
+- slug: telekom
+  title: Telekom (Şirket Operasyonel Verileri)
+  pano:
+    [
+      telekom/tcell-mobil-postpaid-abone,
+      telekom/ttkom-mobil-toplam-abone,
+      telekom/tcell-mobil-arpu-m2m-haric,
+      telekom/ttkom-sabit-genisbant-abone,
+    ]
+  note: >-
+    Turkcell serileri şirketin çeyreklik "Financial and Operational Data"
+    Excel'inden (ARPU/segment kırılımı IAS29 enflasyon düzeltmeli, gelir
+    kırılımı nominal); Türk Telekom serileri "Özet Finansal ve Operasyonel
+    Veriler" Excel'inden gelir. İkisi de çeyrekliktir, yalnızca level
+    grafiği destekler. TÜİK J61 hizmet üretim/ciro endeksleri EVDS'de
+    yayımlanmıyor (ölçüldü), bu yüzden o iki kart bu ailede yok.
+- slug: su-urunleri
+  title: Su Ürünleri İhracatı (EİB)
+  pano:
+    [
+      su-urunleri/toplam-ihracat,
+      su-urunleri/levrek,
+      su-urunleri/cipura,
+      su-urunleri/turk-somonu,
+    ]
+  note: >-
+    Kaynak EİB (Ege İhracatçı Birlikleri) aylık ihracat bülteni. Tutarlar
+    FOB USD, hacimler kilogram; katalog milyon USD / bin tona ölçekler.
+- slug: sut-fiyatlari
+  title: Çiğ Süt Fiyat & Maliyet (USK)
+  pano:
+    [
+      sut-fiyatlari/tavsiye-fiyati,
+      sut-fiyatlari/uretim-maliyeti,
+    ]
+  note: >-
+    Kaynak Ulusal Süt Konseyi: tavsiye fiyatı tablo sayfasından, üretim
+    maliyeti aylık PDF'lerden. Maliyet PDF şablonu Mart 2026'da değişti;
+    öncesinde yalnızca "Türkiye ortalaması" satırı güvenilir okunuyor
+    (bölgesel çok sütunlu tablo PDF metninde karışıyor).
+- slug: hayvansal
+  title: Hayvansal Ürün İhracatı (EİB)
+  pano:
+    [
+      hayvansal/toplam,
+      hayvansal/kanatli,
+      hayvansal/yumurta,
+      hayvansal/sut-urunleri,
+    ]
+  note: >-
+    Kaynak EİB aylık ihracat bülteni; tutarlar FOB USD (katalog milyon
+    USD'ye ölçekler), hacimler kilogramdan bin tona çevrilir.
 

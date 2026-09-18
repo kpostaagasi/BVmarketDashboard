@@ -19,7 +19,7 @@ from urllib3.util.retry import Retry
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import bddk, ebebek, epdk, epias, eurocontrol, evds, fred, osd, pgsus, tav, tefas, thy, tim, yahoo
+from ingest import bddk, ebebek, eib, epdk, epias, eurocontrol, evds, fred, odmd, osd, pgsus, tav, tefas, thy, tim, ttkom, turkcell, usk, yahoo
 
 # Koşu başına tek oturum tüm adaptörlere geçiyor; retry politikası bu yüzden
 # tek yerde tanımlanabiliyor (devredilen iş #1). Ölçüm: 111 serilik bir tam
@@ -71,7 +71,12 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          pgsus_onbellek: dict | None = None,
          tav_onbellek: dict | None = None,
          ebebek_onbellek: dict | None = None,
-         epdk_onbellek: dict | None = None):
+         epdk_onbellek: dict | None = None,
+         turkcell_onbellek: dict | None = None,
+         ttkom_onbellek: dict | None = None,
+         eib_onbellek: dict | None = None,
+         usk_onbellek: dict | None = None,
+         odmd_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
         df = evds.seri_cek(seri, api_key, session=oturum)
@@ -115,6 +120,16 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = ebebek.seri_cek(seri, onbellek=ebebek_onbellek, session=oturum)
     elif seri.kaynak_tipi == "epdk":
         df = epdk.seri_cek(seri, onbellek=epdk_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "turkcell":
+        df = turkcell.seri_cek(seri, onbellek=turkcell_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "ttkom":
+        df = ttkom.seri_cek(seri, onbellek=ttkom_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "eib":
+        df = eib.seri_cek(seri, onbellek=eib_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "usk":
+        df = usk.seri_cek(seri, onbellek=usk_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "odmd":
+        df = odmd.seri_cek(seri, onbellek=odmd_onbellek, session=oturum)
     else:
         raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
     return olcekle(df, seri.olcek)
@@ -218,6 +233,21 @@ def main() -> int:
     # EPDK 20 seri (4 ölçüt × 5 ürün) aynı ~8 aylık EK dosyası kümesini
     # paylaşır (bkz. `ingest.epdk.seri_cek`).
     epdk_onbellek: dict = {}
+    # Turkcell 27 seri aynı çeyreklik "Financial and Operational Data"
+    # Excel'ini paylaşır (bkz. `ingest.turkcell.seri_cek`).
+    turkcell_onbellek: dict = {}
+    # Türk Telekom 6 seri aynı çeyreklik "Özet Finansal ve Operasyonel
+    # Veriler" Excel'ini paylaşır (bkz. `ingest.ttkom.seri_cek`).
+    ttkom_onbellek: dict = {}
+    # EİB 32 seri (14 su ürünleri + 18 hayvansal) aynı 1-2 yıllık yıllık
+    # bülten indirmesini paylaşır (bkz. `ingest.eib.seri_cek`).
+    eib_onbellek: dict = {}
+    # USK 15 seri aynı tavsiye fiyatı tablosunu ve aynı aylık maliyet PDF
+    # kümesini paylaşır (bkz. `ingest.usk.seri_cek`).
+    usk_onbellek: dict = {}
+    # ODMD 79 seri (TOASO/DOAS marka bazlı perakende) aynı ~60 aylık XLSX
+    # kümesini paylaşır (bkz. `ingest.odmd.seri_cek`).
+    odmd_onbellek: dict = {}
 
     with requests.Session() as oturum:
         oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
@@ -246,7 +276,8 @@ def main() -> int:
                     epias_onbellek, osd_onbellek, tim_onbellek, bddk_onbellek,
                     tefas_onbellek, ec_onbellek, tim_il_onbellek, tim_ulke_onbellek,
                     thy_onbellek, pgsus_onbellek, tav_onbellek, ebebek_onbellek,
-                    epdk_onbellek,
+                    epdk_onbellek, turkcell_onbellek, ttkom_onbellek,
+                    eib_onbellek, usk_onbellek, odmd_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")
