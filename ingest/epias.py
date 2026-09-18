@@ -306,6 +306,11 @@ def _kapasite_agirlikli_doluluk(
     """
     toplam_hacim = 0.0
     toplam_kapasite = 0.0
+    havzada_baraj = False
+    for dam_id in kapasiteler:
+        if havza is None or havza_by_id.get(dam_id) == havza:
+            havzada_baraj = True
+            break
     for dam_id, hacim in aktif_hacimler.items():
         if havza is not None and havza_by_id.get(dam_id) != havza:
             continue
@@ -316,7 +321,16 @@ def _kapasite_agirlikli_doluluk(
         toplam_kapasite += kapasite
     if toplam_kapasite <= 0:
         etiket = havza or "Türkiye geneli"
-        raise RuntimeError(f"EPİAŞ baraj doluluk: '{etiket}' için kapasite verisi yok")
+        if havzada_baraj:
+            # Ölçüm (2026-09-18): `dam-volume` 116 baraj, `active-volume` 80
+            # baraj döndü; Gediz'in tek barajı (DEMİRKÖPRÜ) hacim yanıtında
+            # yoktu. Bu kaynak tarafı boşluğu — sıfır yazmak veriyi yanlış
+            # temsil eder, bu yüzden patlatıyoruz.
+            raise RuntimeError(
+                f"EPİAŞ baraj doluluk: '{etiket}' havzasının barajları bugünkü "
+                "active-volume yanıtında yok (kaynak henüz raporlamamış)"
+            )
+        raise RuntimeError(f"EPİAŞ baraj doluluk: '{etiket}' havzası tanınmıyor")
     return toplam_hacim / toplam_kapasite * 100
 
 
