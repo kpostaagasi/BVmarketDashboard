@@ -54,16 +54,17 @@ def test_seri_alanlari_dogru_tiplerde():
 
 
 def test_kategoriye_gore_filtreleme():
-    idler = [s.id for s in seri_listele("insaat")]
-    assert idler == [
-        "insaat/konut-fiyat-endeksi",
-        "insaat/konut-satis-toplam",
-        "insaat/konut-satis-ipotekli",
-        "insaat/konut-satis-ilk-el",
-        "insaat/konut-satis-ikinci-el",
-        "insaat/konut-fiyat-istanbul",
-        "insaat/kira-endeksi",
-    ]
+    """Süzme sözleşmesi: yalnızca o kategorinin serileri, katalog sırasında.
+
+    Önceden kategori içeriği birebir listelenmişti; katalog her büyüdüğünde
+    test kırılıyordu ama kırılan şey davranış değil listenin kendisiydi.
+    """
+    insaat = seri_listele("insaat")
+    assert insaat, "insaat kategorisinde seri olmalı"
+    assert all(s.category == "insaat" for s in insaat)
+    tum_sira = [s.id for s in serileri_yukle() if s.category == "insaat"]
+    assert [s.id for s in insaat] == tum_sira
+    assert "insaat/konut-fiyat-endeksi" in tum_sira
 
 
 def test_bilinmeyen_seri_hata_verir():
