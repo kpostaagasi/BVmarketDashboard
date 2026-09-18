@@ -24601,3 +24601,276 @@
   unit: "Endeks"
   freq: monthly
   charts: [seasonality, level]
+
+- id: kredi-karti/arac-kiralama
+  title: "Kredi Kartı · Araç Kiralama"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT2
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/arac-satis-servis
+  title: "Kredi Kartı · Araç Satış & Servis"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT3
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/cesitli-gida
+  title: "Kredi Kartı · Çeşitli Gıda"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT5
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/dogrudan-pazarlama
+  title: "Kredi Kartı · Doğrudan Pazarlama"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT6
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/egitim-kirtasiye
+  title: "Kredi Kartı · Eğitim & Kırtasiye"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT7
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/elektrik-elektronik
+  title: "Kredi Kartı · Elektrik & Elektronik"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT8
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/hizmet-sektorleri
+  title: "Kredi Kartı · Hizmet Sektörleri"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT11
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/konaklama-otel
+  title: "Kredi Kartı · Konaklama & Otel"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT12
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/kulup-dernek
+  title: "Kredi Kartı · Kulüp & Dernek"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT13
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/kumar-sans-oyunlari
+  title: "Kredi Kartı · Kumar & Şans Oyunları"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT14
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/kuyumcular
+  title: "Kredi Kartı · Kuyumcular"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT15
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/mobilya-dekorasyon
+  title: "Kredi Kartı · Mobilya & Dekorasyon"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT17
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/insaat-muteahhit
+  title: "Kredi Kartı · İnşaat & Müteahhit"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT18
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/saglik-kozmetik
+  title: "Kredi Kartı · Sağlık & Kozmetik"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT19
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/seyahat-tasimacilik
+  title: "Kredi Kartı · Seyahat & Taşımacılık"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT20
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/sigorta
+  title: "Kredi Kartı · Sigorta"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT21
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/telekomunikasyon
+  title: "Kredi Kartı · Telekomünikasyon"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT22
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/yapi-malzemeleri
+  title: "Kredi Kartı · Yapı Malzemeleri"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT23
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/kamu-vergi-odemeleri
+  title: "Kredi Kartı · Kamu & Vergi Ödemeleri"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT25
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/bireysel-emeklilik
+  title: "Kredi Kartı · Bireysel Emeklilik"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT26
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]
+
+- id: kredi-karti/diger
+  title: "Kredi Kartı · Diğer"
+  category: kredi-karti
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.KKHARTUT.KT49
+  evds_frequency: "2"
+  unit: "Milyar TL"
+  olcek: 0.000001
+  freq: weekly
+  monthly_agg: sum
+  charts: [level, seasonality]

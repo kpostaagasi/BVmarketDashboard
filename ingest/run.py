@@ -64,7 +64,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          bddk_onbellek: dict | None = None,
          tefas_onbellek: dict | None = None,
          ec_onbellek: dict | None = None,
-         tim_il_onbellek: dict | None = None):
+         tim_il_onbellek: dict | None = None,
+         tim_ulke_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
         df = evds.seri_cek(seri, api_key, session=oturum)
@@ -78,6 +79,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = tim.seri_cek(seri, onbellek=tim_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tim_il":
         df = tim.il_seri_cek(seri, onbellek=tim_il_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "tim_ulke":
+        df = tim.ulke_seri_cek(seri, onbellek=tim_ulke_onbellek, session=oturum)
     elif seri.kaynak_tipi == "bddk":
         df = bddk.seri_cek(seri, onbellek=bddk_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tefas":
@@ -159,6 +162,9 @@ def main() -> int:
     # İl×sektör bülteni AYLIKTIR (yıllık değil): 741 seri aynı ~40 aylık
     # dosyayı paylaşır, önbelleksiz her seri kendi ayını yeniden indirir.
     tim_il_onbellek: dict = {}
+    # Ülke×sektör bülteni de AYLIKTIR; 674 seri aynı ~44 aylık dosyayı
+    # paylaşır (bkz. `ingest.tim.ulke_seri_cek`).
+    tim_ulke_onbellek: dict = {}
 
     with requests.Session() as oturum:
         oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
@@ -185,7 +191,7 @@ def main() -> int:
                 df = _cek(
                     seri, api_key, tgt, oturum,
                     epias_onbellek, osd_onbellek, tim_onbellek, bddk_onbellek,
-                    tefas_onbellek, ec_onbellek, tim_il_onbellek,
+                    tefas_onbellek, ec_onbellek, tim_il_onbellek, tim_ulke_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")

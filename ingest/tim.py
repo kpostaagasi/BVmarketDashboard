@@ -43,6 +43,10 @@ SAYFA_ADI = "SEKTOR"
 IL_SAYFA_ADI = "ILLER_SEKTOR"
 ASGARI_IL_SAYISI = 75
 IL_GENEL_TOPLAM = "GENEL TOPLAM"
+ULKE_SAYFA_ADI = "GUNLUK_SEKTOR_ULKE"
+# İl bülteninde ikinci sütun "ILLER", ülke bülteninde "ULKE"; hata
+# mesajlarında okunaklı tekil ad ("il"/"ülke") burada eşlenir.
+_VARLIK_ADLARI = {"ILLER": "il", "ULKE": "ülke"}
 
 # Modern (xlsx) yayının başladığı dosya. 2019'un tamamı bu dosyada.
 ILK_YIL = 2019
@@ -82,6 +86,15 @@ def il_bazinda_url(yil: int, ay: int) -> str:
     return (
         f"{TABAN}/files/downloads/rakamlar/{yil}/{ay}/"
         f"{yil}-{ay:02d}-{kapsam}-bazinda-sektor-rakamlari.xlsx"
+    )
+
+
+def ulke_bazinda_url(yil: int, ay: int) -> str:
+    """Ülke×sektör karşılaştırma bülteni; il bülteninden farklı olarak
+    dosya adı yıl geçişinde değişmiyor (ölçüldü: 2022–2026 arası sabit)."""
+    return (
+        f"{TABAN}/files/downloads/rakamlar/{yil}/{ay}/"
+        f"{yil}-{ay:02d}-ulkelere-gore-sektorel-ihracat-rakamlari.xlsx"
     )
 
 
@@ -144,8 +157,14 @@ def sayfayi_ayikla(baytlar: bytes) -> dict[str, dict[str, float]]:
 
 def il_sektor_noktalari(
     baytlar: bytes, anahtar: str = IL_SAYFA_ADI,
+    sayfa_adi: str = IL_SAYFA_ADI, ikinci_sutun: str = "ILLER",
 ) -> dict[tuple[str, str], dict[str, float]]:
-    """Karşılaştırma tablosunu `{(il, sektör): {dönem / yıl: değer}}` okur.
+    """Karşılaştırma tablosunu `{(ikinci sütun değeri, sektör): {dönem/yıl: değer}}` okur.
+
+    İl×sektör (`ILLER_SEKTOR`/"ILLER") ve ülke×sektör (`GUNLUK_SEKTOR_ULKE`/
+    "ULKE") bültenleri AYNI şablonu paylaşır; `sayfa_adi`/`ikinci_sutun`
+    hangisinin okunduğunu seçer (varsayılan il bülteni — mevcut çağıranlar
+    etkilenmez).
 
     Bu dosya aylık zaman serisi değildir: ay, önceki ay ve yılbaşından
     bugüne birikimli karşılaştırmaları yan yana taşır. Dönem başlıkları
@@ -153,23 +172,33 @@ def il_sektor_noktalari(
     `DEĞ.` sütunları ise kaynakta yazıldığı gibi oran (0.10 = %10) kalır.
     Eski dosyaların ek dönem grubu sabit sütun konumu varsaymadan okunur.
     Eksik sektör satırı/sayısal hücre sıfıra çevrilmez; gerçek sıfır korunur.
-    İl hücresi boş genel TOPLAM, `(IL_GENEL_TOPLAM, TOPLAM_ETIKETI)`
-    anahtarında korunur; tutarları il toplamlarıyla doğrulanır.
+    İkinci sütun hücresi boş genel TOPLAM, `(IL_GENEL_TOPLAM, TOPLAM_ETIKETI)`
+    anahtarında korunur.
+
+    `il_sektor_dogrula` (asgari satır sayısı + GENEL TOPLAM uzlaşımı) yalnızca
+    il bülteninde çalışır: her il kendi TOPLAM satırını taşır, o yüzden
+    uzlaştırılabilir. Ülke bülteninde bu satır hiç yayımlanmıyor (ölçüldü:
+    2026-08 dosyasında 4869 veri satırında tek bir TOPLAM/TOPLAM satırı var —
+    tüm ülkelerin genel toplamı — ülke başına ayrı satır yok), bu yüzden
+    `ulke_seri_cek` ülke TOPLAM'ını sektör satırlarını toplayarak kendi
+    hesaplar ve bu doğrulamaya ihtiyaç duymaz.
     """
     kitap = openpyxl.load_workbook(io.BytesIO(baytlar), data_only=True)
     try:
-        if IL_SAYFA_ADI not in kitap.sheetnames:
+        if sayfa_adi not in kitap.sheetnames:
             raise RuntimeError(
-                f"TİM il bülteni {anahtar}: '{IL_SAYFA_ADI}' sayfası yok"
+                f"TİM {sayfa_adi} bülteni {anahtar}: '{sayfa_adi}' sayfası yok"
             )
-        sayfa = kitap[IL_SAYFA_ADI]
+        sayfa = kitap[sayfa_adi]
         yil = _yili_bul(sayfa)
         gruplar = next(sayfa.iter_rows(min_row=3, max_row=3, values_only=True))
         basliklar = next(sayfa.iter_rows(min_row=4, max_row=4, values_only=True))
         if tuple(sektor_adini_normalize(h) for h in basliklar[:2]) != (
-            "SEKTÖR", "ILLER",
+            "SEKTÖR", ikinci_sutun,
         ):
-            raise RuntimeError(f"TİM il bülteni {anahtar}: SEKTÖR/ILLER başlığı yok")
+            raise RuntimeError(
+                f"TİM {sayfa_adi} bülteni {anahtar}: SEKTÖR/{ikinci_sutun} başlığı yok"
+            )
         # Dönem blokları sabit şablondan değil başlık satırının KENDİ
         # yapısından türetilir: 2023 dosyalarında blok sırası değişiyor
         # (ör. 2023.01: '31 OCAK' | '1 - 31 OCAK' | '1 - 31 ARALıK') ve
@@ -189,7 +218,7 @@ def il_sektor_noktalari(
                   if sektor_adini_normalize(h)]
         if any(baslik not in gecerli for _, baslik in okunan) or not okunan:
             raise RuntimeError(
-                f"TİM il bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları"
+                f"TİM {sayfa_adi} bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları"
             )
         bloklar: list[list[tuple[int, str]]] = [[]]
         for sutun, baslik in okunan:
@@ -200,7 +229,7 @@ def il_sektor_noktalari(
             bloklar[-1].append((sutun, baslik))
         if len(bloklar) != len(donemler):
             raise RuntimeError(
-                f"TİM il bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları"
+                f"TİM {sayfa_adi} bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları"
             )
         sutunlar = {
             sutun: f"{donem} / {baslik}"
@@ -208,19 +237,24 @@ def il_sektor_noktalari(
             for sutun, baslik in blok
         }
         if len(set(sutunlar.values())) != len(sutunlar):
-            raise RuntimeError(f"TİM il bülteni {anahtar}: yinelenen dönem başlığı")
+            raise RuntimeError(
+                f"TİM {sayfa_adi} bülteni {anahtar}: yinelenen dönem başlığı"
+            )
 
+        varlik_adi = _VARLIK_ADLARI.get(ikinci_sutun, ikinci_sutun.lower())
         noktalar = {}
         for satir in sayfa.iter_rows(min_row=5, values_only=True):
-            sektor, il = (sektor_adini_normalize(h) for h in satir[:2])
-            if not sektor and not il:
+            sektor, ikinci = (sektor_adini_normalize(h) for h in satir[:2])
+            if not sektor and not ikinci:
                 continue
-            # Genel toplam iki imzayla gelir: 2023'te boş IL ('TOPLAM',
-            # boş), 2026'da ('TOPLAM', 'TOPLAM'). İkisi de aynı satır.
-            if sektor == TOPLAM_ETIKETI and (not il or il == TOPLAM_ETIKETI):
-                il = IL_GENEL_TOPLAM
-            if not sektor or not il:
-                raise RuntimeError(f"TİM il bülteni {anahtar}: eksik il/sektör anahtarı")
+            # Genel toplam iki imzayla gelir: 2023'te boş ikinci sütun
+            # ('TOPLAM', boş), 2026'da ('TOPLAM', 'TOPLAM'). İkisi de aynı satır.
+            if sektor == TOPLAM_ETIKETI and (not ikinci or ikinci == TOPLAM_ETIKETI):
+                ikinci = IL_GENEL_TOPLAM
+            if not sektor or not ikinci:
+                raise RuntimeError(
+                    f"TİM {sayfa_adi} bülteni {anahtar}: eksik {varlik_adi}/sektör anahtarı"
+                )
             degerler = {}
             for sutun, etiket in sutunlar.items():
                 hucre = satir[sutun]
@@ -228,30 +262,33 @@ def il_sektor_noktalari(
                     continue
                 if isinstance(hucre, bool) or not isinstance(hucre, (int, float)):
                     raise RuntimeError(
-                        f"TİM il bülteni {anahtar}: sayısal olmayan hücre "
-                        f"{il}/{sektor}/{etiket}: {hucre!r}"
+                        f"TİM {sayfa_adi} bülteni {anahtar}: sayısal olmayan hücre "
+                        f"{ikinci}/{sektor}/{etiket}: {hucre!r}"
                     )
                 degerler[etiket] = float(hucre)
             if not degerler:
-                raise RuntimeError(f"TİM il bülteni {anahtar}: boş veri {il}/{sektor}")
-            if (il, sektor) in noktalar:
+                raise RuntimeError(
+                    f"TİM {sayfa_adi} bülteni {anahtar}: boş veri {ikinci}/{sektor}"
+                )
+            if (ikinci, sektor) in noktalar:
                 # Ölçüm (2024.10): ADANA/ANTALYA TOPLAM satırı ikinci kez,
                 # aylık sütunları sıfır ama YTD'de küçük bir dilim taşıyan
                 # ek satır olarak geliyor — aynı anahtarın PARÇASI. Parçalar
                 # toplanır; BİREBİR AYNI satır tekrarı ise şablon kaymasıdır
                 # ve toplamak değeri ikiye katlardı, o yüzden hata.
-                if noktalar[il, sektor] == degerler:
+                if noktalar[ikinci, sektor] == degerler:
                     raise RuntimeError(
-                        f"TİM il bülteni {anahtar}: yinelenen il/sektör "
-                        f"{(il, sektor)!r}"
+                        f"TİM {sayfa_adi} bülteni {anahtar}: yinelenen {varlik_adi}/sektör "
+                        f"{(ikinci, sektor)!r}"
                     )
                 for etiket, deger in degerler.items():
-                    noktalar[il, sektor][etiket] = (
-                        noktalar[il, sektor].get(etiket, 0.0) + deger
+                    noktalar[ikinci, sektor][etiket] = (
+                        noktalar[ikinci, sektor].get(etiket, 0.0) + deger
                     )
                 continue
-            noktalar[il, sektor] = degerler
-        il_sektor_dogrula(noktalar, anahtar)
+            noktalar[ikinci, sektor] = degerler
+        if sayfa_adi == IL_SAYFA_ADI:
+            il_sektor_dogrula(noktalar, anahtar)
         return noktalar
     finally:
         kitap.close()
@@ -436,6 +473,10 @@ def seri_cek(seri, onbellek: dict | None = None, session=None,
 def cekilecek_il_bultenleri(bugun: date) -> list[tuple[int, int]]:
     """Her ay ayrı dosya: 2023 Ocak'tan bugüne kadar tüm (yıl, ay) çiftleri.
 
+    İl VE ülke karşılaştırma bültenleri aynı pencereyi paylaşır (ikisi de
+    2023-01'den itibaren yayımlanıyor; ölçüldü), bu yüzden fonksiyon adı
+    "il" olsa da `ulke_seri_cek` de aynı listeyi kullanır.
+
     Sektörel bültenin aksine bu dosya bir yılı değil tek bir ayı taşır,
     bu yüzden `cekilecek_bultenler`in aksine burada yıl başına tek dosya
     yetmez — pencere kadar dosya indirilir.
@@ -483,20 +524,26 @@ def _aylik_sutun(
     return adaylar.pop()
 
 
-def il_seri_cek(seri, onbellek: dict | None = None, session=None,
-                 bugun: date | None = None) -> pd.DataFrame:
-    """İl×sektör karşılaştırma bülteninden tek il/sektörün aylık serisini çeker.
+def _karsilastirma_seri_cek(
+    seri, varlik_alani: str, varlik_adi: str, url_fn, ayikla_fn,
+    onbellek: dict | None = None, session=None, bugun: date | None = None,
+) -> pd.DataFrame:
+    """İl×sektör ya da ülke×sektör karşılaştırma bülteninden tek satırın
+    aylık serisini çeker — `il_seri_cek`/`ulke_seri_cek` ortak gövdesi.
 
     `onbellek` verilirse ayrıştırılmış `(yıl, ay) -> noktalar` eşlemesi koşu
-    boyunca paylaşılır: 741 seri aynı ~40 aylık dosyayı okuduğu için yoksa
-    741 indirme olurdu. 404 (o ay henüz yayımlanmamış) de önbelleğe `None`
-    olarak yazılır ki iki seri aynı eksik ayı iki kez denemesin.
+    boyunca paylaşılır: 741 il serisi aynı ~40 aylık dosyayı, 674 ülke
+    serisi de aynı sayıda dosyayı paylaşır. 404 (o ay henüz yayımlanmamış)
+    de önbelleğe `None` olarak yazılır ki iki seri aynı eksik ayı iki kez
+    denemesin.
 
     `seri.tim_sektor == "TOPLAM"` ise dönen değer bültenin kendi TOPLAM
-    satırı DEĞİL, o ilin TOPLAM-olmayan sektör satırlarının toplamıdır:
-    bülten TOPLAM satırı birlik bazlı bir fazlalık taşır (ölçüm: İstanbul
-    Ağustos 2026 — sektör toplamı 8.679.756,86, bülten TOPLAM satırı
-    8.800.137,83) ve referans siteyle parite için kullanılamaz.
+    satırı DEĞİL, `varlik_alani`nin (il/ülke) TOPLAM-olmayan sektör
+    satırlarının toplamıdır: il tarafında bülten TOPLAM satırı birlik
+    bazlı bir fazlalık taşır (ölçüm: İstanbul Ağustos 2026 — sektör toplamı
+    8.679.756,86, bülten TOPLAM satırı 8.800.137,83), ülke tarafında ise
+    böyle bir satır hiç yayımlanmıyor — ikisi için de sektör satırlarını
+    toplamak doğru ve tutarlı tek yoldur.
 
     Aylık sütun etiketi hesaplanarak bulunur: `'1 - <ayın son günü> <AY
     ADI> / <yıl>'`. Salt "1 - " öneki + "/ <yıl>" soneki YETMEZ: aynı
@@ -506,6 +553,7 @@ def il_seri_cek(seri, onbellek: dict | None = None, session=None,
     """
     bugun = bugun or date.today()
     onbellek = {} if onbellek is None else onbellek
+    varlik = getattr(seri, varlik_alani)
 
     kendi: dict[str, float] = {}
     for yil, ay in cekilecek_il_bultenleri(bugun):
@@ -513,10 +561,10 @@ def il_seri_cek(seri, onbellek: dict | None = None, session=None,
         if anahtar in onbellek:
             noktalar = onbellek[anahtar]
         else:
-            baytlar = _bulten_indir(il_bazinda_url(yil, ay), session)
+            baytlar = _bulten_indir(url_fn(yil, ay), session)
             noktalar = (
                 None if baytlar is None
-                else il_sektor_noktalari(baytlar, f"{yil}.{ay:02d}")
+                else ayikla_fn(baytlar, f"{yil}.{ay:02d}")
             )
             onbellek[anahtar] = noktalar
         if noktalar is None:
@@ -526,39 +574,79 @@ def il_seri_cek(seri, onbellek: dict | None = None, session=None,
 
         if seri.tim_sektor == TOPLAM_ETIKETI:
             satirlar = [
-                (il, sektor) for il, sektor in noktalar
-                if il == seri.tim_il and sektor != TOPLAM_ETIKETI
+                (v, sektor) for v, sektor in noktalar
+                if v == varlik and sektor != TOPLAM_ETIKETI
             ]
             if not satirlar:
                 raise RuntimeError(
-                    f"TİM il bülteni {yil}.{ay:02d}: il bulunamadı: "
-                    f"{seri.tim_il!r}"
+                    f"TİM {varlik_adi} bülteni {yil}.{ay:02d}: {varlik_adi} "
+                    f"bulunamadı: {varlik!r}"
                 )
         else:
-            satirlar = [(seri.tim_il, seri.tim_sektor)]
+            satirlar = [(varlik, seri.tim_sektor)]
             if satirlar[0] not in noktalar:
                 raise RuntimeError(
-                    f"TİM il bülteni {yil}.{ay:02d}: il/sektör bulunamadı: "
-                    f"{satirlar[0]!r}"
+                    f"TİM {varlik_adi} bülteni {yil}.{ay:02d}: {varlik_adi}/sektör "
+                    f"bulunamadı: {satirlar[0]!r}"
                 )
 
         toplam = 0.0
-        for anahtar_il_sektor in satirlar:
-            degerler = noktalar[anahtar_il_sektor]
+        for anahtar_satir in satirlar:
+            degerler = noktalar[anahtar_satir]
             if etiket not in degerler:
                 raise RuntimeError(
-                    f"TİM il bülteni {yil}.{ay:02d}: aylık sütun bulunamadı: "
-                    f"{anahtar_il_sektor} / {etiket!r}"
+                    f"TİM {varlik_adi} bülteni {yil}.{ay:02d}: aylık sütun bulunamadı: "
+                    f"{anahtar_satir} / {etiket!r}"
                 )
             toplam += degerler[etiket]
         kendi[f"{yil}-{ay:02d}-01"] = toplam
 
     if not kendi:
         raise RuntimeError(
-            f"TİM il bültenlerinde hiç nokta bulunamadı: {seri.id}"
+            f"TİM {varlik_adi} bültenlerinde hiç nokta bulunamadı: {seri.id}"
         )
 
     df = pd.DataFrame(sorted(kendi.items()), columns=["date", "value"])
     if seri.start_date:
         df = df[df["date"] >= seri.start_date]
     return df.reset_index(drop=True)
+
+
+def il_seri_cek(seri, onbellek: dict | None = None, session=None,
+                 bugun: date | None = None) -> pd.DataFrame:
+    """İl×sektör karşılaştırma bülteninden tek il/sektörün aylık serisini çeker.
+
+    Ortak gövde `_karsilastirma_seri_cek`tedir; bu fonksiyon yalnızca il
+    bültenine özgü parametreleri (sayfa adı, ikinci sütun, URL şeması)
+    bağlar. 741 seri aynı ~40 aylık dosyayı paylaşır (bkz. o fonksiyonun
+    docstring'i: TOPLAM sözleşmesi, aylık sütun eşleştirmesi).
+    """
+    return _karsilastirma_seri_cek(
+        seri, "tim_il", "il", il_bazinda_url,
+        lambda baytlar, anahtar: il_sektor_noktalari(baytlar, anahtar),
+        onbellek=onbellek, session=session, bugun=bugun,
+    )
+
+
+def ulke_seri_cek(seri, onbellek: dict | None = None, session=None,
+                   bugun: date | None = None) -> pd.DataFrame:
+    """Ülke×sektör karşılaştırma bülteninden tek ülke/sektörün aylık
+    serisini çeker. Ortak gövde `_karsilastirma_seri_cek`tedir (bkz.
+    `il_seri_cek`, aynı önbellek/404/aylık sütun mantığını paylaşır).
+
+    `seri.tim_sektor == "TOPLAM"` ise dönen değer ülkenin sektör
+    satırlarının toplamıdır. İl bülteninin aksine burada "bülten TOPLAM
+    satırından kaçınma" değil "hiç yayımlanmayan satırı türetme" durumu
+    söz konusu (ölçüldü: 2026-08 dosyasında 4869 veri satırında tek bir
+    TOPLAM/TOPLAM satırı var — genel toplam — ülke başına ayrı satır yok);
+    sonuç yine de sektör satırlarının toplamıdır ve referans platformun
+    "Toplam" kartıyla eşleşir (ölçüldü: ALMANYA Ağustos 2026 → 1.561.591,73,
+    Temmuz 2026 → 1.860.767,43, Ağustos 2025 → 1.571.570,19).
+    """
+    return _karsilastirma_seri_cek(
+        seri, "tim_ulke", "ülke", ulke_bazinda_url,
+        lambda baytlar, anahtar: il_sektor_noktalari(
+            baytlar, anahtar, sayfa_adi=ULKE_SAYFA_ADI, ikinci_sutun="ULKE",
+        ),
+        onbellek=onbellek, session=session, bugun=bugun,
+    )
