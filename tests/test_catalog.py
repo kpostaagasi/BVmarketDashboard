@@ -3,6 +3,8 @@ import dataclasses
 import pytest
 
 from core.catalog import (
+    GECERLI_KAYNAK_TIPLERI,
+    KAYNAK_ALANLARI,
     Kaynak,
     KatalogHatasi,
     Seri,
@@ -112,8 +114,11 @@ def _sluglar():
 
 
 def test_her_serinin_kaynak_tipi_gecerli():
+    # Geçerli tipler katalogda tanımlı; listeyi burada ikinci kez yazmak
+    # yeni kaynak eklendiğinde bu testi tek doğruluk kaynağından koparıyordu.
     for seri in serileri_yukle():
-        assert seri.kaynak_tipi in {"evds", "yahoo", "epias", "osd", "tim", "bddk", "tefas", "tefas_fon", "eurocontrol", "fred"}, seri.id
+        assert seri.kaynak_tipi in GECERLI_KAYNAK_TIPLERI, seri.id
+        assert seri.kaynak_tipi in KAYNAK_ALANLARI, seri.id
 
 
 def test_evds_serilerinin_hepsi_evds_koduna_sahip():

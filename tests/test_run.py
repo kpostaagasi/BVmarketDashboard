@@ -12,6 +12,28 @@ def sahte_df():
     return pd.DataFrame({"date": ["2026-01-01"], "value": [1.0]})
 
 
+def tum_adaptorleri_stubla(monkeypatch, haric=()):
+    """`main()` katalogdaki HER seriyi gezer: stub'lanmayan bir kaynak tipi
+    testi gerçek ağa çıkarır. Yeni kaynak eklendiğinde tek yerde güncellenir;
+    liste katalogdaki dispatch dallarıyla birebir tutulmalı."""
+    from ingest import run
+
+    adaptorler = {
+        (run.evds, "seri_cek"), (run.yahoo, "seri_cek"),
+        (run.epias, "seri_cek"), (run.osd, "seri_cek"),
+        (run.tim, "seri_cek"), (run.tim, "il_seri_cek"),
+        (run.bddk, "seri_cek"), (run.tefas, "seri_cek"),
+        (run.tefas, "fon_tam_gecmisi"), (run.eurocontrol, "seri_cek"),
+        (run.fred, "seri_cek"),
+    }
+    if hasattr(run.tim, "ulke_seri_cek"):
+        adaptorler.add((run.tim, "ulke_seri_cek"))
+    for modul, ad in adaptorler:
+        if (modul, ad) in haric:
+            continue
+        monkeypatch.setattr(modul, ad, lambda *a, **k: sahte_df())
+
+
 def test_cek_yahoo_serisini_yahoo_moduline_yonlendirir(monkeypatch):
     gorulen = {}
 
@@ -131,17 +153,7 @@ def test_main_epias_giris_basarisizsa_diger_kaynaklar_calismaya_devam_eder(
 
     monkeypatch.setattr(run.epias, "tgt_al", patlayan_tgt_al)
     monkeypatch.setattr(run.epias, "seri_cek", patlayan_epias_cek)
-    monkeypatch.setattr(run.evds, "seri_cek", lambda seri, api_key, session=None, bugun=None: sahte_df())
-    monkeypatch.setattr(run.yahoo, "seri_cek", lambda seri, session=None: sahte_df())
-    # osd/tim stub'lanmazsa bu test gerçek ağa çıkar: `-m 'not network'`
-    # koşusu OSD PDF'lerini ve TİM XLSX'lerini indirmeye başlar.
-    monkeypatch.setattr(run.osd, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.tim, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.bddk, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.tefas, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.tefas, "fon_tam_gecmisi", lambda *args, **kwargs: sahte_df())
-    monkeypatch.setattr(run.fred, "seri_cek", lambda *args, **kwargs: sahte_df())
-    monkeypatch.setattr(run.eurocontrol, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
+    tum_adaptorleri_stubla(monkeypatch, haric={(run.epias, "seri_cek")})
     monkeypatch.setattr(run, "seriyi_yaz", sahte_seriyi_yaz)
 
     kod = run.main()
@@ -176,14 +188,7 @@ def test_main_epias_serileri_tek_onbellek_paylasir(monkeypatch):
 
     monkeypatch.setattr(run.epias, "tgt_al", lambda k, p, session=None: "TGT-x")
     monkeypatch.setattr(run.epias, "seri_cek", sahte_epias_cek)
-    monkeypatch.setattr(run.evds, "seri_cek", lambda seri, api_key, session=None, bugun=None: sahte_df())
-    monkeypatch.setattr(run.yahoo, "seri_cek", lambda seri, session=None: sahte_df())
-    monkeypatch.setattr(run.osd, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.tim, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.bddk, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.tefas, "seri_cek", lambda seri, onbellek=None, session=None: sahte_df())
-    monkeypatch.setattr(run.tefas, "fon_tam_gecmisi", lambda *args, **kwargs: sahte_df())
-    monkeypatch.setattr(run.fred, "seri_cek", lambda *args, **kwargs: sahte_df())
+    tum_adaptorleri_stubla(monkeypatch, haric={(run.epias, "seri_cek")})
     monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
 
     assert run.main() == 0

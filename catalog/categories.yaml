@@ -185,6 +185,13 @@
     açık demektir.
 - slug: ihracat-il
   title: İhracat (İl × Sektör)
+  pano:
+    [
+      ihracat-il/istanbul-toplam,
+      ihracat-il/bursa-toplam,
+      ihracat-il/izmir-toplam,
+      ihracat-il/kocaeli-toplam,
+    ]
   note: >-
     Kaynak TİM il×sektör karşılaştırma bülteni; değerler Bin USD ve
     AYLIKTIR (o ayın 1'inden son gününe). Bir ilin "Toplam" serisi
