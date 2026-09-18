@@ -200,6 +200,13 @@
     referans site parite ölçütü sektör toplamıdır.
 - slug: ihracat-ulke
   title: İhracat (Ülke × Sektör)
+  pano:
+    [
+      ihracat-ulke/almanya-toplam,
+      ihracat-ulke/abd-toplam,
+      ihracat-ulke/irak-toplam,
+      ihracat-ulke/italya-toplam,
+    ]
   note: >-
     Kaynak TİM ülke×sektör karşılaştırma bülteni; değerler Bin USD ve
     AYLIKTIR (o ayın 1'inden son gününe). Bir ülkenin "Toplam" serisi

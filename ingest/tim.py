@@ -172,8 +172,10 @@ def il_sektor_noktalari(
     `DEĞ.` sütunları ise kaynakta yazıldığı gibi oran (0.10 = %10) kalır.
     Eski dosyaların ek dönem grubu sabit sütun konumu varsaymadan okunur.
     Eksik sektör satırı/sayısal hücre sıfıra çevrilmez; gerçek sıfır korunur.
-    İkinci sütun hücresi boş genel TOPLAM, `(IL_GENEL_TOPLAM, TOPLAM_ETIKETI)`
-    anahtarında korunur.
+    Sektör ya da ikinci sütun hücresi boş genel TOPLAM (hangisinin boş
+    kaldığı dosya tipine/yılına göre değişir; ölçüldü: il 2023'te ikinci
+    sütun boş, ülke 2023–2024'te sektör boş, 2025'ten itibaren ikisi de
+    'TOPLAM'), `(IL_GENEL_TOPLAM, TOPLAM_ETIKETI)` anahtarında korunur.
 
     `il_sektor_dogrula` (asgari satır sayısı + GENEL TOPLAM uzlaşımı) yalnızca
     il bülteninde çalışır: her il kendi TOPLAM satırını taşır, o yüzden
@@ -247,10 +249,20 @@ def il_sektor_noktalari(
             sektor, ikinci = (sektor_adini_normalize(h) for h in satir[:2])
             if not sektor and not ikinci:
                 continue
-            # Genel toplam iki imzayla gelir: 2023'te boş ikinci sütun
-            # ('TOPLAM', boş), 2026'da ('TOPLAM', 'TOPLAM'). İkisi de aynı satır.
-            if sektor == TOPLAM_ETIKETI and (not ikinci or ikinci == TOPLAM_ETIKETI):
-                ikinci = IL_GENEL_TOPLAM
+            # Genel toplam üç imzayla gelir: il 2023'te ('TOPLAM', boş),
+            # ülke 2023–2024'te (boş, 'TOPLAM') — ölçüldü: 2023.01–2024.06
+            # ülke bültenlerinde SEKTÖR boş, ÜLKE 'TOPLAM'; 2025.01'den
+            # itibaren ikisi de 'TOPLAM'. Hangi sütunun boş kaldığı dosya
+            # tipine/yılına göre değişir; üçü de aynı satır — en az biri
+            # TOPLAM, diğeri boş ya da TOPLAM ise. Yalnızca biri boşken
+            # diğeri gerçek bir sektör/il/ülke adıysa (TOPLAM değilse) bu
+            # şablon kayması sayılır ve aşağıdaki kontrolde hataya düşer.
+            if (
+                TOPLAM_ETIKETI in (sektor, ikinci)
+                and sektor in (TOPLAM_ETIKETI, "")
+                and ikinci in (TOPLAM_ETIKETI, "")
+            ):
+                sektor, ikinci = TOPLAM_ETIKETI, IL_GENEL_TOPLAM
             if not sektor or not ikinci:
                 raise RuntimeError(
                     f"TİM {sayfa_adi} bülteni {anahtar}: eksik {varlik_adi}/sektör anahtarı"
