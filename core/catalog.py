@@ -522,6 +522,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
 
     for ham in _yaml_oku("series.yaml"):
         evds_frekans = ham.get("evds_frequency")
+        _epias_alani_ham = ham.get("epias_alani")
         seri = Seri(
             id=ham["id"],
             title=ham["title"],
@@ -535,7 +536,11 @@ def serileri_yukle() -> tuple[Seri, ...]:
             evds_frequency=None if evds_frekans is None else str(evds_frekans),
             yahoo_symbol=ham.get("yahoo_symbol"),
             epias_ucu=ham.get("epias_ucu"),
-            epias_alani=ham.get("epias_alani"),
+            epias_alani=(
+                tuple(_epias_alani_ham)
+                if isinstance(_epias_alani_ham, list)
+                else _epias_alani_ham
+            ),
             epias_bilesenler=(
                 {ad: tuple(alanlar) for ad, alanlar in ham["epias_bilesenler"].items()}
                 if "epias_bilesenler" in ham
@@ -597,6 +602,10 @@ def serileri_yukle() -> tuple[Seri, ...]:
             tsb_sirket_kodu=(
                 int(ham["tsb_sirket_kodu"]) if "tsb_sirket_kodu" in ham else None
             ),
+            epdk_dogalgaz_olcut=ham.get("epdk_dogalgaz_olcut"),
+            eurostat_dataset=ham.get("eurostat_dataset"),
+            eurostat_geo=ham.get("eurostat_geo"),
+            eurostat_currency=ham.get("eurostat_currency"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
             yayin_notu=ham.get("yayin_notu"),
@@ -765,6 +774,27 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             raise KatalogHatasi(
                 f"{seri.id}: geçersiz epdk_urun '{seri.epdk_urun}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_EPDK_URUNLERI))})"
+            )
+    if seri.kaynak_tipi == "epdk_dogalgaz" and seri.epdk_dogalgaz_olcut not in GECERLI_EPDK_DOGALGAZ_OLCUTLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz epdk_dogalgaz_olcut '{seri.epdk_dogalgaz_olcut}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_EPDK_DOGALGAZ_OLCUTLERI))})"
+        )
+    if seri.kaynak_tipi == "eurostat":
+        if seri.eurostat_dataset not in GECERLI_EUROSTAT_DATASETLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz eurostat_dataset '{seri.eurostat_dataset}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_DATASETLERI))})"
+            )
+        if seri.eurostat_geo not in GECERLI_EUROSTAT_GEO:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz eurostat_geo '{seri.eurostat_geo}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_GEO))})"
+            )
+        if seri.eurostat_currency not in GECERLI_EUROSTAT_PARA_BIRIMLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz eurostat_currency '{seri.eurostat_currency}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_PARA_BIRIMLERI))})"
             )
     if seri.kaynak_tipi == "turkcell" and seri.turkcell_metrik not in GECERLI_TURKCELL_METRIKLERI:
         raise KatalogHatasi(

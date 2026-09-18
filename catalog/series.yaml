@@ -38283,3 +38283,266 @@
   - level
   osd_arac_tipi: MİDİBÜS
   osd_veri_tipi: ihracat
+- id: beyaz-esya/ic-satis-buzdolabi
+  title: Beyaz Eşya İç Satış - Buzdolabı (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ic-satis
+  turkbesd_urun: buzdolabi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ic-satis-derin-dondurucu
+  title: Beyaz Eşya İç Satış - Derin Dondurucu (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ic-satis
+  turkbesd_urun: derin-dondurucu
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ic-satis-camasir-makinesi
+  title: Beyaz Eşya İç Satış - Çamaşır Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ic-satis
+  turkbesd_urun: camasir-makinesi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ic-satis-bulasik-makinesi
+  title: Beyaz Eşya İç Satış - Bulaşık Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ic-satis
+  turkbesd_urun: bulasik-makinesi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ic-satis-firin
+  title: Beyaz Eşya İç Satış - Fırın (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ic-satis
+  turkbesd_urun: firin
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ic-satis-kurutucu
+  title: Beyaz Eşya İç Satış - Kurutma Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ic-satis
+  turkbesd_urun: kurutucu
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/uretim-buzdolabi
+  title: Beyaz Eşya Üretim - Buzdolabı (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: uretim
+  turkbesd_urun: buzdolabi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/uretim-derin-dondurucu
+  title: Beyaz Eşya Üretim - Derin Dondurucu (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: uretim
+  turkbesd_urun: derin-dondurucu
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/uretim-camasir-makinesi
+  title: Beyaz Eşya Üretim - Çamaşır Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: uretim
+  turkbesd_urun: camasir-makinesi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/uretim-bulasik-makinesi
+  title: Beyaz Eşya Üretim - Bulaşık Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: uretim
+  turkbesd_urun: bulasik-makinesi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/uretim-firin
+  title: Beyaz Eşya Üretim - Fırın (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: uretim
+  turkbesd_urun: firin
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/uretim-kurutucu
+  title: Beyaz Eşya Üretim - Kurutma Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: uretim
+  turkbesd_urun: kurutucu
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ihracat-buzdolabi
+  title: Beyaz Eşya İhracat - Buzdolabı (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ihracat
+  turkbesd_urun: buzdolabi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ihracat-derin-dondurucu
+  title: Beyaz Eşya İhracat - Derin Dondurucu (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ihracat
+  turkbesd_urun: derin-dondurucu
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ihracat-camasir-makinesi
+  title: Beyaz Eşya İhracat - Çamaşır Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ihracat
+  turkbesd_urun: camasir-makinesi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ihracat-bulasik-makinesi
+  title: Beyaz Eşya İhracat - Bulaşık Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ihracat
+  turkbesd_urun: bulasik-makinesi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ihracat-firin
+  title: Beyaz Eşya İhracat - Fırın (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ihracat
+  turkbesd_urun: firin
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ihracat-kurutucu
+  title: Beyaz Eşya İhracat - Kurutma Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ihracat
+  turkbesd_urun: kurutucu
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ithalat-buzdolabi
+  title: Beyaz Eşya İthalat - Buzdolabı (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ithalat
+  turkbesd_urun: buzdolabi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ithalat-derin-dondurucu
+  title: Beyaz Eşya İthalat - Derin Dondurucu (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ithalat
+  turkbesd_urun: derin-dondurucu
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ithalat-camasir-makinesi
+  title: Beyaz Eşya İthalat - Çamaşır Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ithalat
+  turkbesd_urun: camasir-makinesi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ithalat-bulasik-makinesi
+  title: Beyaz Eşya İthalat - Bulaşık Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ithalat
+  turkbesd_urun: bulasik-makinesi
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ithalat-firin
+  title: Beyaz Eşya İthalat - Fırın (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ithalat
+  turkbesd_urun: firin
+  unit: "Adet"
+  freq: yearly
+  charts: [level]
+
+- id: beyaz-esya/ithalat-kurutucu
+  title: Beyaz Eşya İthalat - Kurutma Makinesi (Yıllık)
+  category: beyaz-esya
+  kaynak: { name: "TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği)", url: "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/" }
+  kaynak_tipi: turkbesd
+  turkbesd_olcut: ithalat
+  turkbesd_urun: kurutucu
+  unit: "Adet"
+  freq: yearly
+  charts: [level]

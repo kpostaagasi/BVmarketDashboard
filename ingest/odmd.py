@@ -140,6 +140,9 @@ def marka_satirlari(dosya_baytlari: bytes) -> dict[str, dict[str, float]]:
     Öz-doğrulama: dosyanın kendi "TOPLAM:" satırı, marka satırlarının
     toplamıyla karşılaştırılır; tutmazsa RuntimeError (şablon değişmiş
     olabilir — sessizce eksik/yanlış veri üretmektense ingest kırılmalı).
+    Ayrıca dönen sözlükte gerçek marka anahtarlarının yanında `"TOPLAM"`
+    sözde-anahtarı da vardır — dosyanın kendi TOPLAM satırı, toplam pazar
+    kartları için (bkz. `Seri.odmd_marka = ("TOPLAM",)`).
     """
     kitap = openpyxl.load_workbook(io.BytesIO(dosya_baytlari), data_only=True)
     satirlar = list(kitap[kitap.sheetnames[0]].iter_rows(values_only=True))
@@ -186,6 +189,12 @@ def marka_satirlari(dosya_baytlari: bytes) -> dict[str, dict[str, float]]:
                 f"ODMD öz-doğrulama — {ad_}: marka toplamı {bulunan:,.0f}, "
                 f"dosyanın TOPLAM satırı {beklenen:,.0f}"
             )
+
+    # Toplam pazar kartları (tüm markaların toplamı) için dosyanın kendi
+    # "TOPLAM:" satırı ayrı bir sözde-marka anahtarıyla eklenir — yukarıdaki
+    # öz-doğrulamadan SONRA eklenir, aksi halde marka toplamına kendi kendini
+    # katıp doğrulamayı bozardı. `Seri.odmd_marka = ("TOPLAM",)` ile okunur.
+    markalar["TOPLAM"] = {ad_: float(toplam_satiri[kol] or 0) for ad_, kol in _MARKA_SUTUNLARI.items()}
 
     return markalar
 

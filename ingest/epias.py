@@ -110,19 +110,34 @@ def tgt_al(kullanici: str, parola: str,
     return ticket
 
 
-def noktalari_ayikla(yanit: dict, alan: str) -> list[tuple[str, float]]:
+def noktalari_ayikla(
+    yanit: dict, alan: str | tuple[str, ...]
+) -> list[tuple[str, float]]:
     """Saf: zarf sözlüğünden (tarih, değer) listesi çıkarır.
 
-    Boş değerli kayıtlar atlanır — EPİAŞ yayınlanmamış saatleri null döner.
-    Alan hiç yoksa KeyError yükselir: sessizce boş seri döndürmek, kırık bir
-    ingest'i sağlıklı göstermekten kötüdür.
+    `alan` tek bir ham JSON alanı (ör. "total") ya da TOPLANACAK birden çok
+    ham alan (ör. `("naturalGas", "lng")`, bir üretim kaynağının ısı/LNG
+    kırılımını tek bir "Doğalgaz" değerinde birleştirmek için) olabilir —
+    katalogda `epias_alani` bir liste verilirse `serileri_yukle` bunu
+    tuple'a çevirir. Bu, `epias_bilesenler`in ÇOK GRUPLU (composition
+    grafiği için geniş DataFrame) yolundan bilinçli olarak AYRI ve daha
+    basit bir yol: tek grup istenen "level"/"seasonality" serileri için
+    `date,value` dışında bir sözleşme gerektirmez.
+
+    Boş değerli kayıtlar atlanır — EPİAŞ yayınlanmamış saatleri null döner;
+    çoklu alanda HERHANGİ biri null ise o saat tamamen atlanır (aksi halde
+    None'ı 0 sayıp o kaynağın üretimini sessizce eksik gösterir — bkz.
+    `bilesen_noktalari_ayikla`'daki aynı ilke). Alan hiç yoksa KeyError
+    yükselir: sessizce boş seri döndürmek, kırık bir ingest'i sağlıklı
+    göstermekten kötüdür.
     """
+    alanlar = (alan,) if isinstance(alan, str) else alan
     noktalar = []
     for kayit in yanit.get("items") or []:
-        ham = kayit[alan]
-        if ham is None:
+        hamlar = [kayit[a] for a in alanlar]
+        if any(h is None for h in hamlar):
             continue
-        noktalar.append((kayit["date"][:10], float(ham)))
+        noktalar.append((kayit["date"][:10], float(sum(hamlar))))
     return noktalar
 
 

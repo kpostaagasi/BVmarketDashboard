@@ -294,3 +294,24 @@
     Kaynak EİB aylık ihracat bülteni; tutarlar FOB USD (katalog milyon
     USD'ye ölçekler), hacimler kilogramdan bin tona çevrilir.
 
+- slug: beyaz-esya
+  title: Beyaz Eşya Sektörü (TÜRKBESD)
+  pano:
+    [
+      beyaz-esya/ic-satis-buzdolabi,
+      beyaz-esya/uretim-buzdolabi,
+      beyaz-esya/ihracat-buzdolabi,
+      beyaz-esya/ithalat-buzdolabi,
+    ]
+  note: >-
+    Kaynak TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği) "Son 5 Yılın
+    Rakamları" sayfası; her ölçüt (İç Satış/Üretim/İhracat/İthalat) için
+    ayrı bir XLSX'te 6 ana ürün bazında YILLIK (2021'den bugüne) veri
+    yayımlanıyor (`freq: yearly`, her nokta 1 Ocak'a tarihli yıl
+    etiketidir).
+    Referans sayfadaki aylık/çeyreksel toplam kartları (ürün kırılımsız,
+    "Aylık"/"Çeyreksel" başlıklı) KASITLI OLARAK bu ailede YOK: TÜRKBESD
+    bu toplamları hiçbir deterministik, tam geçmişli kaynaktan
+    yayımlamıyor (bkz. `ingest/turkbesd.py` docstring'i — "Beyaz Dünya"
+    bültenleri salt anlatı, mutlak aylık tablo taşımıyor ve arşivi
+    yalnızca son ~5 ayı kapsıyor).

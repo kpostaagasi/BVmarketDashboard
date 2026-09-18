@@ -3,6 +3,9 @@ import dataclasses
 import pytest
 
 from core.catalog import (
+    GECERLI_AYLIK_AGG,
+    GECERLI_FREKANSLAR,
+    GECERLI_GRAFIKLER,
     GECERLI_KAYNAK_TIPLERI,
     KAYNAK_ALANLARI,
     Kaynak,
@@ -90,10 +93,10 @@ def test_charts_listesinde_tekrar_reddedilir():
 
 def test_alan_degerleri_gecerli_kumelerde():
     for seri in serileri_yukle():
-        assert seri.freq in {"daily", "weekly", "monthly", "quarterly"}, seri.id
-        assert seri.monthly_agg in {"mean", "last", "sum"}, seri.id
+        assert seri.freq in GECERLI_FREKANSLAR, seri.id
+        assert seri.monthly_agg in GECERLI_AYLIK_AGG, seri.id
         assert seri.charts, seri.id
-        assert set(seri.charts) <= {"seasonality", "daily_seasonality", "level", "composition", "fon"}, seri.id
+        assert set(seri.charts) <= GECERLI_GRAFIKLER, seri.id
         if seri.kaynak_tipi == "evds":
             assert seri.evds_frequency in {"1", "2", "5"}, seri.id
             assert seri.evds_code, seri.id

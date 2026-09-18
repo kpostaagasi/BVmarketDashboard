@@ -71,6 +71,33 @@ ANA_GRUPLAR = ("I. TARIM", "II. SANAYİ", "III. MADENCİLİK")
 ASGARI_SEKTOR_SAYISI = 30
 TOLERANS = 0.5
 
+# Ülke grupları bülteni (AB, Ortadoğu, BDT, Kuzey Amerika Serbest Ticaret vb.
+# 12 grup) il/ülke karşılaştırma bültenleriyle AYNI aylık takvimi VE AYNI
+# başlangıcı (2023-01) paylaşır. Dosya 2019-12'ye kadar yayımlanıyor
+# (ölçüldü) ama 2019-2022 dosyaları ek bir kalite sorunu taşıyor: eski
+# şablonun (aşağıda) bazı satırlarında SEKTÖR boş + ÜLKEGRUP='TOPLAM' ama
+# hücreler tamamen boş geliyor — `il_sektor_noktalari`nın "genel toplam"
+# belirsizlik çözümü bunu il/ülke bültenlerindeki gerçek genel toplam
+# satırıyla karıştırıp "boş veri" hatası veriyor (ölçüldü: 2019-12 dosyası).
+# Referans platform (marketvisuals) da zaten yalnızca 2023+ gösteriyor,
+# bu yüzden pencere il/ülke bültenleriyle AYNI 2023-01'den başlatıldı.
+#
+# TİM İKİ FARKLI şablon arasında KRONOLOJİK OLMAYAN bir sırayla geçiş
+# yapıyor (ölçüldü: 2023 Ocak-Haziran eski, Temmuz-Kasım yeni, 2024
+# Ocak-Temmuz eski, Ağustos-Eylül yeni, Ekim yine eski, Kasım yeni — ay
+# bazlı tahmin GÜVENİLMEZ, her dosyanın KENDİ sayfa adına bakılmalı):
+# - YENİ ("GUNLUK_KONSOLIDE_ULKE_GRUBU"): tek anahtar sütunu (ÜLKE GRUP),
+#   TİM'in kendi önceden hesapladığı grup toplamı (bkz. `ulke_grubu_noktalari`).
+# - ESKİ ("GUNLUK_SEKTOR_ULKEGRUBU"): il/ülke bültenleriyle AYNI SEKTÖR×
+#   ÜLKEGRUP çapraz tablosu — grup toplamı yayımlanmıyor, TOPLAM-olmayan
+#   sektör satırlarının toplamıyla türetiliyor (bkz. `_eski_sablon_grup_noktalari`,
+#   `il_sektor_noktalari` yeniden kullanılır).
+ULKE_GRUBU_YENI_SAYFA_ADI = "GUNLUK_KONSOLIDE_ULKE_GRUBU"
+ULKE_GRUBU_ESKI_SAYFA_ADI = "GUNLUK_SEKTOR_ULKEGRUBU"
+ULKE_GRUBU_ANAHTAR_SUTUNU = "ULKE GRUP"
+# Ölçüldü (2026-08 dosyası): 12 grup + TOPLAM satırı.
+ASGARI_ULKE_GRUBU_SAYISI = 10
+
 
 def bulten_url(yil: int, ay: int) -> str:
     """Ay dizinde sıfırsız, dosya adında sıfırlı — TİM böyle yayımlıyor."""
@@ -662,3 +689,277 @@ def ulke_seri_cek(seri, onbellek: dict | None = None, session=None,
         ),
         onbellek=onbellek, session=session, bugun=bugun,
     )
+
+
+def ulke_grubu_bazinda_url(yil: int, ay: int) -> str:
+    """Ülke grupları bülteni; il/ülke bültenleriyle aynı URL ailesinde
+    ama farklı bir dosya adı taşır (ölçüldü: `.../<yıl>-<aa>-ulke-gruplari-
+    bazinda-rakamlar.xlsx`, 200; 2019-12'den itibaren yayımlanıyor).
+    """
+    return (
+        f"{TABAN}/files/downloads/rakamlar/{yil}/{ay}/"
+        f"{yil}-{ay:02d}-ulke-gruplari-bazinda-rakamlar.xlsx"
+    )
+
+
+def cekilecek_ulke_grubu_bultenleri(bugun: date) -> list[tuple[int, int]]:
+    """Her ay ayrı dosya; pencere il/ülke bültenleriyle BİREBİR aynı
+    (2023-01'den bugüne) — `cekilecek_il_bultenleri`nin kendisi kullanılır.
+    """
+    return cekilecek_il_bultenleri(bugun)
+
+
+def ulke_grubu_noktalari(
+    baytlar: bytes, anahtar: str, sayfa_adi: str,
+) -> dict[str, dict[str, float]]:
+    """Basit tek-anahtarlı (ÜLKE GRUP) şablonu okur — `_ulke_grubu_dosyasini_ayikla`
+    dosyanın GERÇEK başlık satırına bakarak hangi sayfayı/şablonu
+    kullanacağını belirler (sayfa ADI güvenilir değil — bkz. o fonksiyonun
+    docstring'i); `sayfa_adi` çağıran tarafından geçirilir.
+
+    Dönem-bloğu çözümlemesi `il_sektor_noktalari` ile AYNI mantığı taşır
+    (bkz. o fonksiyonun docstring'i: blok sırası hizaya değil sıraya
+    güvenir, 'DEĞ.' bir bloğu kapatır). Fark: burada TEK anahtar sütunu
+    var (ÜLKE GRUP) — il/ülke bültenindeki "genel toplam iki hücrenin
+    biri boş" belirsizliği yok, TOPLAM satırı doğrudan 'TOPLAM' yazıyor.
+    """
+    kitap = openpyxl.load_workbook(io.BytesIO(baytlar), data_only=True)
+    try:
+        if sayfa_adi not in kitap.sheetnames:
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {anahtar}: "
+                f"'{sayfa_adi}' sayfası yok: {kitap.sheetnames}"
+            )
+        sayfa = kitap[sayfa_adi]
+        yil = _yili_bul(sayfa)
+        gruplar = next(sayfa.iter_rows(min_row=3, max_row=3, values_only=True))
+        basliklar = next(sayfa.iter_rows(min_row=4, max_row=4, values_only=True))
+        if sektor_adini_normalize(basliklar[0]) != ULKE_GRUBU_ANAHTAR_SUTUNU:
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {anahtar}: "
+                f"'{ULKE_GRUBU_ANAHTAR_SUTUNU}' başlığı yok"
+            )
+        donemler = [
+            sektor_adini_normalize(h)
+            for h in gruplar if h is not None and str(h).strip()
+        ]
+        gecerli = {str(yil - 1), str(yil), "DEĞ."}
+        okunan = [(sutun, sektor_adini_normalize(h))
+                  for sutun, h in enumerate(basliklar[1:], start=1)
+                  if sektor_adini_normalize(h)]
+        if any(baslik not in gecerli for _, baslik in okunan) or not okunan:
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları"
+            )
+        bloklar: list[list[tuple[int, str]]] = [[]]
+        for sutun, baslik in okunan:
+            simdiki = bloklar[-1]
+            if simdiki and (baslik in {b for _, b in simdiki}
+                            or simdiki[-1][1] == "DEĞ."):
+                bloklar.append([])
+            bloklar[-1].append((sutun, baslik))
+        if len(bloklar) != len(donemler):
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {anahtar}: bilinmeyen dönem/yıl başlıkları"
+            )
+        sutunlar = {
+            sutun: f"{donem} / {baslik}"
+            for donem, blok in zip(donemler, bloklar)
+            for sutun, baslik in blok
+        }
+        if len(set(sutunlar.values())) != len(sutunlar):
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {anahtar}: yinelenen dönem başlığı"
+            )
+
+        noktalar: dict[str, dict[str, float]] = {}
+        for satir in sayfa.iter_rows(min_row=5, values_only=True):
+            grup = sektor_adini_normalize(satir[0])
+            if not grup:
+                continue
+            degerler = {}
+            for sutun, etiket in sutunlar.items():
+                hucre = satir[sutun]
+                if hucre is None:
+                    continue
+                if isinstance(hucre, bool) or not isinstance(hucre, (int, float)):
+                    raise RuntimeError(
+                        f"TİM ülke grupları bülteni {anahtar}: sayısal olmayan hücre "
+                        f"{grup}/{etiket}: {hucre!r}"
+                    )
+                degerler[etiket] = float(hucre)
+            if not degerler:
+                raise RuntimeError(
+                    f"TİM ülke grupları bülteni {anahtar}: boş veri satırı: {grup!r}"
+                )
+            if grup in noktalar:
+                raise RuntimeError(
+                    f"TİM ülke grupları bülteni {anahtar}: yinelenen ülke grubu {grup!r}"
+                )
+            noktalar[grup] = degerler
+        _ulke_grubu_dogrula(noktalar, anahtar)
+        return noktalar
+    finally:
+        kitap.close()
+
+
+def _ulke_grubu_dogrula(noktalar: dict[str, dict[str, float]], anahtar: str) -> None:
+    """Grup sayısı ve TOPLAM uzlaşımı — şablon kayması sessizce geçmemeli."""
+    gruplar = [g for g in noktalar if g != TOPLAM_ETIKETI]
+    if len(gruplar) < ASGARI_ULKE_GRUBU_SAYISI:
+        raise RuntimeError(
+            f"TİM ülke grupları bülteni {anahtar}: yalnızca {len(gruplar)} grup okundu "
+            f"(asgari {ASGARI_ULKE_GRUBU_SAYISI}) — şablon değişmiş olabilir"
+        )
+    toplam = noktalar.get(TOPLAM_ETIKETI)
+    if toplam is None:
+        raise RuntimeError(f"TİM ülke grupları bülteni {anahtar}: TOPLAM satırı yok")
+    for etiket, deger in toplam.items():
+        # Değişim oranları toplanamaz; yalnızca tutar sütunları uzlaşır.
+        if etiket.endswith(" / DEĞ."):
+            continue
+        if any(etiket not in noktalar[g] for g in gruplar):
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {anahtar}: grup değeri eksik: {etiket}"
+            )
+        grup_toplami = sum(noktalar[g][etiket] for g in gruplar)
+        if abs(grup_toplami - deger) > deger * 0.001 + TOLERANS:
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {anahtar}: {etiket} grup toplamı "
+                f"{grup_toplami:.1f} ile TOPLAM {deger:.1f} uyuşmuyor"
+            )
+
+
+def _eski_sablon_grup_noktalari(
+    baytlar: bytes, anahtar: str, sayfa_adi: str,
+) -> dict[str, dict[str, float]]:
+    """ESKİ şablon — SEKTÖR×ÜLKEGRUP çapraz tablosu, il/ülke karşılaştırma
+    bültenleriyle AYNI dosya biçimi. `il_sektor_noktalari` YENİDEN
+    KULLANILIR (yeni bir XLSX ayrıştırıcı yazılmadı); bu bültende grup
+    toplamı doğrudan yayımlanmıyor, TOPLAM olmayan sektör satırlarının
+    toplamıyla türetiliyor (`_karsilastirma_seri_cek`in `seri.tim_sektor
+    == "TOPLAM"` dalıyla aynı mantık). DEĞ. (oran) sütunları sektörler
+    arası toplanamayacağı için hiç taşınmıyor — yalnızca tutar sütunları
+    özetleniyor; `_ulke_grubu_dogrula` bu yüzden burada kendi kendine
+    tutarlı olur (iki tarafı da aynı toplamadan türer), yine de grup
+    SAYISI ve sütun YAPISI kaymasını yakalar.
+    """
+    capraz = il_sektor_noktalari(
+        baytlar, anahtar, sayfa_adi=sayfa_adi, ikinci_sutun="ULKEGRUP",
+    )
+    gruplar = sorted({
+        ikinci for ikinci, _ in capraz
+        if ikinci not in (TOPLAM_ETIKETI, IL_GENEL_TOPLAM)
+    })
+    noktalar: dict[str, dict[str, float]] = {}
+    for grup in gruplar:
+        degerler: dict[str, float] = {}
+        for (ikinci, sektor), deg in capraz.items():
+            if ikinci != grup or sektor == TOPLAM_ETIKETI:
+                continue
+            for etiket, deger in deg.items():
+                if etiket.endswith(" / DEĞ."):
+                    continue
+                degerler[etiket] = degerler.get(etiket, 0.0) + deger
+        if not degerler:
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni (eski şablon) {anahtar}: "
+                f"grup için veri bulunamadı: {grup!r}"
+            )
+        noktalar[grup] = degerler
+    noktalar[TOPLAM_ETIKETI] = {
+        etiket: sum(noktalar[g].get(etiket, 0.0) for g in gruplar)
+        for etiket in {etiket for g in gruplar for etiket in noktalar[g]}
+    }
+    _ulke_grubu_dogrula(noktalar, anahtar)
+    return noktalar
+
+
+def _ulke_grubu_dosyasini_ayikla(baytlar: bytes, anahtar: str) -> dict[str, dict[str, float]]:
+    """Bir ayın ülke grupları dosyasını doğru ayrıştırıcıya yönlendirir.
+
+    SAYFA ADI GÜVENİLMEZ: ölçüldü (2026-09-18) — 2023-05 dosyası
+    'GUNLUK_SEKTOR_ULKEGRUBU' adını taşıyor ama İÇERİĞİ basit tek-anahtarlı
+    (ÜLKE GRUP) YENİ şablon; sayfa adı ile gerçek sütun yapısı BAĞIMSIZ.
+    Bu yüzden dosyanın KENDİ başlık satırına (4. satır, A sütunu) bakılır:
+    'ULKE GRUP' → basit şablon, 'SEKTÖR' → SEKTÖR×ÜLKEGRUP çapraz tablo.
+    """
+    kitap = openpyxl.load_workbook(io.BytesIO(baytlar), data_only=True)
+    try:
+        sayfa_adi = next(
+            (ad for ad in (ULKE_GRUBU_YENI_SAYFA_ADI, ULKE_GRUBU_ESKI_SAYFA_ADI)
+             if ad in kitap.sheetnames),
+            None,
+        )
+        if sayfa_adi is None:
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {anahtar}: bilinen hiçbir sayfa adı yok "
+                f"({ULKE_GRUBU_YENI_SAYFA_ADI!r} / {ULKE_GRUBU_ESKI_SAYFA_ADI!r}): "
+                f"{kitap.sheetnames}"
+            )
+        ilk_hucre = sektor_adini_normalize(
+            next(kitap[sayfa_adi].iter_rows(min_row=4, max_row=4, values_only=True))[0]
+        )
+    finally:
+        kitap.close()
+    if ilk_hucre == ULKE_GRUBU_ANAHTAR_SUTUNU:
+        return ulke_grubu_noktalari(baytlar, anahtar, sayfa_adi)
+    if ilk_hucre == "SEKTÖR":
+        return _eski_sablon_grup_noktalari(baytlar, anahtar, sayfa_adi)
+    raise RuntimeError(
+        f"TİM ülke grupları bülteni {anahtar}: '{sayfa_adi}' sayfasında "
+        f"tanınmayan başlık hücresi: {ilk_hucre!r}"
+    )
+
+
+def ulke_grubu_seri_cek(seri, onbellek: dict | None = None, session=None,
+                         bugun: date | None = None) -> pd.DataFrame:
+    """Ülke grupları bülteninden tek bir grubun aylık serisini çeker.
+
+    `_karsilastirma_seri_cek`in aksine tek boyutlu anahtar var: sektör
+    kırılımı yok, `seri.tim_ulke_grubu` doğrudan bültenin ÜLKE GRUP
+    değerine eşlenir. `seri.tim_ulke_grubu == "TOPLAM"` da özel bir
+    türetme GEREKTİRMEZ — il/ülke bültenlerinin aksine bu bülten TOPLAM
+    satırını gerçekten yayımlıyor ve `_ulke_grubu_dogrula` bunu 12 grubun
+    toplamıyla uzlaştırıyor.
+    """
+    bugun = bugun or date.today()
+    onbellek = {} if onbellek is None else onbellek
+
+    kendi: dict[str, float] = {}
+    for yil, ay in cekilecek_ulke_grubu_bultenleri(bugun):
+        anahtar = (yil, ay)
+        if anahtar in onbellek:
+            noktalar = onbellek[anahtar]
+        else:
+            baytlar = _bulten_indir(ulke_grubu_bazinda_url(yil, ay), session)
+            noktalar = (
+                None if baytlar is None
+                else _ulke_grubu_dosyasini_ayikla(baytlar, f"{yil}.{ay:02d}")
+            )
+            onbellek[anahtar] = noktalar
+        if noktalar is None:
+            continue
+        if seri.tim_ulke_grubu not in noktalar:
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {yil}.{ay:02d}: grup bulunamadı: "
+                f"{seri.tim_ulke_grubu!r}"
+            )
+        etiket = _aylik_sutun(noktalar, yil, ay)
+        degerler = noktalar[seri.tim_ulke_grubu]
+        if etiket not in degerler:
+            raise RuntimeError(
+                f"TİM ülke grupları bülteni {yil}.{ay:02d}: aylık sütun bulunamadı: "
+                f"{seri.tim_ulke_grubu} / {etiket!r}"
+            )
+        kendi[f"{yil}-{ay:02d}-01"] = degerler[etiket]
+
+    if not kendi:
+        raise RuntimeError(
+            f"TİM ülke grupları bültenlerinde hiç nokta bulunamadı: {seri.id}"
+        )
+
+    df = pd.DataFrame(sorted(kendi.items()), columns=["date", "value"])
+    if seri.start_date:
+        df = df[df["date"] >= seri.start_date]
+    return df.reset_index(drop=True)

@@ -28,6 +28,7 @@ ZAMAN_ASIMI = 60
 
 _AYLIK = re.compile(r"^(\d{4})-(\d{2})$")
 _GUNLUK = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")
+_CEYREK = re.compile(r"^(\d{4})-Q([1-4])$")
 
 
 def alan_adi(evds_code: str) -> str:
@@ -42,6 +43,10 @@ def tarih_parse(tarih: str) -> str | None:
     gunluk = _GUNLUK.match(metin)
     if gunluk:
         return f"{gunluk.group(3)}-{gunluk.group(2)}-{gunluk.group(1)}"
+    ceyrek = _CEYREK.match(metin)
+    if ceyrek:
+        ilk_ay = (int(ceyrek.group(2)) - 1) * 3 + 1
+        return f"{ceyrek.group(1)}-{ilk_ay:02d}-01"
     return None
 
 
