@@ -65,15 +65,19 @@ Ham değerler TONDUR — "Bin ton" gösterime katalogdaki `olcek: 0.001` ile
 
 from __future__ import annotations
 
+import html as html_modul
 import re
 from io import BytesIO
 
 import openpyxl
 import pandas as pd
+import pdfplumber
 import requests
 
 from core.catalog import (
     GECERLI_EPDK_DOGALGAZ_OLCUTLERI,
+    GECERLI_EPDK_FIYAT_KALEMLERI,
+    GECERLI_EPDK_FIYAT_URUNLERI,
     GECERLI_EPDK_OLCUTLERI,
     GECERLI_EPDK_URUNLERI,
 )
@@ -765,4 +769,193 @@ def dogalgaz_seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.Da
     df = pd.DataFrame(sorted(noktalar[olcut].items()), columns=["date", "value"])
     if seri.start_date:
         df = df[df["date"] >= seri.start_date]
+    return df.reset_index(drop=True)
+
+
+# --- Petrol ve LPG Piyasası Fiyatlandırma Raporu (benzin/motorin fiyat
+#     bileşenleri) ---
+#
+# Kaynak sayfası SEKTÖR RAPORU'NDAN FARKLI: `3-0-143/fiyatlandirma-raporu`
+# ("Fiyatlandırma Raporu Listesi", 2014'e kadar aylık PDF arşivi — canlı
+# ölçüldü 2026-09-18). Liste şablonu da farklı: link metni/`title` niteliği
+# AYNI `<a href="/Detay/DownloadDocument?id=...">` içinde birlikte geliyor
+# (sektör raporunun `data-id`+`ShowDetailList` iki-adımlı deseninin aksine,
+# bkz. `_DOSYA_LISTESI_RE`), ama başlık metni tutarsız: bazı yıllar "Yılı"
+# ekliyor, dotless-I/entity kodlama karışıyor ("Fiyatlandirma" vs
+# "Fiyatlandırma", "Ayı" vs "Ayi"), ve title niteliğinin SONUNDA rastgele
+# boşluk/`&quot;` artığı var — bu yüzden `_FIYAT_LINK_RE` başlığı tam
+# ANKORLAMAZ, yalnızca "Fiyatlandır(m)a Raporu" alt dizesini arar ve
+# yıl/ay'ı bağımsız regex'lerle çıkarır. **En yeni 1 ay** (bu yazının
+# tarihinde Ağustos 2026) liste sayfasında henüz statik link olarak
+# YOK — sektör raporundaki ShowDetailList benzeri bir `POST
+# /Detay/GetFastAccessList` AJAX ucundan geliyor (ölçüldü: `{fId: ...}`
+# gönderimi `{"Type":3,"State":1}` döndürüyor, `model` alanı yok — kimlik
+# doğrulama/oturum gerektirebilir); bu adaptör o AJAX'ı izlemez, sektör
+# raporu adaptörüyle AYNI ilkeyle ("en son statik linkli ay") çalışır —
+# yeni ay bir sonraki yayın döngüsünde statik hale geldiğinde otomatik
+# yakalanır.
+#
+# Pencere BİLİNÇLİ olarak son 3 yılla (FIYAT_ILK_YIL=2024) sınırlı: format
+# 2014'e kadar stabil görünüyor ama her ay ayrı bir PDF (~0,5-5 MB) —
+# tam geçmiş 140+ dosya indirmek anlamına gelirdi (bkz. `eib.py`/`bddk.py`
+# gibi diğer adaptörlerin de benzer gerekçeyle sınırlı pencere kullanması).
+#
+# PDF'in "2. Ağustos Ayı Benzin ve Motorin Fiyat Oluşumu (İstanbul Avrupa
+# Yakası)" bölümündeki Tablo-1 (Benzin) ve Tablo-2 (Motorin) HER AY hem o
+# ayı hem BİR ÖNCEKİ ayı satır olarak taşıyor — yalnızca hedef aya ait
+# satır okunur (sektör raporuyla aynı ilke: "her ayı kendi dosyasından
+# oku", revizyon riskinden kaçın). Sütun sırası: Ürün Fiyatı, Toptancı
+# Marjı, Gelir Payı (SABİT 0,04568 TL/lt, ayrı kart yok — katalog kapsamı
+# dışı), Dağıtıcı ve Bayi Marjı Toplamı, Toplam Vergi, Nihai Satış Fiyatı
+# Toplamı.
+#
+# Referans doğrulaması (ölçüldü 2026-09-18, Temmuz 2026 dosyasından Ağustos
+# 2026 satırı): Motorin Nihai Satış Fiyatı 79,768, K.Benzin Nihai Satış
+# Fiyatı 70,686, Motorin/Benzin Toplam Vergi 15,187/18,063, Motorin/Benzin
+# Ürün Fiyatı 53,890/41,009 — epdk_marjlari.html kartlarıyla ALTISI DA
+# BİREBİR eşleşti. Toptancı Marjı ve Dağıtıcı&Bayi Marjı kartları referans
+# sitede Motorin+Benzin'i TEK grafikte birleştiriyor (`latestVal` muhtemelen
+# iki ürünün ortalaması — 1,151 ≈ (0,932+1,369)/2); bu katalog bilinçli
+# olarak İKİ AYRI seri üretir (motorin/benzin), referans sitenin kendi
+# blend'ini tekrar ETMEZ — ham bileşen değerleri (0,932 ve 1,369) doğrudan
+# kaynaktan birebir doğrulanmıştır, blend yalnızca sunum tercihidir.
+FIYAT_LISTE_URL = f"{TABAN}/Detay/Icerik/3-0-143/fiyatlandirma-raporu"
+FIYAT_ILK_YIL = 2024
+
+_FIYAT_LINK_RE = re.compile(
+    r'<a[^>]*href="(/Detay/DownloadDocument\?id=[^"]+)"[^>]*title="([^"]*)"'
+)
+_FIYAT_SATIR_RE = re.compile(
+    r"(" + "|".join(AY_ADLARI) + r")\s+(?:(\d{4})\s+)?(K\.Benzin 95 Oktan|Motorin)\s+"
+    r"([\d,]+)\s+([\d,]+)\s+([\d,]+)\s+([\d,]+)\s+([\d,]+)\s+([\d,]+)"
+)
+# Sütun sırası -> katalogdaki `epdk_fiyat_kalem` (Gelir Payı hariç, `None`
+# ile atlanır). GECERLI_EPDK_FIYAT_KALEMLERI ile birebir eşleşmeli.
+_FIYAT_KALEM_SIRASI = (
+    "urun-fiyati", "toptanci-marji", None, "dagitici-bayi-marji",
+    "toplam-vergi", "nihai-satis-fiyati",
+)
+assert set(k for k in _FIYAT_KALEM_SIRASI if k) == GECERLI_EPDK_FIYAT_KALEMLERI
+_FIYAT_URUN_ESLEME = {"K.Benzin 95 Oktan": "benzin", "Motorin": "motorin"}
+assert set(_FIYAT_URUN_ESLEME.values()) == GECERLI_EPDK_FIYAT_URUNLERI
+
+
+def fiyat_dosyalarini_ayikla(html: str) -> list[dict]:
+    """Ham liste sayfasından `{"yil", "ay", "url"}` girdileri çıkarır.
+
+    Başlık metni tam ankorlanmaz (bkz. modül docstring'i) — yalnızca
+    "Fiyatlandır*a Raporu" alt dizesi arandıktan sonra yıl/ay bağımsız
+    çıkarılır; ay adı bulunamazsa (alakasız bir link) satır atlanır.
+    """
+    sonuc = []
+    for url, ham_baslik in _FIYAT_LINK_RE.findall(html):
+        baslik = html_modul.unescape(ham_baslik)
+        if "iyatlandırma Raporu" not in baslik and "iyatlandirma Raporu" not in baslik:
+            continue
+        yil_m = re.search(r"(\d{4})", baslik)
+        if yil_m is None:
+            continue
+        ay_no = next((no for ad, no in AY_ADI_TO_NO.items() if re.search(rf"\b{ad}\b", baslik)), None)
+        if ay_no is None:
+            continue
+        sonuc.append({"yil": int(yil_m.group(1)), "ay": ay_no, "url": url})
+    return sonuc
+
+
+def fiyat_cekilecek_dosyalar(dosya_listesi: list[dict]) -> list[dict]:
+    """Yalnızca FIYAT_ILK_YIL'den bugüne dönemleri, eskiden yeniye sıralı döner.
+
+    Liste sayfasında bazı aylar için AYNI (yıl, ay) birden fazla `<a>`
+    linkiyle geliyor (ölçüldü: 2026 Temmuz'un iki farklı `id` değeri var) —
+    (yıl, ay) başına İLK görülen url tutulur, gereksiz ikinci indirme
+    önlenir.
+    """
+    gorulen: dict[tuple[int, int], dict] = {}
+    for d in dosya_listesi:
+        if d["yil"] < FIYAT_ILK_YIL:
+            continue
+        gorulen.setdefault((d["yil"], d["ay"]), d)
+    return sorted(gorulen.values(), key=lambda d: (d["yil"], d["ay"]))
+
+
+def fiyat_tablosunu_cikar(pdf_metni: str, hedef_ay_adi: str, hedef_yil: int) -> dict[tuple[str, str], float]:
+    """PDF'in Tablo-1/Tablo-2 satırlarından yalnızca hedef aya ait olanları okur.
+
+    Satırdaki yıl BAZI dönemlerde (ölçüldü: 2024 formatı) hiç yazılmıyor —
+    yalnızca "<Ay> <Ürün> ..." (yıl yok), 2025+ formatında "<Ay> <Yıl>
+    <Ürün> ..." yazıyor. Satır kendi ay adını ("Ay" sütunu) taşıdığından ve
+    bir tabloda aynı ay adı İKİ KEZ geçmediğinden (cari + bir önceki ay,
+    ardışık iki farklı ay), yıl yazılı DEĞİLSE ay adı eşleşmesi tek başına
+    yeterli — yıl yazılıysa ekstra bir tutarlılık kontrolü olarak kullanılır.
+    """
+    duz_metin = re.sub(r"\s+", " ", pdf_metni)
+    sonuc: dict[tuple[str, str], float] = {}
+    for eslesme in _FIYAT_SATIR_RE.finditer(duz_metin):
+        ay_adi, yil_str, urun_ham, *degerler = eslesme.groups()
+        if ay_adi != hedef_ay_adi:
+            continue
+        if yil_str is not None and int(yil_str) != hedef_yil:
+            continue
+        urun = _FIYAT_URUN_ESLEME[urun_ham]
+        for kalem, ham_deger in zip(_FIYAT_KALEM_SIRASI, degerler):
+            if kalem is None:
+                continue
+            sonuc[(urun, kalem)] = float(ham_deger.replace(",", "."))
+    return sonuc
+
+
+def _fiyat_dosya_listesi_cek(session=None) -> list[dict]:
+    http = session or requests
+    yanit = http.get(FIYAT_LISTE_URL, timeout=ZAMAN_ASIMI)
+    if yanit.status_code != 200:
+        raise RuntimeError(f"EPDK Fiyatlandırma Raporu HTTP {yanit.status_code}")
+    return fiyat_cekilecek_dosyalar(fiyat_dosyalarini_ayikla(yanit.text))
+
+
+def _fiyat_dosya_indir(url: str, session=None) -> bytes:
+    http = session or requests
+    yanit = http.get(f"{TABAN}{url}", timeout=ZAMAN_ASIMI)
+    if yanit.status_code != 200:
+        raise RuntimeError(f"EPDK Fiyatlandırma Raporu dosya indirme HTTP {yanit.status_code} ({url})")
+    return yanit.content
+
+
+def _fiyat_tum_noktalari_getir(onbellek: dict, session=None) -> dict[tuple[str, str], dict[str, float]]:
+    if "fiyat_noktalar" in onbellek:
+        return onbellek["fiyat_noktalar"]
+
+    noktalar: dict[tuple[str, str], dict[str, float]] = {
+        (urun, kalem): {}
+        for urun in GECERLI_EPDK_FIYAT_URUNLERI
+        for kalem in GECERLI_EPDK_FIYAT_KALEMLERI
+    }
+    for dosya in _fiyat_dosya_listesi_cek(session=session):
+        ay_adi = AY_ADLARI[dosya["ay"] - 1]
+        baytlar = _fiyat_dosya_indir(dosya["url"], session=session)
+        with pdfplumber.open(BytesIO(baytlar)) as pdf:
+            tam_metin = "\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages)
+        degerler = fiyat_tablosunu_cikar(tam_metin, ay_adi, dosya["yil"])
+        tarih = f"{dosya['yil']}-{dosya['ay']:02d}-01"
+        for (urun, kalem), deger in degerler.items():
+            noktalar[(urun, kalem)][tarih] = deger
+
+    onbellek["fiyat_noktalar"] = noktalar
+    return noktalar
+
+
+def fiyat_seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
+    """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı).
+
+    Pencere FIYAT_ILK_YIL'den bugüne (bkz. modül docstring'i — bilinçli
+    sınırlama, teknik kısıt değil).
+    """
+    if onbellek is None:
+        onbellek = {}
+
+    noktalar = _fiyat_tum_noktalari_getir(onbellek, session)
+    anahtar = (seri.epdk_fiyat_urun, seri.epdk_fiyat_kalem)
+    if anahtar not in noktalar or not noktalar[anahtar]:
+        raise RuntimeError(f"EPDK Fiyatlandırma Raporu: veri bulunamadı: {anahtar} ({seri.id})")
+
+    df = pd.DataFrame(sorted(noktalar[anahtar].items()), columns=["date", "value"])
     return df.reset_index(drop=True)

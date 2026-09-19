@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
-from ingest.tsb import dosya_listesi, seri_cek, sheet_degerleri
+from ingest.tsb import ILK_DESTEKLENEN_YIL, dosya_listesi, kumulatif_seri, seri_cek, sheet_degerleri
 
 
 def tsb_seri(**kwargs):
@@ -114,6 +114,34 @@ def test_sheet_degerleri_bos_satirlari_atlar():
     assert degerler == {1020: 100.0}
 
 
+def test_sheet_degerleri_kodsuz_sektor_toplamini_9003e_normalize_eder():
+    """Eski dosyalarda (ör. 2022-03) 'SEKTÖR TOPLAMI' satırının Şirket Kodu
+    hücresi boş — isimden tanınıp 9003'e normalize edilmeli."""
+    baytlar = _workbook_baytlari({
+        "Hayat": [
+            (1, "Türkiye Hayat ve Emeklilik AŞ", 3018, 500.0, 0.2),
+            (None, "SEKTÖR TOPLAMI", None, 5793809742.64, 1.0),
+        ],
+    })
+    wb = openpyxl.load_workbook(BytesIO(baytlar), data_only=True)
+    degerler = sheet_degerleri(wb, "Hayat")
+    assert degerler[9003] == pytest.approx(5793809742.64)
+
+
+def test_sheet_degerleri_kodsuz_baska_satiri_atlar():
+    """Kodu boş ve adı 'SEKTÖR TOPLAMI' OLMAYAN satır (ör. dipnot) atlanır,
+    yanlışlıkla 9003'e eşlenmez."""
+    baytlar = _workbook_baytlari({
+        "Hayat": [
+            (1, "Türkiye Hayat ve Emeklilik AŞ", 3018, 500.0, 0.2),
+            (None, "*geçici rakam notu", None, 999.0, None),
+        ],
+    })
+    wb = openpyxl.load_workbook(BytesIO(baytlar), data_only=True)
+    degerler = sheet_degerleri(wb, "Hayat")
+    assert degerler == {3018: 500.0}
+
+
 # --- dosya_listesi: sayfalama ---
 
 
@@ -137,6 +165,44 @@ def test_dosya_listesi_bos_alt_kategoride_hata():
     oturum = SahteOturum({"prim-adet": [[]]}, {})
     with pytest.raises(RuntimeError, match="prim-adet"):
         dosya_listesi("prim-adet", en_eski_yil=2020, session=oturum)
+
+
+def test_kumulatif_seri_nfd_dosya_adiyla_nfc_raporu_eslestirir():
+    """2021-03 öncesi yeniden indekslenmiş kayıtlarda FileName NFD Unicode
+    kullanıyor (ör. 'Ü' = 'U' + birleşen çift nokta); normalize edilmeden
+    substring araması sessizce hiç eşleşmiyordu."""
+    nfd_ad = "Prim U\u0308retimleri Sıralama 2018-12"  # NFD: U + combining diaeresis
+    assert "Ü" not in nfd_ad  # doğrulama: gerçekten NFD, NFC "Ü" içermiyor
+    dosyalar = {
+        "/nfd.xlsx": _workbook_baytlari({
+            "Hayatdışı": [(1, "Türkiye Sigorta AŞ", 1020, 100.0, 0.5)],
+        }),
+    }
+    sayfalar = {"prim-adet": [[_dosya_kaydi(nfd_ad, 2018, 12, "/nfd.xlsx")]]}
+    oturum = SahteOturum(sayfalar, dosyalar)
+    kumulatif = kumulatif_seri(
+        tsb_seri(start_date="2018-01-01"), onbellek={}, session=oturum
+    )
+    assert kumulatif == {"2018-12-01": 100.0}
+
+
+def test_kumulatif_seri_xls_donemine_inmez():
+    """`ILK_DESTEKLENEN_YIL`nin altındaki dönemler (eski .xls dosyaları)
+    `start_date` boş bırakılsa bile hiç indirilmeye ÇALIŞILMAZ (workbook
+    açma denemesi olsaydı BadZipFile ile patlardı)."""
+    dosyalar = {
+        "/eski.xlsx": _workbook_baytlari({"Hayatdışı": [(1, "X", 1020, 1.0, 1.0)]}),
+    }
+    sayfalar = {
+        "prim-adet": [[
+            _dosya_kaydi("3 Prim Üretimleri Sıralama 2014-01", 2014, 1, "/eski.xlsx"),
+        ]]
+    }
+    oturum = SahteOturum(sayfalar, dosyalar)
+    kumulatif = kumulatif_seri(tsb_seri(start_date=None), onbellek={}, session=oturum)
+    assert kumulatif == {}
+    assert not any(c.endswith("/eski.xlsx") for c in oturum.cagrilar)
+    assert ILK_DESTEKLENEN_YIL == 2015
 
 
 # --- seri_cek: kümülatif→aylık dönüşüm ve ağ kabuğu ---
@@ -189,6 +255,24 @@ def test_seri_cek_onbellek_workbooku_sirketler_arasinda_paylasir():
     seri_cek(tsb_seri(tsb_sirket_kodu=9003, start_date="2020-01-01"), onbellek=onbellek, session=oturum)
     # Dosya listesi + workbook indirmeleri tekrarlanmaz; yalnızca çağrı sayısı artmaz.
     assert len(oturum.cagrilar) == cagri_sayisi
+
+
+def test_seri_cek_onbellek_workbooku_farkli_sheetler_arasinda_paylasir():
+    """Aynı ayın workbook'unu FARKLI sheet isteyen iki seri de tek indirme
+    üzerinden okur (workbook indirme, sheet çözümünden AYRI önbelleklenir)."""
+    dosyalar = {
+        "/karma.xlsx": _workbook_baytlari({
+            "Hayatdışı": [(1, "Türkiye Sigorta AŞ", 1020, 100.0, 0.5)],
+            "Hayat": [(1, "Türkiye Hayat ve Emeklilik AŞ", 3018, 50.0, 0.5)],
+        }),
+    }
+    sayfalar = {"prim-adet": [[_dosya_kaydi("3 Prim Üretimleri Sıralama 2026-08", 2026, 8, "/karma.xlsx")]]}
+    oturum = SahteOturum(sayfalar, dosyalar)
+    onbellek = {}
+    kumulatif_seri(tsb_seri(tsb_sheet="Hayatdışı", tsb_sirket_kodu=1020, start_date="2020-01-01"), onbellek=onbellek, session=oturum)
+    indirme_sayisi = sum(1 for c in oturum.cagrilar if c.endswith("/karma.xlsx"))
+    kumulatif_seri(tsb_seri(tsb_sheet="Hayat", tsb_sirket_kodu=3018, start_date="2020-01-01"), onbellek=onbellek, session=oturum)
+    assert sum(1 for c in oturum.cagrilar if c.endswith("/karma.xlsx")) == indirme_sayisi == 1
 
 
 def test_seri_cek_start_date_oncesini_kirpar():

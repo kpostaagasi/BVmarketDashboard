@@ -43,7 +43,7 @@ import pandas as pd
 import pdfplumber
 import requests
 
-from ingest.ir_sunum import tr_sayi
+from ingest.ir_sunum import pdf_metnini_normallestir, tr_sayi
 
 TABAN = "https://www.tabgida.com.tr/tr/yatirimci-iliskileri/"
 SUNUM_URL = f"{TABAN}yatirimci-sunumlari"
@@ -97,7 +97,7 @@ def _belge_metnini_getir(url: str, onbellek: dict, session=None) -> str:
     yanit = http.get(url, headers=_BASLIKLAR, timeout=ZAMAN_ASIMI)
     yanit.raise_for_status()
     with pdfplumber.open(io.BytesIO(yanit.content)) as pdf:
-        metin = "\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages)
+        metin = pdf_metnini_normallestir("\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages))
     onbellek[url] = metin
     return metin
 
@@ -111,13 +111,16 @@ def restoran_sayisini_ayikla(metin: str) -> float | None:
 
 
 def fis_sayisini_ayikla(metin: str) -> float | None:
-    """'Fiş sayısı ('000) ÖNCEKİ CARİ %değişim ...' satırından CARİ (ikinci) değeri alır."""
+    """'Fiş sayısı ('000) ÖNCEKİ CARİ %değişim ...' satırından CARİ (ikinci)
+    değeri alır. Değer zaten BİN adet cinsindendir (satır başlığı "('000)")
+    — marketvisuals.net'in "Bin Adet" birimiyle birebir, AYRICA ölçeklenmez.
+    """
     desen = re.compile(r"^Fiş sayısı \('000\)\s+([()%\d.,\-]+)\s+([()%\d.,\-]+)", re.M)
     m = desen.search(metin)
     if not m:
         return None
     try:
-        return tr_sayi(m.group(2)) * 1000.0
+        return tr_sayi(m.group(2))
     except ValueError:
         return None
 

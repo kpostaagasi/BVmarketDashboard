@@ -1,348 +1,510 @@
 - slug: ekonomi-makro
   title: Ekonomi & Makro
   pano:
-    [
-      ekonomi-makro/usd-try,
-      ekonomi-makro/politika-faizi,
-      ekonomi-makro/issizlik-orani,
-      ekonomi-makro/butce-dengesi,
-    ]
+  - ekonomi-makro/usd-try
+  - ekonomi-makro/politika-faizi
+  - ekonomi-makro/issizlik-orani
+  - ekonomi-makro/butce-dengesi
 - slug: enflasyon
   title: Enflasyon Verileri
   pano:
-    [
-      enflasyon/tufe-genel,
-      enflasyon/cekirdek-c,
-      enflasyon/ufe,
-      enflasyon/beklenti-12a,
-    ]
+  - enflasyon/tufe-genel
+  - enflasyon/cekirdek-c
+  - enflasyon/ufe
+  - enflasyon/beklenti-12a
 - slug: sanayi
   title: Sanayi & Reel Kesim
   pano:
-    [
-      sanayi/uretim-endeksi,
-      sanayi/kapasite-kullanim,
-      sanayi/reel-kesim-guven,
-      sanayi/oncu-gostergeler,
-    ]
-  note: >-
-    Sanayi üretim endeksi mevsim ve takvim etkisinden arındırılmıştır ve
-    TÜİK tarafından bir ay gecikmeyle yayımlanır; KKO ile güven endeksi
-    cari aya kadar gelir.
+  - sanayi/uretim-endeksi
+  - sanayi/kapasite-kullanim
+  - sanayi/reel-kesim-guven
+  - sanayi/oncu-gostergeler
+  note: Sanayi üretim endeksi mevsim ve takvim etkisinden arındırılmıştır ve TÜİK
+    tarafından bir ay gecikmeyle yayımlanır; KKO ile güven endeksi cari aya kadar
+    gelir.
 - slug: dis-ticaret
   title: Dış Ticaret & Ödemeler Dengesi
   pano:
-    [
-      dis-ticaret/ihracat,
-      dis-ticaret/ithalat,
-      dis-ticaret/cari-denge,
-    ]
-  note: >-
-    Üçü de aylık akım büyüklüğüdür, Milyon USD cinsinden gösterilir. Cari
-    dengede negatif değer açık demektir; ödemeler dengesi verisi dış
-    ticaret verisinden bir ay geriden gelir.
+  - dis-ticaret/ihracat
+  - dis-ticaret/ithalat
+  - dis-ticaret/cari-denge
+  note: Üçü de aylık akım büyüklüğüdür, Milyon USD cinsinden gösterilir. Cari dengede
+    negatif değer açık demektir; ödemeler dengesi verisi dış ticaret verisinden bir
+    ay geriden gelir.
 - slug: ihracat
   title: İhracat (Sektörel)
   pano:
-    [
-      ihracat/toplam,
-      ihracat/otomotiv,
-      ihracat/hazir-giyim,
-      ihracat/celik,
-    ]
-  note: >-
-    Kaynak TİM'dir ve takip eden ayın 1–2'sinde yayımlanır — panodaki en
-    hızlı makro sinyal. TİM ihracatçı birlikleri kayıtlarını sayar, TÜİK
-    gümrük beyanlarının tamamını: TİM toplamı `dis-ticaret/ihracat`
-    serisinden yapısal olarak düşüktür (Temmuz 2026: 22.029 karşı 25.623
-    milyon USD), ikisi seviye olarak karşılaştırılmamalıdır.
+  - ihracat/toplam
+  - ihracat/otomotiv
+  - ihracat/hazir-giyim
+  - ihracat/celik
+  note: 'Kaynak TİM''dir ve takip eden ayın 1–2''sinde yayımlanır — panodaki en hızlı
+    makro sinyal. TİM ihracatçı birlikleri kayıtlarını sayar, TÜİK gümrük beyanlarının
+    tamamını: TİM toplamı `dis-ticaret/ihracat` serisinden yapısal olarak düşüktür
+    (Temmuz 2026: 22.029 karşı 25.623 milyon USD), ikisi seviye olarak karşılaştırılmamalıdır.'
 - slug: bankacilik
   title: Bankacılık
   pano:
-    [
-      bankacilik/net-donem-kari,
-      bankacilik/net-faiz-geliri,
-      bankacilik/npl-orani,
-      bankacilik/sermaye-yeterliligi,
-    ]
-  note: >-
-    Kaynak BDDK Aylık Bülten'in "Gelişmiş Gösterim" ucu, taraf = Sektör
-    (banka bazlı veri bu bültende yok). Kar/zarar kalemleri BDDK'da
-    yılbaşından kümülatif yayımlanır; burada yıl içinde fark alınarak AYLIK
-    akıma çevrilmiştir. Rasyolar yayımlandığı gibidir (kümülatif kâra
-    dayandıkları için yıl içinde basamaklı hareket ederler).
+  - bankacilik/net-donem-kari
+  - bankacilik/net-faiz-geliri
+  - bankacilik/npl-orani
+  - bankacilik/sermaye-yeterliligi
+  note: Kaynak BDDK Aylık Bülten'in "Gelişmiş Gösterim" ucu, taraf = Sektör (banka
+    bazlı veri bu bültende yok). Kar/zarar kalemleri BDDK'da yılbaşından kümülatif
+    yayımlanır; burada yıl içinde fark alınarak AYLIK akıma çevrilmiştir. Rasyolar
+    yayımlandığı gibidir (kümülatif kâra dayandıkları için yıl içinde basamaklı hareket
+    ederler).
 - slug: para-banka
   title: Para & Banka
   pano:
-    [
-      para-banka/kredi-hacmi,
-      para-banka/mevduat,
-      para-banka/m3,
-      para-banka/rezervler,
-    ]
-  note: >-
-    Dördü de stok büyüklüğüdür (dönem sonu bakiyesi); aylık indirgemede
-    dönemin son değeri alınır, toplanmaz. Rezervler haftalık (Cuma)
-    yayımlanır.
+  - para-banka/kredi-hacmi
+  - para-banka/mevduat
+  - para-banka/m3
+  - para-banka/rezervler
+  note: Dördü de stok büyüklüğüdür (dönem sonu bakiyesi); aylık indirgemede dönemin
+    son değeri alınır, toplanmaz. Rezervler haftalık (Cuma) yayımlanır.
 - slug: fonlar
   title: Yatırım Fonları
   pano:
-    [
-      fonlar/yatirim-fonu-buyukluk,
-      fonlar/yatirim-fonu-hesap,
-      fonlar/emeklilik-fonu-buyukluk,
-      fonlar/yatirim-fonu-sayisi,
-    ]
-  note: >-
-    Kaynak TEFAS. Değerler AY SONU STOKUDUR: ayın son yayın gününün tüm fon
-    satırları toplanır. TEFAS ucu 5 yıldan eski tarih kabul etmediği için
-    seriler beş yıl geriye gider. "Hesap sayısı" fon bazındadır — aynı
-    yatırımcı iki fondaysa iki kez sayılır, yani yatırımcı sayısı değildir.
+  - fonlar/yatirim-fonu-buyukluk
+  - fonlar/yatirim-fonu-hesap
+  - fonlar/emeklilik-fonu-buyukluk
+  - fonlar/yatirim-fonu-sayisi
+  note: 'Kaynak TEFAS. Değerler AY SONU STOKUDUR: ayın son yayın gününün tüm fon satırları
+    toplanır. TEFAS ucu 5 yıldan eski tarih kabul etmediği için seriler beş yıl geriye
+    gider. "Hesap sayısı" fon bazındadır — aynı yatırımcı iki fondaysa iki kez sayılır,
+    yani yatırımcı sayısı değildir.'
 - slug: havacilik
   title: Havacılık
   pano:
-    [
-      havacilik/turkiye,
-      havacilik/thy,
-      havacilik/pegasus,
-      havacilik/istanbul-havalimani,
-    ]
-  note: >-
-    Kaynak EUROCONTROL "Daily Traffic Variation" panosu: günlük IFR uçuş
-    sayısı (yolcu değil, uçuş). Dosyalar yalnızca cari yılı taşır; seriler
-    her satırın "önceki yıl referansı" sütunuyla bir yıl geriye uzatılır,
-    bu yüzden geçmiş iki yılla sınırlıdır. Havayolu serileri şirketin TÜM
-    ağını sayar (yurt dışı bacaklar dahil), havalimanı serileri o
-    havalimanına iniş/kalkışları.
+  - havacilik/turkiye
+  - havacilik/thy
+  - havacilik/pegasus
+  - havacilik/istanbul-havalimani
+  note: 'Kaynak EUROCONTROL "Daily Traffic Variation" panosu: günlük IFR uçuş sayısı
+    (yolcu değil, uçuş). Dosyalar yalnızca cari yılı taşır; seriler her satırın "önceki
+    yıl referansı" sütunuyla bir yıl geriye uzatılır, bu yüzden geçmiş iki yılla sınırlıdır.
+    Havayolu serileri şirketin TÜM ağını sayar (yurt dışı bacaklar dahil), havalimanı
+    serileri o havalimanına iniş/kalkışları.'
 - slug: insaat
   title: İnşaat
   pano:
-    [
-      insaat/konut-satis-toplam,
-      insaat/konut-satis-ipotekli,
-      insaat/konut-fiyat-endeksi,
-      insaat/kira-endeksi,
-    ]
+  - insaat/konut-satis-toplam
+  - insaat/konut-satis-ipotekli
+  - insaat/konut-fiyat-endeksi
+  - insaat/kira-endeksi
 - slug: kredi-karti
   title: Kredi Kartı Harcamaları
   pano:
-    [
-      kredi-karti/harcama-toplam,
-      kredi-karti/market,
-      kredi-karti/akaryakit,
-      kredi-karti/giyim,
-    ]
-  note: >-
-    Haftalık (Cuma) akım verisidir; sektör serileri toplamın alt
-    kalemleridir, nominal TL olduğu için seviye karşılaştırmaları enflasyon
-    içerir.
+  - kredi-karti/harcama-toplam
+  - kredi-karti/market
+  - kredi-karti/akaryakit
+  - kredi-karti/giyim
+  note: Haftalık (Cuma) akım verisidir; sektör serileri toplamın alt kalemleridir,
+    nominal TL olduğu için seviye karşılaştırmaları enflasyon içerir.
 - slug: emtia-enerji
   title: Emtia · Enerji
-  pano: [emtia-enerji/brent, emtia-enerji/wti, emtia-enerji/dogalgaz]
-  note: >-
-    Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade
-    değişimlerinde grafikte görülen sıçrama piyasa hareketi değil
-    kontrat roll'üdür.
+  pano:
+  - emtia-enerji/brent
+  - emtia-enerji/wti
+  - emtia-enerji/dogalgaz
+  note: Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade değişimlerinde
+    grafikte görülen sıçrama piyasa hareketi değil kontrat roll'üdür.
 - slug: emtia-metaller
   title: Emtia · Metaller
   pano:
-    [
-      emtia-metaller/altin,
-      emtia-metaller/gumus,
-      emtia-metaller/bakir,
-      emtia-metaller/hrc-celik,
-    ]
-  note: >-
-    Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade
-    değişimlerinde grafikte görülen sıçrama piyasa hareketi değil
-    kontrat roll'üdür.
+  - emtia-metaller/altin
+  - emtia-metaller/gumus
+  - emtia-metaller/bakir
+  - emtia-metaller/hrc-celik
+  note: Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade değişimlerinde
+    grafikte görülen sıçrama piyasa hareketi değil kontrat roll'üdür.
 - slug: elektrik
   title: Elektrik
-  pano: [elektrik/uretim, elektrik/ptf]
-  note: >-
-    Üretim ve PTF saatlik yayımlanır; üretim günlük toplama, PTF günlük
-    ortalamaya indirgenmiştir.
+  pano:
+  - elektrik/uretim
+  - elektrik/ptf
+  note: Üretim ve PTF saatlik yayımlanır; üretim günlük toplama, PTF günlük ortalamaya
+    indirgenmiştir.
 - slug: otomotiv
   title: Otomotiv
-  pano: [otomotiv/ford-otosan, otomotiv/tofas, otomotiv/turk-traktor, otomotiv/karsan]
-  note: >-
-    Üretim adetleri OSD aylık üretim bültenlerinden alınır; bülten genelde
-    takip eden ayın 12–18'i arasında yayımlanır.
+  pano:
+  - otomotiv/ford-otosan
+  - otomotiv/tofas
+  - otomotiv/turk-traktor
+  - otomotiv/karsan
+  note: Üretim adetleri OSD aylık üretim bültenlerinden alınır; bülten genelde takip
+    eden ayın 12–18'i arasında yayımlanır.
 - slug: beklentiler
   title: Beklentiler (Piyasa Anketi)
   pano:
-    [
-      beklentiler/tufe-yilsonu,
-      beklentiler/politika-faizi-12a,
-      beklentiler/usdtry-12a,
-      beklentiler/gsyh-buyume,
-    ]
-  note: >-
-    Kaynak TCMB Piyasa Katılımcıları Anketi'nin "Uygun Ortalamalar" tablosu:
-    gerçekleşme değil KATILIMCI KONSENSÜSÜdür ve anketin yapıldığı ayı
-    etiketler. Mevsimsellik grafiği bilinçli olarak yok — beklenti serisinin
-    mevsimi değil, patikası okunur. Cari denge beklentisinde negatif değer
-    açık demektir.
+  - beklentiler/tufe-yilsonu
+  - beklentiler/politika-faizi-12a
+  - beklentiler/usdtry-12a
+  - beklentiler/gsyh-buyume
+  note: 'Kaynak TCMB Piyasa Katılımcıları Anketi''nin "Uygun Ortalamalar" tablosu:
+    gerçekleşme değil KATILIMCI KONSENSÜSÜdür ve anketin yapıldığı ayı etiketler.
+    Mevsimsellik grafiği bilinçli olarak yok — beklenti serisinin mevsimi değil, patikası
+    okunur. Cari denge beklentisinde negatif değer açık demektir.'
 - slug: ihracat-il
   title: İhracat (İl × Sektör)
   pano:
-    [
-      ihracat-il/istanbul-toplam,
-      ihracat-il/bursa-toplam,
-      ihracat-il/izmir-toplam,
-      ihracat-il/kocaeli-toplam,
-    ]
-  note: >-
-    Kaynak TİM il×sektör karşılaştırma bülteni; değerler Bin USD ve
-    AYLIKTIR (o ayın 1'inden son gününe). Bir ilin "Toplam" serisi
-    bültenin kendi TOPLAM satırı DEĞİL, o ilin sektör satırlarının
-    toplamıdır — bülten TOPLAM satırı birlik bazlı bir fazlalık taşır ve
-    referans site parite ölçütü sektör toplamıdır.
+  - ihracat-il/istanbul-toplam
+  - ihracat-il/bursa-toplam
+  - ihracat-il/izmir-toplam
+  - ihracat-il/kocaeli-toplam
+  note: Kaynak TİM il×sektör karşılaştırma bülteni; değerler Bin USD ve AYLIKTIR (o
+    ayın 1'inden son gününe). Bir ilin "Toplam" serisi bültenin kendi TOPLAM satırı
+    DEĞİL, o ilin sektör satırlarının toplamıdır — bülten TOPLAM satırı birlik bazlı
+    bir fazlalık taşır ve referans site parite ölçütü sektör toplamıdır.
 - slug: ihracat-ulke
   title: İhracat (Ülke × Sektör)
   pano:
-    [
-      ihracat-ulke/almanya-toplam,
-      ihracat-ulke/abd-toplam,
-      ihracat-ulke/irak-toplam,
-      ihracat-ulke/italya-toplam,
-    ]
-  note: >-
-    Kaynak TİM ülke×sektör karşılaştırma bülteni; değerler Bin USD ve
-    AYLIKTIR (o ayın 1'inden son gününe). Bir ülkenin "Toplam" serisi
-    bültenin kendi TOPLAM satırı DEĞİL (böyle bir satır ülke başına hiç
-    yayımlanmıyor), o ülkenin sektör satırlarının toplamıdır.
+  - ihracat-ulke/almanya-toplam
+  - ihracat-ulke/abd-toplam
+  - ihracat-ulke/irak-toplam
+  - ihracat-ulke/italya-toplam
+  note: Kaynak TİM ülke×sektör karşılaştırma bülteni; değerler Bin USD ve AYLIKTIR
+    (o ayın 1'inden son gününe). Bir ülkenin "Toplam" serisi bültenin kendi TOPLAM
+    satırı DEĞİL (böyle bir satır ülke başına hiç yayımlanmıyor), o ülkenin sektör
+    satırlarının toplamıdır.
 - slug: perakende
   title: Perakende (Şirket Operasyonel Verileri)
   pano:
-    [
-      perakende/ebebek-satis-adedi,
-      perakende/ebebek-magaza-ziyaretci,
-      perakende/ebebek-web-ziyaret,
-      perakende/ebebek-toplam-magaza,
-    ]
-  note: >-
-    Kaynak ebebek Yatırımcı İlişkileri'nin aylık KAP Özel Durum
-    Açıklamaları (Satış Adedi / Ziyaretçi Sayısı / Mağaza Sayısı).
-    "Mega Mağaza" kırılımı Ağustos 2026 bildiriminden itibaren ayrı
-    raporlanıyor; öncesinde standart mağaza içindeydi (sınıflandırma
-    değişikliği, gerçek kapanış değil).
+  - perakende/ebebek-satis-adedi
+  - perakende/ebebek-magaza-ziyaretci
+  - perakende/ebebek-web-ziyaret
+  - perakende/ebebek-toplam-magaza
+  note: Kaynak ebebek Yatırımcı İlişkileri'nin aylık KAP Özel Durum Açıklamaları (Satış
+    Adedi / Ziyaretçi Sayısı / Mağaza Sayısı). "Mega Mağaza" kırılımı Ağustos 2026
+    bildiriminden itibaren ayrı raporlanıyor; öncesinde standart mağaza içindeydi
+    (sınıflandırma değişikliği, gerçek kapanış değil).
 - slug: petrol-piyasasi
   title: Petrol Piyasası (EPDK)
   pano:
-    [
-      petrol-piyasasi/rafineri-uretimi-motorin,
-      petrol-piyasasi/yurtici-satis-motorin,
-      petrol-piyasasi/rafineri-uretimi-benzin,
-      petrol-piyasasi/yurtici-satis-benzin,
-    ]
-  note: >-
-    Kaynak EPDK Aylık Sektör Raporu'nun çok tablolu EK dosyası. Bu dosya
-    biçimi Ocak 2026'da başladı; öncesinde ek yalnızca il bazında teslim
-    matrisi taşıyor, ürün grubu toplamı yok — seriler bu yüzden 2026'dan
-    başlar. Değerler bin ton.
+  - petrol-piyasasi/rafineri-uretimi-motorin
+  - petrol-piyasasi/yurtici-satis-motorin
+  - petrol-piyasasi/rafineri-uretimi-benzin
+  - petrol-piyasasi/yurtici-satis-benzin
+  note: Kaynak EPDK Aylık Sektör Raporu'nun çok tablolu EK dosyası. Bu dosya biçimi
+    Ocak 2026'da başladı; öncesinde ek yalnızca il bazında teslim matrisi taşıyor,
+    ürün grubu toplamı yok — seriler bu yüzden 2026'dan başlar. Değerler bin ton.
 - slug: telekom
   title: Telekom (Şirket Operasyonel Verileri)
   pano:
-    [
-      telekom/tcell-mobil-postpaid-abone,
-      telekom/ttkom-mobil-toplam-abone,
-      telekom/tcell-mobil-arpu-m2m-haric,
-      telekom/ttkom-sabit-genisbant-abone,
-    ]
-  note: >-
-    Turkcell serileri şirketin çeyreklik "Financial and Operational Data"
-    Excel'inden (ARPU/segment kırılımı IAS29 enflasyon düzeltmeli, gelir
-    kırılımı nominal); Türk Telekom serileri "Özet Finansal ve Operasyonel
-    Veriler" Excel'inden gelir. İkisi de çeyrekliktir, yalnızca level
-    grafiği destekler. TÜİK J61 hizmet üretim/ciro endeksleri EVDS'de
-    yayımlanmıyor (ölçüldü), bu yüzden o iki kart bu ailede yok.
+  - telekom/tcell-mobil-postpaid-abone
+  - telekom/ttkom-mobil-toplam-abone
+  - telekom/tcell-mobil-arpu-m2m-haric
+  - telekom/ttkom-sabit-genisbant-abone
+  note: Turkcell serileri şirketin çeyreklik "Financial and Operational Data" Excel'inden
+    (ARPU/segment kırılımı IAS29 enflasyon düzeltmeli, gelir kırılımı nominal); Türk
+    Telekom serileri "Özet Finansal ve Operasyonel Veriler" Excel'inden gelir. İkisi
+    de çeyrekliktir, yalnızca level grafiği destekler. TÜİK J61 hizmet üretim/ciro
+    endeksleri EVDS'de yayımlanmıyor (ölçüldü), bu yüzden o iki kart bu ailede yok.
 - slug: su-urunleri
   title: Su Ürünleri İhracatı (EİB)
   pano:
-    [
-      su-urunleri/toplam-ihracat,
-      su-urunleri/levrek,
-      su-urunleri/cipura,
-      su-urunleri/turk-somonu,
-    ]
-  note: >-
-    Kaynak EİB (Ege İhracatçı Birlikleri) aylık ihracat bülteni. Tutarlar
-    FOB USD, hacimler kilogram; katalog milyon USD / bin tona ölçekler.
+  - su-urunleri/toplam-ihracat
+  - su-urunleri/levrek
+  - su-urunleri/cipura
+  - su-urunleri/turk-somonu
+  note: Kaynak EİB (Ege İhracatçı Birlikleri) aylık ihracat bülteni. Tutarlar FOB
+    USD, hacimler kilogram; katalog milyon USD / bin tona ölçekler.
 - slug: sut-fiyatlari
   title: Çiğ Süt Fiyat & Maliyet (USK)
   pano:
-    [
-      sut-fiyatlari/tavsiye-fiyati,
-      sut-fiyatlari/uretim-maliyeti,
-    ]
-  note: >-
-    Kaynak Ulusal Süt Konseyi: tavsiye fiyatı tablo sayfasından, üretim
-    maliyeti aylık PDF'lerden. Maliyet PDF şablonu Mart 2026'da değişti;
-    öncesinde yalnızca "Türkiye ortalaması" satırı güvenilir okunuyor
-    (bölgesel çok sütunlu tablo PDF metninde karışıyor).
+  - sut-fiyatlari/tavsiye-fiyati
+  - sut-fiyatlari/uretim-maliyeti
+  note: 'Kaynak Ulusal Süt Konseyi: tavsiye fiyatı tablo sayfasından, üretim maliyeti
+    aylık PDF''lerden. Maliyet PDF şablonu Mart 2026''da değişti; öncesinde yalnızca
+    "Türkiye ortalaması" satırı güvenilir okunuyor (bölgesel çok sütunlu tablo PDF
+    metninde karışıyor).'
 - slug: hayvansal
   title: Hayvansal Ürün İhracatı (EİB)
   pano:
-    [
-      hayvansal/toplam,
-      hayvansal/kanatli,
-      hayvansal/yumurta,
-      hayvansal/sut-urunleri,
-    ]
-  note: >-
-    Kaynak EİB aylık ihracat bülteni; tutarlar FOB USD (katalog milyon
-    USD'ye ölçekler), hacimler kilogramdan bin tona çevrilir.
-
+  - hayvansal/toplam
+  - hayvansal/kanatli
+  - hayvansal/yumurta
+  - hayvansal/sut-urunleri
+  note: Kaynak EİB aylık ihracat bülteni; tutarlar FOB USD (katalog milyon USD'ye
+    ölçekler), hacimler kilogramdan bin tona çevrilir.
 - slug: beyaz-esya
   title: Beyaz Eşya Sektörü (TÜRKBESD)
   pano:
-    [
-      beyaz-esya/ic-satis-buzdolabi,
-      beyaz-esya/uretim-buzdolabi,
-      beyaz-esya/ihracat-buzdolabi,
-      beyaz-esya/ithalat-buzdolabi,
-    ]
-  note: >-
-    Kaynak TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği) "Son 5 Yılın
-    Rakamları" sayfası; her ölçüt (İç Satış/Üretim/İhracat/İthalat) için
-    ayrı bir XLSX'te 6 ana ürün bazında YILLIK (2021'den bugüne) veri
-    yayımlanıyor (`freq: yearly`, her nokta 1 Ocak'a tarihli yıl
-    etiketidir).
-    Referans sayfadaki aylık/çeyreksel toplam kartları (ürün kırılımsız,
-    "Aylık"/"Çeyreksel" başlıklı) KASITLI OLARAK bu ailede YOK: TÜRKBESD
-    bu toplamları hiçbir deterministik, tam geçmişli kaynaktan
-    yayımlamıyor (bkz. `ingest/turkbesd.py` docstring'i — "Beyaz Dünya"
-    bültenleri salt anlatı, mutlak aylık tablo taşımıyor ve arşivi
-    yalnızca son ~5 ayı kapsıyor).
-
+  - beyaz-esya/ic-satis-buzdolabi
+  - beyaz-esya/uretim-buzdolabi
+  - beyaz-esya/ihracat-buzdolabi
+  - beyaz-esya/ithalat-buzdolabi
+  note: 'Kaynak TÜRKBESD (Türkiye Beyaz Eşya Sanayicileri Derneği) "Son 5 Yılın Rakamları"
+    sayfası; her ölçüt (İç Satış/Üretim/İhracat/İthalat) için ayrı bir XLSX''te 6
+    ana ürün bazında YILLIK (2021''den bugüne) veri yayımlanıyor (`freq: yearly`,
+    her nokta 1 Ocak''a tarihli yıl etiketidir). Referans sayfadaki aylık/çeyreksel
+    toplam kartları (ürün kırılımsız, "Aylık"/"Çeyreksel" başlıklı) KASITLI OLARAK
+    bu ailede YOK: TÜRKBESD bu toplamları hiçbir deterministik, tam geçmişli kaynaktan
+    yayımlamıyor (bkz. `ingest/turkbesd.py` docstring''i — "Beyaz Dünya" bültenleri
+    salt anlatı, mutlak aylık tablo taşımıyor ve arşivi yalnızca son ~5 ayı kapsıyor).'
 - slug: emtia-tarim
   title: Emtia · Tarım
   pano:
-    [
-      emtia-tarim/pamuk,
-      emtia-tarim/bugday,
-      emtia-tarim/kakao,
-      emtia-tarim/kahve,
-    ]
-  note: >-
-    Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade
-    değişimlerinde grafikte görülen sıçrama piyasa hareketi değil
-    kontrat roll'üdür. Gübre Endeksi, Üre ve DAP, Dünya Bankası Pink
-    Sheet AYLIK ortalamalarıdır (diğer kalemler gibi günlük değil) ve
-    yaklaşık bir ay gecikmeyle yayımlanır.
-
+  - emtia-tarim/pamuk
+  - emtia-tarim/bugday
+  - emtia-tarim/kakao
+  - emtia-tarim/kahve
+  note: Fiyatlar sürekli ön vade (front-month) kontratlarıdır; vade değişimlerinde
+    grafikte görülen sıçrama piyasa hareketi değil kontrat roll'üdür. Gübre Endeksi,
+    Üre ve DAP, Dünya Bankası Pink Sheet AYLIK ortalamalarıdır (diğer kalemler gibi
+    günlük değil) ve yaklaşık bir ay gecikmeyle yayımlanır.
 - slug: avrupa
   title: Avrupa Ekonomisi
   pano:
-    [
-      avrupa/almanya-tufe-hicp,
-      avrupa/almanya-issizlik-orani,
-      avrupa/euro-tufe-hicp,
-      avrupa/euro-ecb-mevduat-faizi,
-    ]
-  note: >-
-    FRED üzerinden OECD/Eurostat kaynaklı aylık/çeyreklik göstergeler
-    ile ifo Institute'ün Almanya iş dünyası güven endeksleri bir arada
-    sunulur; veriler ilgili ülke/bölge istatistik kurumlarının yayın
-    takvimine göre 1-2 ay gecikmeli gelir.
+  - avrupa/almanya-tufe-hicp
+  - avrupa/almanya-issizlik-orani
+  - avrupa/euro-tufe-hicp
+  - avrupa/euro-ecb-mevduat-faizi
+  note: FRED üzerinden OECD/Eurostat kaynaklı aylık/çeyreklik göstergeler ile ifo
+    Institute'ün Almanya iş dünyası güven endeksleri bir arada sunulur; veriler ilgili
+    ülke/bölge istatistik kurumlarının yayın takvimine göre 1-2 ay gecikmeli gelir.
+- slug: sigorta
+  title: Sigortacılık
+  pano:
+  - sigorta/hayatdisi-sektor-toplam
+  - sigorta/hayatdisi-turkiye-sigorta
+  - sigorta/hayatdisi-anadolu-sigorta
+  - sigorta/hayatdisi-aksigorta
+  note: Kaynak TSB (Türkiye Sigorta Birliği) "Prim Üretimleri Sıralama" aylık workbook'u.
+    Şirket/sektör değerleri workbook'ta yıl başından KÜMÜLATİF (YTD) yayımlanır; katalogdaki
+    seriler ay(N)-ay(N-1) farkıyla AYLIK akıma çevrilmiştir (bkz. `ingest/tsb.py`).
+    TSB'nin dosya indirme akışı şu an (2026-09) e-posta/reCAPTCHA doğrulaması istemiyor
+    (IsActiveStatisticReport=false); bu bayrak açılırsa adaptör kırılır.
+- slug: cimento
+  title: Çimento Sektörü
+  pano:
+  - cimento/cimento-uretim
+  - cimento/cimento-ic-satis
+  - cimento/cimento-ihracat
+  - cimento/klinker-uretim
+  note: Kaynak TürkÇimento'nun aylık bölgesel istatistikleridir (Bin Ton). Değerler
+    AY İÇİ AKIMDIR (yılbaşından kümülatif değil); veri ortalama 1,5-2 ay gecikmeyle
+    yayımlanır ve TürkÇimento geçmiş ayları zaman zaman revize eder (özellikle ihracat
+    kalemleri) — burada gösterilen değer her zaman kaynağın EN GÜNCEL revizyonudur.
+- slug: dogalgaz
+  title: Doğal Gaz
+  pano:
+  - dogalgaz/ahgaz-tuketim
+  - dogalgaz/botas-ithalat
+  note: EPDK Doğal Gaz Piyasası aylık sektör raporunun "EK" (çok tablolu) XLSX ekinden
+    çekilir; format yalnızca Ocak 2026'dan itibaren yayımlanıyor, geçmiş bu tarihten
+    başlar (bkz. ingest/epdk.py docstring'i).
+- slug: guven-endeksleri
+  title: Güven Endeksleri (Finans & Ödeme)
+  pano:
+  - guven-endeksleri/fhge-genel
+  - guven-endeksleri/kartmetre-genel-nominal
+  - guven-endeksleri/kartmetre-genel-reel
+  - guven-endeksleri/fhge-sigorta
+  note: Kaynak TCMB EVDS. FHGE (Finansal Hizmetler Güven Endeksi) TCMB'nin aylık İktisadi
+    Yönelim Anketi'nin finansal hizmetler bacağıdır; Kartmetre BKM'nin kartlı ödeme
+    harcama endeksidir (TCMB EVDS üzerinden yayımlanır). Kartmetre serileri seviye
+    (index) endeksidir — "Yıllık % Değişim" görünümü sayfanın YoY görünüm seçicisiyle
+    (Varsayılan/YoY/MoM) elde edilir, ayrı seri gerekmez.
+- slug: milli-gelir
+  title: Milli Gelir (GSYİH)
+  pano:
+  - milli-gelir/gsyih-toplam
+  - milli-gelir/sanayi
+  - milli-gelir/insaat
+  - milli-gelir/ticaret-ulastirma-konaklama
+  note: 'Kaynak TÜİK / TCMB EVDS, "Üretim Yöntemiyle Gayrisafi Yurt İçi Hasıla" grubu
+    (bie_gsyhuretzinc), İktisadi Faaliyet Kollarına (A10) göre ZİNCİRLENMİŞ HACİM
+    (sabit fiyatlarla, mevsim/takvim etkisinden ARINDIRILMAMIŞ ham seri). ÇEYREKLİKTİR
+    — `date` çeyreğin ilk ayına indirgenir (Ç1→01, Ç2→04, Ç3→07, Ç4→10). "YoY Büyüme
+    %" ve "Sektör Payı %" görünümleri TÜM kartlarda app katmanında (sayfanın YoY görünüm
+    seçicisi / core/stats.py) türetilir — bu 11 seri YALNIZCA ham zincirlenmiş hacim
+    seviyesini taşır, ayrı bir "büyüme" serisi yoktur. UYARI: bu grubun YoY% çıktısı,
+    TÜİK''in dönemsel REVİZYONLARI nedeniyle referans anlık görüntüsünden birkaç puan
+    sapabilir (bkz. agent raporunun parite bölümü, milli_gelir satırı) — seviye verisi
+    doğru, revizyon farkı veri kalitesi sorunu değildir.'
+- slug: tcmb-swap
+  title: TCMB Döviz/Altın-TL Swap Piyasası
+  pano:
+  - tcmb-swap/toplam-alim-stok
+  - tcmb-swap/toplam-satim-stok
+  - tcmb-swap/altin-satim-stok
+  - tcmb-swap/doviz-tl-stok
+  note: Kaynak TCMB EVDS, bie_swaptektarf grubu (TCMB Taraflı Swap İşlemleri). İŞ
+    GÜNÜ frekanslı; "Stok" son işlem gününün açık pozisyonu, "Akım" o günkü net işlem
+    tutarıdır (aylık indirgemede stok=last, akım=sum). Kanal isimleri (Geleneksel
+    İhale, Miktar İhalesi, Altın İhale, BIST Swap, Depo İşlemine Dönen) TCMB'nin kendi
+    seri adlarıdır. "Net Swap Pozisyonu" (Alım−Satım) ve "Toplam" büyüklükler app
+    katmanında (fark/toplam) türetilebilir — toplam-alim-stok ve toplam-satim-stok
+    zaten grubun kendi TOPLAM satırlarıdır, ayrıca toplanmaz.
+- slug: ihracat-ulke-grubu
+  title: İhracat (Ülke Grupları)
+  pano:
+  - ihracat-ulke-grubu/ortadogu-ulkeleri
+  - ihracat-ulke-grubu/bagimsiz-devletler-toplulugu
+  - ihracat-ulke-grubu/kuzey-amerika-serbest-ticaret
+  note: Kaynak TİM'in kendi "Ülke Gruplarına Göre İhracat" bülteni (AB, Ortadoğu,
+    Diğer Avrupa, Afrika, BDT, Kuzey Amerika Serbest Ticaret, Diğer Asya, Diğer Amerikan,
+    Uzakdoğu, Serbest Bölgeler, Okyanusya, Diğer Ülkeler — 12 grup); değerler Bin
+    USD ve AYLIKTIR. Ülke→grup eşlemesi TİM'in kendisi tarafından yapılmıştır, burada
+    türetilmez. Bültenin YENİ (tek anahtarlı, 2023 Temmuz'dan itibaren ağırlıklı)
+    ve ESKİ (SEKTÖR×ÜLKEGRUP çapraz tablo, il/ülke bültenleriyle aynı şablon) iki
+    üretim biçimi arasında KRONOLOJİK OLMAYAN bir sırayla geçiş yapıyor; adaptör dosyanın
+    kendi başlık satırına bakarak hangisini okuyacağına karar verir (sayfa adı güvenilir
+    değil). "TOPLAM" serisi (varsa) bültenin kendi TOPLAM satırıdır — il/ülke'nin
+    aksine burada bu satır gerçekten yayımlanıyor.
+- slug: sermaye-piyasalari
+  title: Sermaye Piyasaları (TSPB)
+  pano:
+  - sermaye-piyasalari/pys-aum-yatirim-fonu
+  - sermaye-piyasalari/pys-musteri-fon-sayisi
+  - sermaye-piyasalari/kredili-kredi-hacmi
+  - sermaye-piyasalari/kredili-kullanan-yatirimci-sayisi
+  note: Kaynak TSPB (Türkiye Sermaye Piyasaları Birliği) "Veriler" sayfası (https://tspb.org.tr/veriler/).
+    Bu pretty URL requests/curl ile çekildiğinde TSPB'yle ilgisi olmayan bir Shopify/kumar
+    sitesine (ALTARTOTO) yönleniyor — sunucu tarafında gerçekten önbellekli (Varnish
+    X-Cache HIT + Age), muhtemelen ters proxy/CDN yapılandırma hatası ya da sayfa
+    ele geçirme; adaptör bu yüzden WordPress REST API'sinden (`wp-json/wp/v2/pages?slug=veriler`)
+    okur (bkz. `ingest/tspb.py` docstring'i). AUM/gelir/müşteri-fon sayısı serileri
+    "PYŞ Aylık" dosyasının; kredili işlem serileri "Krediler" dosyasının ARŞİV+GÜNCEL
+    parçalarının birleşiminden gelir — ikisi de her yayında dosya adına zaman damgası
+    eklendiği için sabit URL yoktur, indeks her koşuda yeniden taranır. AUM ve Portföy
+    Yönetimi Geliri kartlarının "Toplam" değeri katalogda AYRI seri DEĞİLDİR — 4 kategori
+    bileşeninin (Bireysel/Yatırım Ortaklığı/Emeklilik Yatırım Fonu/Yatırım Fonu) toplamı
+    `core/stats.py` katmanında hesaplanabilir. Aynı şekilde "AUM Büyüme Hızı (YoY
+    %)" ve "Ortalama AUM/PYŞ" (=Toplam AUM ÷ Aktif PYŞ Sayısı) türetilmiş oran kartlarıdır,
+    ayrı seri değildir. Kredili tarafında "Yatırımcı Başına Kredi Hacmi" de aynı nedenle
+    (Kredi Hacmi ÷ Kredi Kullanan Yatırımcı Sayısı) ayrı seri değildir.
+- slug: kanatli
+  title: Kanatlı Hayvancılık (Fiyat & Üretim)
+  pano:
+  - kanatli/pilic-eti-kemiksiz
+  - kanatli/hindi-eti-kemikli
+  - kanatli/toplam-uretim
+  - kanatli/kesilen-tavuk
+  note: Fiyat serileri (piliç/hindi eti, piliç kanat) İstanbul Ticaret Borsası'nın
+    haftalık tescil bülteninden gelir — borsa yalnızca O HAFTA GERÇEKTEN İŞLEM GÖREN
+    kalemleri listeler, bu yüzden bazı haftalarda nokta hiç yoktur (sessizce atlanır,
+    sıfır UYDURULMAZ). Üretim serileri (toplam/tavuk üretimi, kesilen tavuk sayısı)
+    TÜİK'in Eurostat'a bildirdiği apro_mt_pwgtm veri kümesinden gelir; TÜİK'in kendisi
+    bu kırılımı ayrı yayımlamaz, Eurostat yalnızca dağıtım ucudur.
+- slug: botas-dogalgaz
+  title: BOTAŞ Doğal Gaz Tarifesi
+  pano:
+  - botas-dogalgaz/konut
+  - botas-dogalgaz/elektrik-uretimi-amacli
+  - botas-dogalgaz/elektrik-uretimi-disi
+  - botas-dogalgaz/ekmek-ureticileri
+  note: BOTAŞ'ın dağıtım şirketlerine uyguladığı toptan satış tarifesidir; tüketici
+    pompa fiyatı DEĞİLDİR (EPDK'nın motorin/benzin fiyatlandırma raporundaki "petrol-piyasasi"
+    serileriyle karıştırılmamalı — bu doğal gaz, o akaryakıttır). Tarife DÜZENSİZ
+    aralıklarla (BOTAŞ kararına bağlı, günler ile aylar arasında değişebilir) güncellenir;
+    kaynakta erişilebilir bir tarihsel arşiv YOKTUR (yalnızca güncel tarife sayfası
+    — ölçüldü, bkz. ingest/botas.py docstring'i), bu yüzden seriler tek nokta ile
+    başlar ve BOTAŞ her tarife değiştirdiğinde ingest'in bir sonraki koşusunda otomatik
+    yeni nokta eklenerek zamanla gerçek bir tarihçeye dönüşür.
+- slug: restoran
+  title: Restoran Zincirleri (Şirket Operasyonel Verileri)
+  pano:
+  - restoran/bigch-sube-sayisi
+  - restoran/bigch-net-satislar
+  - restoran/bigch-favok-marji
+  - restoran/bigch-fis-sayisi
+  note: 'Kaynak BigChefs (BIST: BIGCH) Yatırımcı İlişkileri. Şube/şehir/ülke sayısı
+    AYLIK "Şube Sayısı Bildirimi" KAP özel durum açıklamalarından (şirket sitesi aynası);
+    finansal ve fiş metrikleri ÇEYREKLİK "Bilgilendirme Notu"ndan — TÜMÜ yıl başından
+    o çeyrek sonuna KÜMÜLATİFTİR (1Ç yalnızca 1Ç''yi, 9A Ocak-Eylül''ü, yıl sonu raporu
+    tüm yılı kapsar; çeyrek-tek DEĞİL). BigChefs''in aylık şube bildirimi Mart 2026''dan
+    sonra kesildi (yalnızca çeyreklik faaliyet raporlarından takip edilebiliyor) —
+    bu adaptör yalnızca aylık bildirim tarihini kullanır, bu yüzden şube sayısı serisinin
+    kuyruğu bu tarihte durabilir.'
+- slug: turizm
+  title: Turizm
+  pano:
+  - turizm/yabanci-ziyaretci-sayisi
+  - turizm/seyahat-geliri
+  - turizm/geceleme-toplam
+  - turizm/seyahat-gideri
+  note: 'Yabancı ziyaretçi sayısı Kültür ve Turizm Bakanlığı Sınır İstatistikleri
+    Bülteni''nden (aylık, kesin), seyahat geliri/gideri/kişi başı ortalama harcama
+    TCMB EVDS `bie_sgegi` grubundan, konaklama geceleme (toplam/ yerli/yabancı) Eurostat
+    `tour_occ_nim`den gelir — üçü de farklı kaynak ve farklı referans dönemidir (bülten
+    ~2 ay, EVDS ~2.5 ay, Eurostat ~9 ay gecikmeli), doğrudan toplanmamalı/karşılaştırılmamalıdır.
+    "Net Seyahat Geliri" (gelir − gider) ve "Seyahat Geliri/Gideri/Net" bileşik kartı
+    katalogda YOK: EVDS bunu tek bir seri olarak yayımlamıyor, mevcut Seri şeması
+    iki seriyi çıkararak üçüncü bir seri üretmeyi (kaynaklar-arası bileşik/computed
+    seri) desteklemiyor — bkz. görev raporu. TCMB EVDS''in eski "yabancı ziyaretçi"
+    alt kırılımı (K5-K10) artık boş yayımlanıyor (ölçüldü 2026-09-18), bu yüzden Kültür
+    ve Turizm Bakanlığı''nın kendi "Gelen Yabancılar" tablosu kullanılmıştır.'
+- slug: denizcilik
+  title: Denizcilik (Liman Yük Elleçleme)
+  pano:
+  - denizcilik/turkiye-toplam-yuk-ellecleme
+  - denizcilik/kocaeli-yuk-ellecleme
+  - denizcilik/aliaga-yuk-ellecleme
+  - denizcilik/mersin-yuk-ellecleme
+  note: 'Kaynak UAB (Ulaştırma ve Altyapı Bakanlığı) "Liman Başkanlıkları Bazında
+    Yük Elleçleme" aylık bülteni (denizcilikistatistikleri.uab.gov.tr/yuk-istatistikleri-<yıl>).
+    Dosyalar YIL BAŞINDAN İLGİLİ AYA KADAR KÜMÜLATİFTİR; burada ardışık iki bültenin
+    farkı alınarak AYLIK akıma çevrilmiştir. "2025 - İlk 12 Liman" yıllık sıralama
+    kartı katalogda YOK: tek bir sabit yıla ait sıralama (zaman serisi değil), mevcut
+    Seri şemasına (tek varlık × zaman ekseni) uymuyor — bkz. görev raporu.'
+- slug: tuketim-nabzi
+  title: Tüketim Nabzı (POS)
+  pano:
+  - tuketim-nabzi/pos-toplam-tutar
+  - tuketim-nabzi/pos-eticaret-tutar
+  - tuketim-nabzi/pos-maas-tutar
+  - tuketim-nabzi/pos-bireysel-tutar
+  note: Kaynak TCMB EVDS haftalık kartlı ödeme (POS) harcama serileri; referans sayfadaki
+    30 günlük hareketli ortalama kartları bu ham serilerden app katmanında türetilebilir.
+- slug: saglik
+  title: Sağlık
+  pano:
+  - saglik/hastane-toplam-muracaat
+  - saglik/hastane-toplam-fatura
+  - saglik/eczane-recete-sayisi
+  - saglik/turizm-toplam-ziyaretci
+  note: Hastane/eczane serileri SGK Aylık Sağlık İstatistik Bülteni'nden (Tablo 21/23);
+    tek bir XLSX TÜM tarihçeyi (2012'den bugüne) taşır. Sağlık turizmi serileri TCMB
+    EVDS'den (TÜİK "Çıkış Yapan Ziyaretçiler" ve "Ülke Dağılımı" grupları); ülke kırılımı
+    ÇEYREKLİKTİR, toplam ziyaretçi/kişi başı harcama AYLIKTIR. Özel hastane müracaat
+    payı ve reçete başı ortalama maliyet TÜRETİLMİŞ kartlardır, ayrı seri değildir.
+- slug: avm
+  title: AVM (Alışveriş Merkezleri)
+  pano:
+  - avm/ciro-endeksi
+  note: Kaynak AYD (Alışveriş Merkezleri ve Yatırımcıları Derneği) & Akademetre Research'ün
+    aylık "AVM Metrekare Verimlilik Endeksi" duyurusu — yapılandırılmış dosya değil,
+    resmi sitenin kendi aylık duyuru sayfası (serbest metin, sayı ayıklanır). Yalnızca
+    ENDEKS SEVİYESİ (puan) ingest edilir; YoY/MoM büyüme türetilir. Slug kalıbı yalnızca
+    2025-01'den itibaren güvenilir (öncesi farklı şema).
+- slug: gayrimenkul
+  title: Gayrimenkul & İnşaat (Şirket Operasyonel Verileri)
+  pano:
+  - gayrimenkul/orge-backlog
+  - gayrimenkul/orge-yeni-is-ytd
+  note: ORGE Enerji Elektrik Taahhüt A.Ş.'nin çeyreklik yatırımcı sunumu PDF'inden
+    (backlog + yıl içi kümülatif yeni iş). KZBGY (Kızılbük GYO, devre mülk satışı)
+    ve AKFGY (Akfen GYO, kira geliri) için KAP/IR kaynakları BLOKE — bkz. görev raporu.
+- slug: liman
+  title: Liman İşletmeciliği (Kruvaziyer)
+  pano:
+  - liman/gph-yolcu-konsolide
+  - liman/gph-sefer-konsolide
+  - liman/gph-yolcu-konsolide-edilmeyen
+  note: GPH (Global Ports Holding, Global Yatırım Holding'in dolaylı bağlı ortaklığı)
+    aylık trafik istatistikleri; kaynak KAP'taki serbest metin duyuru DEĞİL, şirketin
+    globalyatirim.com.tr Yatırımcı İlişkileri sitesindeki yapılandırılmış XLSX. "Konsolide
+    Edilmeyen Limanlar" kırılımı yalnızca 2026-01'den itibaren var; "Tüm GPH Portföyü"
+    toplamı türetilmiş karttır (Konsolide + Konsolide Edilmeyen), ayrı seri değil.
+- slug: ihracat-pazar-monitoru
+  title: Ihracat Pazar Monitoru
+  pano:
+  - ihracat-pazar-monitoru/milli-talep
+  - ihracat-pazar-monitoru/milli-dayaniklilik
+  - ihracat-pazar-monitoru/sektor-celik-talep
+  - ihracat-pazar-monitoru/sektor-cimento-cam-ser-topr-ur-talep
+  note: Kaynak TİM İhracat Pazar Monitörü (TİM'in kendi yayımladığı talep ve pazar
+    dayanıklılık endeksleri).

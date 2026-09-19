@@ -14,25 +14,33 @@ def sahte_df():
 
 def tum_adaptorleri_stubla(monkeypatch, haric=()):
     """`main()` katalogdaki HER seriyi gezer: stub'lanmayan bir kaynak tipi
-    testi gerçek ağa çıkarır. Yeni kaynak eklendiğinde tek yerde güncellenir;
-    liste katalogdaki dispatch dallarıyla birebir tutulmalı."""
+    testi GERÇEK AĞA çıkarır (süre 1 sn'den 7 dakikaya fırlar, sonuç ağ
+    durumuna bağlı olur).
+
+    Elle tutulan liste 35+ kaynak tipinin gerisine düştüğü için stub kümesi
+    artık `ingest.run`un içe aktardığı MODÜLLERDEN TÜRETİLİR: her ingest
+    modülünde tanımlı `seri_cek`, `*_seri_cek`, `fon_tam_gecmisi` ve
+    `baraj_doluluk_cek` otomatik stub'lanır. Yeni adaptör eklemek bu
+    yardımcıyı güncellemeyi gerektirmez; liste bayatlayamaz.
+    """
+    import types
+
     from ingest import run
 
-    adaptorler = {
-        (run.evds, "seri_cek"), (run.yahoo, "seri_cek"),
-        (run.epias, "seri_cek"), (run.osd, "seri_cek"),
-        (run.tim, "seri_cek"), (run.tim, "il_seri_cek"),
-        (run.bddk, "seri_cek"), (run.tefas, "seri_cek"),
-        (run.tefas, "fon_tam_gecmisi"), (run.eurocontrol, "seri_cek"),
-        (run.fred, "seri_cek"),
-        (run.epias, "baraj_doluluk_cek"),
-    }
-    if hasattr(run.tim, "ulke_seri_cek"):
-        adaptorler.add((run.tim, "ulke_seri_cek"))
-    for modul, ad in adaptorler:
-        if (modul, ad) in haric:
+    for modul in list(vars(run).values()):
+        if not isinstance(modul, types.ModuleType):
             continue
-        monkeypatch.setattr(modul, ad, lambda *a, **k: sahte_df())
+        if not modul.__name__.startswith("ingest."):
+            continue
+        for ad, nesne in list(vars(modul).items()):
+            if not callable(nesne) or getattr(nesne, "__module__", None) != modul.__name__:
+                continue
+            if not (ad == "seri_cek" or ad.endswith("_seri_cek")
+                    or ad in {"fon_tam_gecmisi", "baraj_doluluk_cek"}):
+                continue
+            if (modul, ad) in haric:
+                continue
+            monkeypatch.setattr(modul, ad, lambda *a, **k: sahte_df())
 
 
 def test_cek_yahoo_serisini_yahoo_moduline_yonlendirir(monkeypatch):

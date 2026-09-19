@@ -25,10 +25,13 @@ Kaynak gerçekleri 2026-09-18'de canlı ölçüldü (sıfırdan yeniden keşfetm
   veri 7. satırdan başlar (üstü başlık/dönem metadatası — satır NUMARASI
   yerine `"Sıralama"` başlık satırı ARANARAK bulunur, şablon kayarsa da
   çalışsın diye).
-- **Sektör toplamı** her şirket-sıralı sheette `Şirket Kodu=9003`
+- **Sektör toplamı** güncel şirket-sıralı sheetlerde `Şirket Kodu=9003`
   ("SEKTÖR TOPLAMI") satırıyla verilir; bu değer `Genel` sheet'indeki
   `"<BRANŞ> TOPLAM"` satırıyla çapraz doğrulandı (Ağustos 2026: ikisi de
-  815.731.863.400,10 TL YTD) — ayrı bir sheet aramaya gerek yok.
+  815.731.863.400,10 TL YTD). **ESKİ dosyalarda (ör. 2022-03) bu satırın
+  `Şirket Kodu` hücresi BOŞ** (kod hiç yazılmamış, yalnızca `Şirket Adı`
+  = "SEKTÖR TOPLAMI") — ölçüldü, canlı doğrulandı. `sheet_degerleri` bu
+  satırı isimden tanıyıp `SEKTOR_KODU`ya (9003) normalize eder.
 - **AYLIK tekil üretim = ay(N) kümülatif − ay(N−1) kümülatif** (Ocak hariç,
   Ocak zaten tek aylıktır) — BDDK kar/zarar kalemleriyle BİREBİR AYNI
   desen, dönüşüm `ingest.bddk.kumulatifi_ayliga_cevir`den yeniden
@@ -39,11 +42,25 @@ Kaynak gerçekleri 2026-09-18'de canlı ölçüldü (sıfırdan yeniden keşfetm
   "2015-11" / "2012-4" arası tutarsız); bu yüzden dosya EŞLEŞTİRMESİ
   `FileName` İÇİNDE `tsb_rapor` alt dizesi aranarak yapılıyor, dönem de
   dosya adından değil `PeriodYear`/`PeriodMonth` alanlarından okunuyor.
+- **`.xls` DUVARI**: Kasım 2014'ten ÖNCEKİ dosyalar eski ikili Excel
+  biçiminde (`.xls` uzantılı) yayımlanıyor; `openpyxl` bunu AÇAMAZ
+  (`BadZipFile`). Ölçüldü: 2014-11 `.xlsx`, 2013-10 ve 2012-3 `.xls`.
+  `ILK_DESTEKLENEN_YIL` (2015) bu yüzden `start_date`den bağımsız SERT
+  bir taban — daha eskisi istense de aşılmaz (bkz. `ingest.bddk.ILK_YIL`
+  ile aynı desen).
+- **UNICODE NORMALİZASYONU**: 2021-03'ten önce yeniden indekslenmiş (ör.
+  `CreatedDate` 2021 olan 2018 dönemli kayıtlar) `FileName` alanları NFD
+  (bileşke, "Ü" = U+0055 + U+0308) kodlanmış; daha yeni kayıtlar ve
+  katalogdaki `tsb_rapor` NFC ("Ü" = U+00DC). Normalize etmeden substring
+  araması ikisi arasında SESSİZCE hiç eşleşmiyordu (`in` operatörü hata
+  vermez, boş liste döner) — dosya eşleştirmesi `unicodedata.normalize
+  ("NFC", ...)` ile yapılıyor.
 """
 
 from __future__ import annotations
 
 from io import BytesIO
+from unicodedata import normalize
 
 import openpyxl
 import pandas as pd
@@ -55,6 +72,7 @@ UC = "https://www.tsb.org.tr"
 ZAMAN_ASIMI = 60
 KATEGORI = "genel-sigorta-verileri"
 SEKTOR_KODU = 9003  # her şirket-sıralı sheette "SEKTÖR TOPLAMI" satırının kodu
+ILK_DESTEKLENEN_YIL = 2015  # bundan önceki dosyalar .xls (openpyxl açamaz)
 
 
 def _yil(start_date: str | None) -> int:
@@ -99,6 +117,9 @@ def sheet_degerleri(wb: openpyxl.Workbook, sheet: str) -> dict[int, float]:
 
     Sütunlar POZİSYONDAN değil `"Sıralama"` başlık satırından sonraki
     sabit üç kolon (Şirket Kodu, Toplam Üretim) taşınarak bulunur.
+    Eski dosyalarda "SEKTÖR TOPLAMI" satırının `Şirket Kodu` hücresi boş
+    olabiliyor (bkz. modül docstring'i) — isimden tanınıp `SEKTOR_KODU`ya
+    normalize edilir.
     """
     if sheet not in wb.sheetnames:
         raise RuntimeError(f"TSB workbook'unda '{sheet}' sheet'i yok")
@@ -112,9 +133,14 @@ def sheet_degerleri(wb: openpyxl.Workbook, sheet: str) -> dict[int, float]:
             if satir[0] == "Sıralama":
                 basliklar_gorundu = True
             continue
-        if len(satir) < 4 or satir[2] is None or satir[3] is None:
+        if len(satir) < 4 or satir[3] is None:
             continue
-        degerler[int(satir[2])] = float(satir[3])
+        kod = satir[2]
+        if kod is None:
+            if satir[1] != "SEKTÖR TOPLAMI":
+                continue
+            kod = SEKTOR_KODU
+        degerler[int(kod)] = float(satir[3])
     if not degerler:
         raise RuntimeError(f"TSB '{sheet}' sheet'inde hiç şirket satırı yok")
     return degerler
@@ -131,13 +157,15 @@ def _workbook_indir(url: str, session=None) -> openpyxl.Workbook:
 def kumulatif_seri(seri, session=None, onbellek: dict | None = None) -> dict[str, float]:
     """`(alt_kategori, rapor, sheet, şirket_kodu)` için ay→YTD-kümülatif eşlemesi.
 
-    Dosya listesi `(alt_kategori, en_eski_yil)`e göre, indirilen her
-    workbook'un sheet çözümü `(FilePath, sheet)`e göre önbelleklenir:
+    Dosya listesi `(alt_kategori, en_eski_yil)`e göre, indirilen workbook
+    `FilePath` başına, sheet çözümü `(FilePath, sheet)`e göre önbelleklenir:
     aynı ayın workbook'u ve sheet'i birden çok şirket serisi arasında
-    (ör. 5 hayat dışı şirket + sektör toplamı) tek sefer indirilip okunur.
+    (ör. 5 hayat dışı şirket + sektör toplamı, ya da aynı workbook'un farklı
+    sheet'lerini isteyen kardeş aileler) tek sefer indirilip okunur.
+    `en_eski_yil` `ILK_DESTEKLENEN_YIL`nin altına asla inmez (`.xls` duvarı).
     """
     onbellek = {} if onbellek is None else onbellek
-    en_eski_yil = _yil(seri.start_date)
+    en_eski_yil = max(_yil(seri.start_date), ILK_DESTEKLENEN_YIL)
 
     liste_anahtari = ("liste", seri.tsb_alt_kategori, en_eski_yil)
     if liste_anahtari not in onbellek:
@@ -146,7 +174,15 @@ def kumulatif_seri(seri, session=None, onbellek: dict | None = None) -> dict[str
         )
     dosyalar = onbellek[liste_anahtari]
 
-    eslesen = [d for d in dosyalar if seri.tsb_rapor in (d.get("FileName") or "")]
+    # 2021-03'ten önce yeniden indekslenen kayıtlarda FileName NFD (bileşke
+    # Unicode, ör. "Ü" = "U" + birleşen çift nokta) kullanıyor, katalogdaki
+    # `tsb_rapor` ve daha yeni kayıtlar NFC (tek kod noktalı "Ü") — normalize
+    # etmeden substring araması bu ikisi arasında sessizce hiç eşleşmiyordu.
+    rapor_nfc = normalize("NFC", seri.tsb_rapor)
+    eslesen = [
+        d for d in dosyalar
+        if rapor_nfc in normalize("NFC", d.get("FileName") or "")
+    ]
     if not eslesen:
         raise RuntimeError(
             f"TSB '{seri.tsb_alt_kategori}' altında '{seri.tsb_rapor}' eşleşen dosya yok"
@@ -160,10 +196,13 @@ def kumulatif_seri(seri, session=None, onbellek: dict | None = None) -> dict[str
         if yil < en_eski_yil:
             continue
 
+        wb_anahtari = ("wb", kayit["FilePath"])
+        if wb_anahtari not in onbellek:
+            onbellek[wb_anahtari] = _workbook_indir(f"{UC}{kayit['FilePath']}", session=session)
+
         sheet_anahtari = (kayit["FilePath"], seri.tsb_sheet)
         if sheet_anahtari not in onbellek:
-            wb = _workbook_indir(f"{UC}{kayit['FilePath']}", session=session)
-            onbellek[sheet_anahtari] = sheet_degerleri(wb, seri.tsb_sheet)
+            onbellek[sheet_anahtari] = sheet_degerleri(onbellek[wb_anahtari], seri.tsb_sheet)
         degerler = onbellek[sheet_anahtari]
 
         if seri.tsb_sirket_kodu not in degerler:

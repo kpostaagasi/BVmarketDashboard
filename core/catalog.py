@@ -22,17 +22,24 @@ GECERLI_EVDS_FREKANSLARI = {"1", "2", "5", "6"}  # günlük, haftalık, aylık, 
 GECERLI_GRAFIKLER = {"seasonality", "daily_seasonality", "level", "composition", "fon"}
 GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
-    "evds", "yahoo", "epias", "osd", "tim", "tim_il", "tim_ulke", "bddk",
+    "evds", "yahoo", "epias", "osd", "tim", "tim_il", "tim_ulke", "tim_ulke_grubu", "bddk",
+    "bddk_haftalik", "bddk_bdmk",
     "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus", "thy",
     "tav", "ebebek",
     "epdk", "epdk_dogalgaz",
     "turkcell", "ttkom",
     "odmd",
     "eib", "usk", "turkbesd",
-    "tsb",
+    "tsb", "tspb",
     "eurostat",
     "ecb", "turkcimento",
     "worldbank", "ifo",
+    "istib", "tuik_kanatli", "botas", "epdk_fiyat",
+    "sgk", "ayd", "gph", "orge", "tcud",
+    "dhmi", "uab", "ktb", "eurostat_turizm",
+    "iso_pmi", "tim_pazar_monitoru",
+    "bigchefs", "turktraktor", "migros",
+    "tepav", "tmsd", "ithib",
 }
 SIKLIK_ETIKETLERI = {
     "daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK",
@@ -98,6 +105,7 @@ GECERLI_TURKCELL_METRIKLERI = {
 GECERLI_TTKOM_METRIKLERI = {
     "mobil-toplam-abone", "sabit-genisbant-abone", "tv-abone", "sabit-ses-abone",
     "sabit-genisbant-arpu-buyume", "mobil-karma-arpu-buyume",
+    "mobil-faturali-abone-payi", "sabit-genisbant-fiber-abone-payi",
 }
 # ODMD (Otomotiv Distribütörleri ve Mobilite Derneği) aylık marka bazında
 # perakende satış dosyasının okunan üç sütunu. Bkz. ingest/odmd.py.
@@ -134,9 +142,9 @@ GECERLI_TURKBESD_URUNLERI = {
     "buzdolabi", "derin-dondurucu", "camasir-makinesi", "bulasik-makinesi",
     "firin", "kurutucu",
 }
-# Dünya Bankası "Pink Sheet" emtia fiyat verisinde okunan üç seri
+# Dünya Bankası "Pink Sheet" emtia fiyat verisinde okunan dört seri
 # (ingest/worldbank.py::SERI_TANIMLARI ile birebir).
-GECERLI_WB_SERILERI = {"gubre-endeksi", "urea", "dap"}
+GECERLI_WB_SERILERI = {"gubre-endeksi", "urea", "dap", "kaucuk-tsr20"}
 # ifo Institute "ifo Business Climate Germany" Excel'inde okunan üç endeks
 # (ingest/ifo.py::SERI_ETIKETLERI ile birebir).
 GECERLI_IFO_SERILERI = {"iklim", "durum", "beklenti"}
@@ -167,6 +175,137 @@ GECERLI_TURKCIMENTO_METRIKLERI = {
 # iki ürünü: Faktoring ve Finansal Kiralama sektör bültenleri. Bkz.
 # ingest/bddk.py::seri_cek_bdmk docstring'i.
 GECERLI_BDDK_BDMK_URUNLERI = {"faktoring", "finansal_kiralama"}
+# İTB (İstanbul Ticaret Borsası) haftalık tescil bülteninden okunan dört
+# kanatlı eti ürünü. Bkz. ingest/istib.py docstring'i.
+GECERLI_ISTIB_URUNLERI = {
+    "piliç-eti-kemiksiz", "hindi-eti-kemikli", "hindi-eti-kemiksiz", "piliç-kanat",
+}
+# TÜİK'in Eurostat apro_mt_pwgtm aynasından okunan üç kümes hayvancılığı
+# üretim ölçütü. Bkz. ingest/tuik.py docstring'i.
+GECERLI_TUIK_KANATLI_OLCUTLERI = {"toplam-uretim", "tavuk-uretim", "kesilen-tavuk"}
+# BOTAŞ güncel doğal gaz toptan satış tarifesinin beş tüketici kategorisi.
+# Bkz. ingest/botas.py docstring'i.
+GECERLI_BOTAS_KATEGORILERI = {
+    "konut", "sehit-ailesi", "ekmek-ureticileri",
+    "elektrik-uretimi-amacli", "elektrik-uretimi-disi",
+}
+# EPDK "Petrol ve LPG Piyasası Fiyatlandırma Raporu"nun iki ekseni: ürün ve
+# fiyat bileşeni kalemi. Bkz. ingest/epdk.py docstring'i (fiyatlandırma
+# bölümü) — mevcut `epdk_urun`/`epdk_olcut` (Sektör Raporu, üretim/satış
+# hacmi) ile KARIŞTIRILMAMALI, ayrı bir rapor/ayrı bir kaynak_tipi'dir.
+GECERLI_EPDK_FIYAT_URUNLERI = {"motorin", "benzin"}
+GECERLI_EPDK_FIYAT_KALEMLERI = {
+    "urun-fiyati", "toptanci-marji", "dagitici-bayi-marji",
+    "toplam-vergi", "nihai-satis-fiyati",
+}
+# TSPB (Türkiye Sermaye Piyasaları Birliği) "Veriler" sayfasının iki
+# dosyası: "PYŞ Aylık" (portföy yönetim şirketleri AUM/müşteri-fon
+# sayısı/gelir, 4 kategori kırılımlı) ve "Krediler" (kredili işlem, tek
+# eksenli 4 ölçüt). Bkz. ingest/tspb.py docstring'i.
+GECERLI_TSPB_TABLOLAR = {
+    "musteri-fon-sayisi", "portfoy-buyuklugu", "portfoy-yonetimi-geliri", "kredili",
+}
+GECERLI_TSPB_PYS_KATEGORILERI = {
+    "bireysel", "yatirim-ortakligi", "emeklilik-yatirim-fonu", "yatirim-fonu", "toplam",
+}
+GECERLI_TSPB_KREDILI_KATEGORILERI = {
+    "araci-kurum-sayisi", "sozlesmeli-yatirimci-sayisi", "kullanan-yatirimci-sayisi",
+    "kredi-hacmi",
+}
+# TEPAV Gıda Fiyat Endeksi (TEGE) aylık bültenlerinden çekilen üç seri.
+# Bkz. ingest/tepav.py docstring'i.
+GECERLI_TEPAV_SERILERI = {"tege-aylik", "tege-yillik", "kktc-tege-aylik"}
+# SGK (Sosyal Güvenlik Kurumu) Aylık Sağlık İstatistik Bülteni'nin tek
+# ekseni: Tablo 21 (hastane müracaat/fatura, özel/toplam) ve Tablo 23
+# (eczane reçete/fatura) kalemleri. Bkz. ingest/sgk.py docstring'i.
+GECERLI_SGK_METRIKLERI = {
+    "hastane-ozel-muracaat", "hastane-ozel-fatura",
+    "hastane-toplam-muracaat", "hastane-toplam-fatura",
+    "eczane-recete-sayisi", "eczane-fatura-tutari",
+}
+# GPH (Global Ports Holding) aylık trafik istatistiği XLSX'inin tek ekseni.
+# Bkz. ingest/gph.py docstring'i.
+GECERLI_GPH_METRIKLERI = {"yolcu-konsolide", "sefer-konsolide", "yolcu-konsolide-edilmeyen"}
+# ORGE Enerji çeyreklik yatırımcı sunumu PDF'inin tek ekseni. Bkz.
+# ingest/orge.py docstring'i.
+GECERLI_ORGE_METRIKLERI = {"backlog", "yeni-is-ytd"}
+# DHMİ (Devlet Hava Meydanları İşletmesi) "Havalimanları Karşılaştırmalı
+# İstatistikleri" bülteninin tek ekseni: hangi ölçüt (yolcu toplam/dış hat,
+# kargo, uçak toplam/ticari) okunacağı — hepsi aynı 6 büyük havalimanının
+# (İstanbul, Sabiha Gökçen, Ankara Esenboğa, İzmir Adnan Menderes, Antalya,
+# Muğla Dalaman) toplamıdır. Bkz. ingest/dhmi.py docstring'i.
+GECERLI_DHMI_OLCUTLERI = {
+    "yolcu-toplam", "yolcu-dis-hat", "kargo-toplam", "ucak-toplam", "ucak-ticari",
+}
+# UAB (Ulaştırma ve Altyapı Bakanlığı) "Liman Başkanlıkları Bazında Yük
+# Elleçleme" bülteninin tek ekseni: ulusal toplam ya da 9 seçili liman
+# başkanlığından biri. Bkz. ingest/uab.py docstring'i.
+GECERLI_UAB_LIMANLARI = {
+    "toplam", "aliaga", "trabzon", "kocaeli", "ambarli", "izmir",
+    "iskenderun", "mersin", "gemlik", "tekirdag",
+}
+# Eurostat tour_occ_nim (konaklama geceleme) istatistiğinin tek ekseni:
+# ikamet ülkesi kırılımı. `ingest/eurostat.py`nin (nrg_pc_204/205, ayrı
+# kaynak_tipi: eurostat) eksenleriyle KARIŞTIRILMAMALI. Bkz.
+# ingest/eurostat_turizm.py docstring'i.
+GECERLI_EUROSTAT_TURIZM_RESID = {"TOTAL", "DOM", "FOR"}
+
+# İSO (İstanbul Sanayi Odası) Türkiye Sektörel PMI raporunun iki ekseni:
+# 10 alt sektör (None ise manşet Türkiye İmalat PMI) ve 4 ölçüt. Bkz.
+# ingest/iso_pmi.py::SEKTOR_SIRASI/GECERLI_METRIKLER ile birebir.
+GECERLI_ISO_PMI_SEKTORLERI = frozenset({
+    "Gıda Ürünleri", "Tekstil Ürünleri", "Giyim ve Deri Ürünleri",
+    "Ağaç ve Kağıt Ürünleri", "Kimyasal, Plastik ve Kauçuk Ürünler",
+    "Metalik Olmayan Mineral Ürünler", "Ana Metal Sanayi",
+    "Makine ve Metal Ürünler", "Elektrikli ve Elektronik Ürünler",
+    "Kara ve Deniz Taşıtları",
+})
+GECERLI_ISO_PMI_METRIKLERI = frozenset({
+    "pmi", "yeni-siparisler", "yeni-ihracat-siparisleri", "fiyat-farki",
+})
+# TİM İhracat Pazar Monitörü'nün üç ekseni: endeks (talep/dayanıklılık,
+# zorunlu), sektör ve ülke (ikisi de opsiyonel, birlikte kullanılamaz —
+# ikisi de boşsa milli endeks). Bkz. ingest/tim.py::PM_SEKTORLER/PM_ULKELER
+# ile birebir.
+GECERLI_TIM_PM_ENDEKSLERI = frozenset({"talep", "dayaniklilik"})
+GECERLI_TIM_PM_SEKTORLERI = frozenset({
+    "Çelik", "Çimento, Cam, Ser. Topr. Ür.", "Demir ve Demir Dışı Metaller",
+    "Deri ve Deri Mamulleri", "Elektrik ve Elektronik", "Fındık ve Mamulleri",
+    "Gemi, Yat ve Hizmetleri", "Halı", "Hazırgiyim ve Konfeksiyon",
+    "Hububat, Bakliyat, Yağlı Toh.", "İklimlendirme Sanayi",
+    "Kimyevi Maddeler ve Mamulleri", "Kuru Meyve ve Mamulleri",
+    "Madencilik Ürünleri", "Makine ve Aksamları", "Meyve Sebze Mamulleri",
+    "Mobilya, Kağıt ve Orman Ür.", "Mücevher", "Otomotiv Endüstrisi",
+    "Savunma ve Havacılık", "Su Ürünleri ve Hayvancılık",
+    "Süs Bitkileri ve Mamulleri", "Tekstil ve Hammaddeleri", "Tütün",
+    "Yaş Meyve ve Sebze", "Zeytin ve Zeytinyağı",
+})
+GECERLI_TIM_PM_ULKELERI = frozenset({
+    "ABD", "Almanya", "Belçika", "Çin", "Danimarka", "Finlandiya", "Fransa",
+    "Güney Kore", "Hollanda", "İspanya", "İsveç", "İtalya", "Kolombiya",
+    "Macaristan", "Meksika", "Polonya", "Portekiz", "Şili", "Tayland",
+})
+
+# BigChefs (BIST: BIGCH) Yatırımcı İlişkileri'nin aylık "Şube Sayısı
+# Bildirimi" (3 ölçüt) + çeyreklik "Bilgilendirme Notu"ndan (17 ölçüt)
+# çekilen 20 metrik. Bkz. ingest/bigchefs.py docstring'i.
+GECERLI_BIGCHEFS_METRIKLERI = {
+    "sube-sayisi", "sehir-sayisi", "ulke-sayisi", "calisan-sayisi",
+    "sistem-geneli-net-satislar", "net-satislar", "brut-kar", "brut-kar-marji",
+    "favok", "favok-marji", "net-kar", "net-kar-marji",
+    "fis-sayisi", "ziyaretci-sayisi", "nakit", "toplam-borclar",
+    "net-nakit-pozisyonu", "geri-alinan-paylar",
+    "fis-ortalamasi-bigchefs", "fis-ortalamasi-buselik", "fis-ortalamasi-numnum",
+}
+# TürkTraktör (BIST: TTRAK) Yatırımcı İlişkileri'nin aylık "OSD'ye
+# Bildirilen Üretim ve Satış Adetleri" PDF'inden çekilen üç ölçüt (üretim
+# zaten mevcut `osd_firma: TÜRK TRAKTÖR` ile karşılanıyor). Bkz.
+# ingest/turktraktor.py docstring'i.
+GECERLI_TURKTRAKTOR_METRIKLERI = {"fabrika-satis", "yurtdisi-satis", "toplam-satis"}
+# Migros Ticaret A.Ş. (BIST: MGROS) "Ara Dönem Faaliyet Raporu"ndan çekilen
+# tek ölçüt (çeyrek sonu mağaza sayısı anlık görüntüsü). Bkz.
+# ingest/migros.py docstring'i.
+GECERLI_MIGROS_METRIKLERI = {"toplam-magaza-sayisi"}
 
 
 
@@ -206,6 +345,10 @@ KAYNAK_ALANLARI = {
     },
     "tim_ulke": {
         "zorunlu": ("tim_ulke", "tim_sektor"),
+        "istege_bagli": ("start_date",),
+    },
+    "tim_ulke_grubu": {
+        "zorunlu": ("tim_ulke_grubu",),
         "istege_bagli": ("start_date",),
     },
     "bddk": {
@@ -308,6 +451,94 @@ KAYNAK_ALANLARI = {
         "zorunlu": ("turkcimento_metrik",),
         "istege_bagli": ("start_date",),
     },
+    "istib": {
+        "zorunlu": ("istib_urun",),
+        "istege_bagli": ("start_date",),
+    },
+    "tuik_kanatli": {
+        "zorunlu": ("tuik_kanatli_olcut",),
+        "istege_bagli": ("start_date",),
+    },
+    "botas": {
+        "zorunlu": ("botas_kategori",),
+        "istege_bagli": (),
+    },
+    "epdk_fiyat": {
+        "zorunlu": ("epdk_fiyat_urun", "epdk_fiyat_kalem"),
+        "istege_bagli": ("start_date",),
+    },
+    "tspb": {
+        "zorunlu": ("tspb_tablo", "tspb_kategori"),
+        "istege_bagli": ("start_date",),
+    },
+    "sgk": {
+        "zorunlu": ("sgk_metrik",),
+        "istege_bagli": (),
+    },
+    "ayd": {
+        "zorunlu": (),
+        "istege_bagli": (),
+    },
+    "gph": {
+        "zorunlu": ("gph_metrik",),
+        "istege_bagli": (),
+    },
+    "orge": {
+        "zorunlu": ("orge_metrik",),
+        "istege_bagli": (),
+    },
+    "tcud": {
+        "zorunlu": ("tcud_kalem",),
+        "istege_bagli": ("start_date",),
+    },
+    "dhmi": {
+        "zorunlu": ("dhmi_olcut",),
+        "istege_bagli": ("start_date",),
+    },
+    "uab": {
+        "zorunlu": ("uab_liman",),
+        "istege_bagli": ("start_date",),
+    },
+    "ktb": {
+        "zorunlu": (),
+        "istege_bagli": ("start_date",),
+    },
+    "eurostat_turizm": {
+        "zorunlu": ("eurostat_turizm_resid",),
+        "istege_bagli": ("start_date",),
+    },
+    "iso_pmi": {
+        "zorunlu": ("iso_pmi_metrik",),
+        "istege_bagli": ("iso_pmi_sektor", "start_date"),
+    },
+    "tim_pazar_monitoru": {
+        "zorunlu": ("tim_pm_endeks",),
+        "istege_bagli": ("tim_pm_sektor", "tim_pm_ulke", "start_date"),
+    },
+    "bigchefs": {
+        "zorunlu": ("bigchefs_metrik",),
+        "istege_bagli": (),
+    },
+    "turktraktor": {
+        "zorunlu": ("turktraktor_metrik",),
+        "istege_bagli": (),
+    },
+    "migros": {
+        "zorunlu": ("migros_metrik",),
+        "istege_bagli": (),
+    },
+    "tepav": {
+        "zorunlu": ("tepav_seri",),
+        "istege_bagli": ("start_date",),
+    },
+    "tmsd": {
+        "zorunlu": ("tmsd_kalem",),
+        "istege_bagli": ("start_date",),
+    },
+    "ithib": {
+        "zorunlu": ("ithib_kalem",),
+        "istege_bagli": ("start_date",),
+    },
 }
 
 # Tipe değil, kataloğa ait alanlar: kaynak tipi ne olursa olsun
@@ -387,6 +618,7 @@ class Seri:
     tim_eski_adlar: tuple[str, ...] | None = None
     tim_il: str | None = None
     tim_ulke: str | None = None
+    tim_ulke_grubu: str | None = None
     monthly_agg: str = "mean"
     start_date: str | None = None
     bddk_kalem: str | None = None
@@ -438,10 +670,35 @@ class Seri:
     ecb_akis: str | None = None
     ecb_anahtar: str | None = None
     turkcimento_metrik: str | None = None
+    istib_urun: str | None = None
+    tuik_kanatli_olcut: str | None = None
+    botas_kategori: str | None = None
+    epdk_fiyat_urun: str | None = None
+    epdk_fiyat_kalem: str | None = None
+    tspb_tablo: str | None = None
+    tspb_kategori: str | None = None
+    sgk_metrik: str | None = None
+    gph_metrik: str | None = None
+    orge_metrik: str | None = None
+    tcud_kalem: str | None = None
     yayin_notu: str | None = None
     olcek: float | None = None
     gecikme_gunu: int | None = None
     hareketli_ortalama_gun: int | None = None
+    dhmi_olcut: str | None = None
+    uab_liman: str | None = None
+    eurostat_turizm_resid: str | None = None
+    iso_pmi_sektor: str | None = None
+    iso_pmi_metrik: str | None = None
+    tim_pm_sektor: str | None = None
+    tim_pm_ulke: str | None = None
+    tim_pm_endeks: str | None = None
+    bigchefs_metrik: str | None = None
+    turktraktor_metrik: str | None = None
+    migros_metrik: str | None = None
+    tepav_seri: str | None = None
+    tmsd_kalem: str | None = None
+    ithib_kalem: str | None = None
 
 
 def _alan_verilmis(seri: Seri, alan: str) -> bool:
@@ -599,11 +856,25 @@ def serileri_yukle() -> tuple[Seri, ...]:
             ),
             tim_il=ham.get("tim_il"),
             tim_ulke=ham.get("tim_ulke"),
+            tim_ulke_grubu=ham.get("tim_ulke_grubu"),
             bddk_kalem=ham.get("bddk_kalem"),
             bddk_taraf=(
                 str(ham["bddk_taraf"]) if "bddk_taraf" in ham else None
             ),
             bddk_kumulatif=ham.get("bddk_kumulatif"),
+            bddk_haftalik_id=ham.get("bddk_haftalik_id"),
+            bddk_haftalik_sutun=(
+                int(ham["bddk_haftalik_sutun"]) if "bddk_haftalik_sutun" in ham else None
+            ),
+            bddk_haftalik_taraf=(
+                str(ham["bddk_haftalik_taraf"]) if "bddk_haftalik_taraf" in ham else None
+            ),
+            bddk_bdmk_urun=ham.get("bddk_bdmk_urun"),
+            bddk_bdmk_tablo=(
+                int(ham["bddk_bdmk_tablo"]) if "bddk_bdmk_tablo" in ham else None
+            ),
+            bddk_bdmk_kalem=ham.get("bddk_bdmk_kalem"),
+            bddk_bdmk_kumulatif=ham.get("bddk_bdmk_kumulatif"),
             tefas_tip=ham.get("tefas_tip"),
             tefas_olcut=ham.get("tefas_olcut"),
             tefas_kod=ham.get("tefas_kod"),
@@ -649,14 +920,39 @@ def serileri_yukle() -> tuple[Seri, ...]:
             ecb_akis=ham.get("ecb_akis"),
             ecb_anahtar=ham.get("ecb_anahtar"),
             turkcimento_metrik=ham.get("turkcimento_metrik"),
+            istib_urun=ham.get("istib_urun"),
+            tuik_kanatli_olcut=ham.get("tuik_kanatli_olcut"),
+            botas_kategori=ham.get("botas_kategori"),
+            epdk_fiyat_urun=ham.get("epdk_fiyat_urun"),
+            epdk_fiyat_kalem=ham.get("epdk_fiyat_kalem"),
+            tspb_tablo=ham.get("tspb_tablo"),
+            tspb_kategori=ham.get("tspb_kategori"),
+            sgk_metrik=ham.get("sgk_metrik"),
+            gph_metrik=ham.get("gph_metrik"),
+            orge_metrik=ham.get("orge_metrik"),
             monthly_agg=ham.get("monthly_agg", "mean"),
             start_date=ham.get("start_date"),
+            tcud_kalem=ham.get("tcud_kalem"),
             yayin_notu=ham.get("yayin_notu"),
             olcek=float(ham["olcek"]) if "olcek" in ham else None,
             gecikme_gunu=(
                 int(ham["gecikme_gunu"]) if "gecikme_gunu" in ham else None
             ),
             hareketli_ortalama_gun=ham.get("hareketli_ortalama_gun"),
+            dhmi_olcut=ham.get("dhmi_olcut"),
+            uab_liman=ham.get("uab_liman"),
+            eurostat_turizm_resid=ham.get("eurostat_turizm_resid"),
+            iso_pmi_sektor=ham.get("iso_pmi_sektor"),
+            iso_pmi_metrik=ham.get("iso_pmi_metrik"),
+            tim_pm_sektor=ham.get("tim_pm_sektor"),
+            tim_pm_ulke=ham.get("tim_pm_ulke"),
+            tim_pm_endeks=ham.get("tim_pm_endeks"),
+            bigchefs_metrik=ham.get("bigchefs_metrik"),
+            turktraktor_metrik=ham.get("turktraktor_metrik"),
+            migros_metrik=ham.get("migros_metrik"),
+            tepav_seri=ham.get("tepav_seri"),
+            tmsd_kalem=ham.get("tmsd_kalem"),
+            ithib_kalem=ham.get("ithib_kalem"),
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)
@@ -704,6 +1000,55 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
     if seri.kaynak_tipi not in GECERLI_KAYNAK_TIPLERI:
         raise KatalogHatasi(f"{seri.id}: geçersiz kaynak_tipi '{seri.kaynak_tipi}'")
     _alan_sahipligini_dogrula(seri)
+    if seri.kaynak_tipi == "dhmi" and seri.dhmi_olcut not in GECERLI_DHMI_OLCUTLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz dhmi_olcut '{seri.dhmi_olcut}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_DHMI_OLCUTLERI))})"
+        )
+    if seri.kaynak_tipi == "uab" and seri.uab_liman not in GECERLI_UAB_LIMANLARI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz uab_liman '{seri.uab_liman}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_UAB_LIMANLARI))})"
+        )
+    if (
+        seri.kaynak_tipi == "eurostat_turizm"
+        and seri.eurostat_turizm_resid not in GECERLI_EUROSTAT_TURIZM_RESID
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz eurostat_turizm_resid "
+            f"'{seri.eurostat_turizm_resid}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_TURIZM_RESID))})"
+        )
+    if seri.kaynak_tipi == "iso_pmi":
+        if seri.iso_pmi_metrik not in GECERLI_ISO_PMI_METRIKLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz iso_pmi_metrik '{seri.iso_pmi_metrik}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_ISO_PMI_METRIKLERI))})"
+            )
+        if seri.iso_pmi_sektor is not None and seri.iso_pmi_sektor not in GECERLI_ISO_PMI_SEKTORLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz iso_pmi_sektor '{seri.iso_pmi_sektor}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_ISO_PMI_SEKTORLERI))})"
+            )
+        if seri.iso_pmi_sektor is None and seri.iso_pmi_metrik != "pmi":
+            raise KatalogHatasi(
+                f"{seri.id}: manşet seri (iso_pmi_sektor yok) yalnızca "
+                "iso_pmi_metrik='pmi' olabilir"
+            )
+    if seri.kaynak_tipi == "tim_pazar_monitoru":
+        if seri.tim_pm_endeks not in GECERLI_TIM_PM_ENDEKSLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz tim_pm_endeks '{seri.tim_pm_endeks}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_TIM_PM_ENDEKSLERI))})"
+            )
+        if seri.tim_pm_sektor is not None and seri.tim_pm_sektor not in GECERLI_TIM_PM_SEKTORLERI:
+            raise KatalogHatasi(f"{seri.id}: geçersiz tim_pm_sektor '{seri.tim_pm_sektor}'")
+        if seri.tim_pm_ulke is not None and seri.tim_pm_ulke not in GECERLI_TIM_PM_ULKELERI:
+            raise KatalogHatasi(f"{seri.id}: geçersiz tim_pm_ulke '{seri.tim_pm_ulke}'")
+        if seri.tim_pm_sektor and seri.tim_pm_ulke:
+            raise KatalogHatasi(
+                f"{seri.id}: tim_pm_sektor ve tim_pm_ulke birlikte kullanılamaz"
+            )
     if (seri.kaynak_tipi == "tefas_fon") != ("fon" in seri.charts):
         raise KatalogHatasi(f"{seri.id}: tefas_fon kaynağı ile fon grafiği birlikte kullanılmalı")
     if "fon" in seri.charts and seri.charts != ("fon",):
@@ -901,6 +1246,23 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             raise KatalogHatasi(f"{seri.id}: start_date YYYY-MM-DD biçiminde geçerli tarih olmalı") from hata
         if baslangic.isoformat() != seri.start_date or baslangic > date.today():
             raise KatalogHatasi(f"{seri.id}: start_date YYYY-MM-DD biçiminde ve bugün veya öncesinde olmalı")
+    if (
+        seri.kaynak_tipi == "bddk_haftalik"
+        and seri.bddk_haftalik_sutun is not None
+        and seri.bddk_haftalik_sutun not in (1, 2, 3)
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz bddk_haftalik_sutun '{seri.bddk_haftalik_sutun}' "
+            "(geçerli: 1=TP, 2=YP, 3=Toplam)"
+        )
+    if (
+        seri.kaynak_tipi == "bddk_bdmk"
+        and seri.bddk_bdmk_urun not in GECERLI_BDDK_BDMK_URUNLERI
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz bddk_bdmk_urun '{seri.bddk_bdmk_urun}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_BDDK_BDMK_URUNLERI))})"
+        )
     # Alan varlığı tabloda; burada yalnızca değer geçerliliği kalıyor.
     if seri.olcek is not None and seri.olcek <= 0:
         raise KatalogHatasi(
@@ -916,6 +1278,74 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
     if seri.kaynak_tipi == "evds" and seri.evds_frequency not in GECERLI_EVDS_FREKANSLARI:
         raise KatalogHatasi(
             f"{seri.id}: geçersiz evds_frequency '{seri.evds_frequency}'"
+        )
+    if seri.kaynak_tipi == "epdk_fiyat":
+        if seri.epdk_fiyat_urun not in GECERLI_EPDK_FIYAT_URUNLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz epdk_fiyat_urun '{seri.epdk_fiyat_urun}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_EPDK_FIYAT_URUNLERI))})"
+            )
+        if seri.epdk_fiyat_kalem not in GECERLI_EPDK_FIYAT_KALEMLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz epdk_fiyat_kalem '{seri.epdk_fiyat_kalem}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_EPDK_FIYAT_KALEMLERI))})"
+            )
+    if seri.kaynak_tipi == "istib" and seri.istib_urun not in GECERLI_ISTIB_URUNLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz istib_urun '{seri.istib_urun}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_ISTIB_URUNLERI))})"
+        )
+    if (
+        seri.kaynak_tipi == "tuik_kanatli"
+        and seri.tuik_kanatli_olcut not in GECERLI_TUIK_KANATLI_OLCUTLERI
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz tuik_kanatli_olcut '{seri.tuik_kanatli_olcut}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TUIK_KANATLI_OLCUTLERI))})"
+        )
+    if seri.kaynak_tipi == "botas" and seri.botas_kategori not in GECERLI_BOTAS_KATEGORILERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz botas_kategori '{seri.botas_kategori}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_BOTAS_KATEGORILERI))})"
+        )
+    if seri.kaynak_tipi == "tspb":
+        if seri.tspb_tablo not in GECERLI_TSPB_TABLOLAR:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz tspb_tablo '{seri.tspb_tablo}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_TSPB_TABLOLAR))})"
+            )
+        gecerli_kategoriler = (
+            GECERLI_TSPB_KREDILI_KATEGORILERI if seri.tspb_tablo == "kredili"
+            else GECERLI_TSPB_PYS_KATEGORILERI
+        )
+        if seri.tspb_kategori not in gecerli_kategoriler:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz tspb_kategori '{seri.tspb_kategori}' "
+                f"(tspb_tablo='{seri.tspb_tablo}' için geçerli: "
+                f"{', '.join(sorted(gecerli_kategoriler))})"
+            )
+    if seri.kaynak_tipi == "tepav" and seri.tepav_seri not in GECERLI_TEPAV_SERILERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz tepav_seri '{seri.tepav_seri}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TEPAV_SERILERI))})"
+        )
+    if seri.kaynak_tipi == "bigchefs" and seri.bigchefs_metrik not in GECERLI_BIGCHEFS_METRIKLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz bigchefs_metrik '{seri.bigchefs_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_BIGCHEFS_METRIKLERI))})"
+        )
+    if (
+        seri.kaynak_tipi == "turktraktor"
+        and seri.turktraktor_metrik not in GECERLI_TURKTRAKTOR_METRIKLERI
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz turktraktor_metrik '{seri.turktraktor_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TURKTRAKTOR_METRIKLERI))})"
+        )
+    if seri.kaynak_tipi == "migros" and seri.migros_metrik not in GECERLI_MIGROS_METRIKLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz migros_metrik '{seri.migros_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_MIGROS_METRIKLERI))})"
         )
 
 

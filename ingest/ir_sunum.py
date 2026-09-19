@@ -62,6 +62,15 @@ def tr_sayi(ham: str) -> float:
     return -deger if negatif else deger
 
 
+def pdf_metnini_normallestir(metin: str) -> str:
+    """pdfplumber çıktısındaki tipografik kesme işaretlerini (U+2019 `'`,
+    U+2018 `'`) düz ASCII kesme işaretine (`'`) çevirir. PDF üreticileri
+    (Word/InDesign) "Türkiye'de" gibi ekleri sıkça tipografik kesme
+    işaretiyle diziyor; regex desenleri düz `'` beklerse sessizce
+    eşleşmez (ölçüldü: BigChefs "Şirket Profili" paragrafı)."""
+    return metin.replace("\u2019", "'").replace("\u2018", "'")
+
+
 _CEYREK_ILK_AY = {1: "01", 2: "04", 3: "07", 4: "10"}
 
 _DONEM_FY = re.compile(r"\bFY\s*(\d{4})\b")

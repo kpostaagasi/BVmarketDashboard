@@ -29,11 +29,15 @@ class SahteSayfa:
 
 
 class SahteKitap:
+    """Gerçek dosyada TÜM 12 ay sayfası her zaman var (yayımlanmamış aylar
+    dahil, TOPLAM=0.0 ile) — listelenmeyen aylar için varsayılan boş sayfa
+    döner, `sheet_by_name` KeyError fırlatmaz."""
+
     def __init__(self, sayfalar: dict[str, SahteSayfa]):
         self._sayfalar = sayfalar
 
     def sheet_by_name(self, ad: str) -> SahteSayfa:
-        return self._sayfalar[ad]
+        return self._sayfalar.get(ad, _bos_ay_sayfasi())
 
 
 def _ay_sayfasi(uretim_2025=6957759.81, uretim_2026=8107646.6, ic_satis_2026=6778235.43) -> SahteSayfa:
@@ -119,15 +123,12 @@ def test_seri_cek_onbellegi_paylasir(monkeypatch):
 
 
 def test_seri_cek_blok_hic_bulunamazsa_yukselir(monkeypatch):
+    """Var olmayan ürün/alt etiketi (ör. KLİNKER hiç yok) hiçbir ay/yılda
+    bulunamazsa şablon değişikliği kabul edilip RuntimeError yükselmeli."""
     kitap = SahteKitap({"nisan": _ay_sayfasi()})
     monkeypatch.setattr(tc, "_yil_dosyalari", lambda session=None: {2026: "https://example.test/2026.xls"})
     monkeypatch.setattr(tc, "_xls_indir", lambda url, session=None: b"sahte")
     monkeypatch.setattr(tc.xlrd, "open_workbook", lambda file_contents: kitap)
-    # "nisan" dışındaki tüm ay sayfaları da isteniyor ama SahteKitap'ta yok —
-    # KeyError yerine RuntimeError'a dönüşmeli mi diye değil, "hiç bulunamadı"
-    # yoluna düşüp düşmediğine bakılıyor; bunun için tüm ay sayfalarını ekle.
-    tum_aylar = {ay: _ay_sayfasi() if ay == "nisan" else SahteSayfa([[None] * 10]) for ay in tc.AY_SAYFALARI}
-    monkeypatch.setattr(tc.xlrd, "open_workbook", lambda file_contents: SahteKitap(tum_aylar))
 
     seri = type("S", (), {"turkcimento_metrik": "klinker-uretim", "start_date": None, "id": "cimento/x"})()
     with pytest.raises(RuntimeError, match="hiçbir sayfada bulunamadı"):

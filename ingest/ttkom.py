@@ -17,34 +17,39 @@ Kaynak gerçekleri 2026-09-18'de canlı ölçüldü:
   Oper. Veriler (TMS29)" sayfası TÜM çeyrekleri BU RAPORUN kendi
   döneminin (2026 Ç2) satın alma gücüne göre YENİDEN İFADE eder — yani bu
   sayfanın "2023 1Ç" sütunu 2023 Ç1'in o zamanki nominal değeri DEĞİLDİR.
-  Sonuç: MUTLAK nominal ARPU (TL) kartları (ör. "Sabit Hat ARPU",
-  "Mobil ARPU") her çeyreğin KENDİ döneminin raporundan okunmalı — bu, N
-  ayrı çeyrek dosyasının indirilmesini gerektirir ve bu adaptörün kapsamı
-  DIŞINDA bırakıldı (bkz. ölçüm raporu). Yalnızca YoY BÜYÜME ORANI
-  kartları tek dosyadan hesaplanabilir, çünkü TMS29 sayfasındaki TÜM
-  sütunlar AYNI referans döneme göre yeniden ifade edildiğinden ARALARINDAKİ
-  ORAN gerçek reel büyümeyi verir (bkz. `_buyume_serisi`).
-- ARPU büyüme kartlarının kendisi de İKİ REJİMLİDİR (referans sitenin
-  başlığında da belirtiliyor): 2023 çeyrekleri NOMİNAL (ARPU Tarihsel'den,
-  bir önceki yılın nominal değerine bölünerek), 2024 Ç1+ REEL/TAS29
-  (Finansal&Oper. Veriler (TMS29) sayfasının kendi içinde tutarlı
-  sütunlarından). Mobil Karma ARPU büyümesi ayrıca 2025 Ç3'te ÜÇÜNCÜ bir
-  kırılma taşır: bu çeyrekten itibaren şirket M2M'i abone tabanına DAHİL
-  edip ARPU hesabından HARİÇ tutmaya başladı, bu yüzden büyüme de o
-  tarihten sonra "Mobil Karma ARPU (M2M hariç)" satırından hesaplanmalı
-  (aksi halde 2Ç26 büyümesi referans %-5,9 yerine yanlış bir pozitif değer
-  verir — canlı ölçüldü ve doğrulandı).
-- Ölçüldü (2026-Ç2, referans marketvisuals.net/turk_telekom_operasyonel.html
-  ile birebir): Mobil Toplam Abone 32,7 mn; Sabit Genişbant 15,4 mn; TV 3,0
-  mn; Sabit Ses 6,5 mn; Sabit Genişbant ARPU Büyümesi YoY %15,2; Mobil
-  Karma ARPU Büyümesi YoY %-5,9.
-- "Mobil Faturalı Abone Payı"/"Fiber Abone Payı" (paylaşım oranları) ve
-  "Ortalama İndirme Hızı" kartları bu Excel'de HAM alan olarak YOK;
-  basit oran/pazarlama rakamı olarak yaklaşık üretilebilir ama birebir
-  tutmuyor (ölçüldü, ~0,1-0,2 puan sapma) — katalog dışı bırakıldı, bkz.
-  ölçüm raporu. "Mobil Abone Pazar Payı" kartı (BTK + üç operatör verisi,
-  yıllık/seçili çeyrek) bu Excel'de hiç yok ve düzensiz kadanslı; ayrıca
-  dışarıda bırakıldı.
+  Sonuç: BLENDED (Genişbant+TV+Ses karması "Sabit Hat ARPU", Faturalı+
+  Karma+Faturasız karması "Mobil ARPU") MUTLAK nominal ARPU kartları BU
+  ADAPTÖRÜN KAPSAMI DIŞINDA bırakıldı — iki ayrı, birbirinden bağımsız
+  neden var: (1) segment ARPU'larının ("Sabit Ses ARPU", "Genişbant ARPU",
+  "Ev TV ARPU" / "Mobil Faturalı ARPU", "Mobil Karma ARPU", "Mobil Ön
+  Ödemeli ARPU") ne şekilde ağırlıklandırılıp tek bir karma rakama
+  indirgendiğini gösteren HAM bir "Sabit Hat ARPU"/"Mobil ARPU" satırı
+  Excel'de YOK (ölçüldü: 'Finansal&Oper. Veriler (TMS29)' sayfasının B
+  sütununu tam taradık, böyle bir etiket yok) — basit abone-sayısı ağırlıklı
+  ortalama denemek ÇİFT SAYIM riski taşır (bir müşteri hem genişbant hem TV
+  hem sabit ses abonesi olabilir, üçü de ayrı payda olarak toplanırsa aynı
+  müşteri üç kez sayılır); (2) MUTLAK (nominal TL) kartlar zaten her
+  çeyreğin KENDİ döneminin raporundan okunmalı (yukarıdaki TAS29 yeniden
+  ifade sorunundan ötürü), N ayrı dosya indirmesi gerektirir. İkisi birden
+  güvenilir bir hesaplama yolunu kapatıyor.
+- **Abone PAYI (%) kartları GENİŞLETİLDİ** (2026-09-18 canlı ölçüldü):
+  "Mobil Faturalı Abone Payı" ve "Sabit Genişbant Fiber Abone Payı" —
+  ARPU'nun aksine bunlar için "Abone Verileri" sayfasında PAY hesaplamak
+  için gereken HER İKİ ham abone-sayısı alanı da VAR ("Mobil Faturalı Abone
+  Sayısı (mn)" / "Mobil Toplam Abone Sayısı (mn)"; "Fiber Abone Sayısı
+  (mn)" / "Genişbant Toplam Abone Sayısı (mn)") — çift sayım riski yok
+  (Faturalı, Toplam'ın alt kümesi; Fiber, Genişbant Toplam'ın alt kümesi,
+  tanım gereği örtüşme yok). Basit oran = doğrudan gerçek veri, tahmini
+  değil. Ölçüldü (2026 2Ç, referans marketvisuals.net'le karşılaştırıldı):
+  Mobil Faturalı Payı hesap %80,32 (referans %80,4, fark 0,08 p); Fiber
+  Payı hesap %94,07 (referans %94,1, fark 0,03 p) — küçük sapma muhtemelen
+  şirketin kendi yuvarlama/anlık görüntü zamanlamasından, iki bağımsız
+  ölçümde de 0,1 puanın altında.
+- "Ortalama İndirme Hızı" (Mbps) kartı bu Excel'de HAM alan olarak YOK
+  (her iki sayfa da tam tarandı, "hız"/"Mbps" içeren hiçbir satır etiketi
+  yok) — katalog dışı. "Mobil Abone Pazar Payı" kartı (BTK + üç operatör
+  verisi, yıllık/seçili çeyrek) bu Excel'de hiç yok ve düzensiz kadanslı;
+  ayrıca dışarıda bırakıldı.
 """
 
 from __future__ import annotations
@@ -78,6 +83,18 @@ DOGRUDAN_METRIK_KAYNAK = {
 BUYUME_METRIK_KAYNAK = {
     "sabit-genisbant-arpu-buyume": ("Genişbant ARPU  (TL)", "Genişbant ARPU"),
     "mobil-karma-arpu-buyume": ("Mobil Karma ARPU (TL)", "Mobil Karma ARPU"),
+}
+
+# metrik -> ("Abone Verileri" pay etiketi, "Abone Verileri" toplam etiketi).
+# Alt küme/toplam ilişkisi tanım gereği örtüşmez (çift sayım riski yok) —
+# bkz. modül docstring'i.
+ABONE_PAYI_KAYNAK = {
+    "mobil-faturali-abone-payi": (
+        "Mobil Faturalı Abone Sayısı (mn)", "Mobil Toplam Abone Sayısı (mn)",
+    ),
+    "sabit-genisbant-fiber-abone-payi": (
+        "Fiber Abone Sayısı (mn)", "Genişbant Toplam Abone Sayısı (mn)",
+    ),
 }
 # Bkz. modül docstring'i: 2025 Ç3'ten itibaren Mobil Karma ARPU büyümesi
 # M2M HARİÇ hesaplanıyor.
@@ -173,6 +190,20 @@ def _buyume_serisi(kitap, metrik: str) -> dict[str, float]:
     return sonuc
 
 
+def _payi_serisi(kitap, metrik: str) -> dict[str, float]:
+    """Alt küme abone sayısının toplam içindeki payı (%) — bkz. modül
+    docstring'indeki "Abone PAYI" notu."""
+    pay_etiket, toplam_etiket = ABONE_PAYI_KAYNAK[metrik]
+    ws = kitap["Abone Verileri"]
+    pay = _etiket_serisi(ws, pay_etiket)
+    toplam = _etiket_serisi(ws, toplam_etiket)
+    return {
+        donem: deger / toplam[donem] * 100
+        for donem, deger in pay.items()
+        if toplam.get(donem)
+    }
+
+
 def _kitabi_getir(onbellek: dict, session=None):
     if "kitap" in onbellek:
         return onbellek["kitap"]
@@ -204,6 +235,10 @@ def seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
         ceyrekler = _buyume_serisi(kitap, metrik)
         if not ceyrekler:
             raise RuntimeError(f"TTKOM: '{metrik}' büyüme serisi hesaplanamadı (seri={seri.id})")
+    elif metrik in ABONE_PAYI_KAYNAK:
+        ceyrekler = _payi_serisi(kitap, metrik)
+        if not ceyrekler:
+            raise RuntimeError(f"TTKOM: '{metrik}' payı hesaplanamadı (seri={seri.id})")
     else:
         raise RuntimeError(f"Bilinmeyen ttkom_metrik: {metrik!r}")
 

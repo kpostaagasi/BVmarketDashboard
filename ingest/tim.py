@@ -30,11 +30,14 @@ Değerler bültende Bin USD cinsindedir; Milyon USD'ye çevirim katalogdaki
 from __future__ import annotations
 
 import calendar
+import html
 import io
+import re
 from datetime import date
 
 import openpyxl
 import pandas as pd
+import pdfplumber
 import requests
 
 TABAN = "https://tim.org.tr"
@@ -960,6 +963,265 @@ def ulke_grubu_seri_cek(seri, onbellek: dict | None = None, session=None,
         )
 
     df = pd.DataFrame(sorted(kendi.items()), columns=["date", "value"])
+    if seri.start_date:
+        df = df[df["date"] >= seri.start_date]
+    return df.reset_index(drop=True)
+
+
+# --- İhracat Pazar Monitörü: TİM'in KENDİ resmi aylık PDF bülteni ---
+#
+# Kaynak gerçekleri (canlı ölçüldü 2026-09-19). Marketvisuals'ın
+# "tim_market_monitor.html" sayfası "Talep Endeksi + Pazar Dayanıklılık
+# Endeksi" başlığıyla 47 kart gösterir; ilk ölçümde bu TÜRETİLMİŞ/üçüncü
+# parti sanılmıştı ama TİM'in KENDİ web sitesindeki haber metinleri
+# (`/tr/ihracat-pazar-monitoru-...`) yalnızca İKİ ulusal ortalamayı
+# (Talep, Dayanıklılık) düz metinde veriyor — sektör/ülke kırılımı YOK
+# sanılmıştı. Sonra `/tr/raporlar-yayinlar-tim-ihracat-pazar-monitoru`
+# arşivinin (yıl başına bir alt sayfa) her ay AYRI, gerçek bir PDF
+# BÜLTENE (`TIMIhracatPazarMonitoru<YYYY><MM>.pdf`, ücretsiz/girişsiz)
+# bağlandığı görüldü — bu bülten haber metninden çok daha zengin:
+#
+# - Sayfa 1: milli özet tablo — "İhracat Talep Endeksi" ve "Pazar
+#   Dayanıklılık Endeksi" satırları, her biri `<değer> <YTD%> <Yıllık%>
+#   <Aylık%>` (Türkçe virgüllü ondalık).
+# - Diğer 4 sayfa (başlık metnine göre ayrışır, sayfa indeksine göre
+#   DEĞİL — bkz. `_pm_sayfa_tipi`): 26 sektör × "İhracat Talep Endeksi" /
+#   "Pazar Dayanıklılık Endeksi", 19 ülke × aynı iki endeks — her satır
+#   `<Ad> <değer> <YTD%> <Yıllık%> <Aylık%>` biçiminde.
+# - Ölçüldü (Temmuz 2026 bülteni, TIMIhracatPazarMonitoru202607.pdf):
+#   milli Talep=100,4 / Dayanıklılık=99,8; sektör "Çelik" Talep=101,4;
+#   ülke "Danimarka" Talep=102,9 — marketvisuals'ın referans kartlarıyla
+#   BİREBİR (değer + YTD/Yıllık/Aylık % hepsi eşleşiyor).
+# - marketvisuals'ın 47 kartı YALNIZCA "Talep Endeksi" eksenini kullanıyor
+#   (2 milli + 26 sektör + 19 ülke); "Dayanıklılık" sektör/ülke tabloları
+#   (bültende VAR) referans sayfada hiç GÖSTERİLMİYOR — biz yine de aynı
+#   koddan besleniyor, `tim_pm_endeks` ekseniyle ayrı seri olarak sunulur.
+# - Dosya adı deseni "TIMIhracatPazarMonitoru<YYYY><MM>.pdf" ama en az bir
+#   ayda (Nisan 2026) "İ" harfi eklenip tire kullanılmış
+#   ("TİMIhracatPazarMonitoru-202604.pdf") — bu yüzden URL asla yeniden
+#   inşa edilmez, HER ZAMAN yıl arşiv sayfasından okunur.
+# - Bazı aylarda (ör. Aralık 2025) TİM'in web HABER metni yalnızca Talep
+#   Endeksi'nden bahsediyor, Dayanıklılık'tan hiç söz etmiyor — ama bu
+#   PDF BÜLTEN her ay ikisini de içeriyor (haber metni ayrı, kısaltılmış
+#   bir özet; biz PDF'i kullanıyoruz, haber metnini değil).
+
+PAZAR_MONITORU_INDEKS_URL = f"{TABAN}/tr/raporlar-yayinlar-tim-ihracat-pazar-monitoru"
+_PM_YIL_BAGLANTISI = re.compile(r'href="([^"]*ihracat-pazar-monitoru-(20\d\d)[^"]*)"')
+_PM_PDF_BAGLANTISI = re.compile(r'href="([^"]*azarmonitoru[^"]*\.pdf)"', re.I)
+_PM_DOSYA_TARIHI = re.compile(r"(\d{4})(\d{2})\.pdf$", re.I)
+_PM_SATIR = re.compile(r"^(.+?)\s+(-?\d+,\d+)\s+(-?\d+,\d+)\s+(-?\d+,\d+)\s+(-?\d+,\d+)\s*$")
+
+# TİM'in Temmuz 2026 bülteninde (TIMIhracatPazarMonitoru202607.pdf)
+# alfabetik sırayla ölçülen 26 sektör ve 19 ülke — şablon kayması bu
+# listelerle karşılaştırılarak yakalanır (bkz. `_pm_bulteni_ayristir`).
+PM_SEKTORLER = (
+    "Çelik", "Çimento, Cam, Ser. Topr. Ür.", "Demir ve Demir Dışı Metaller",
+    "Deri ve Deri Mamulleri", "Elektrik ve Elektronik", "Fındık ve Mamulleri",
+    "Gemi, Yat ve Hizmetleri", "Halı", "Hazırgiyim ve Konfeksiyon",
+    "Hububat, Bakliyat, Yağlı Toh.", "İklimlendirme Sanayi",
+    "Kimyevi Maddeler ve Mamulleri", "Kuru Meyve ve Mamulleri",
+    "Madencilik Ürünleri", "Makine ve Aksamları", "Meyve Sebze Mamulleri",
+    "Mobilya, Kağıt ve Orman Ür.", "Mücevher", "Otomotiv Endüstrisi",
+    "Savunma ve Havacılık", "Su Ürünleri ve Hayvancılık",
+    "Süs Bitkileri ve Mamulleri", "Tekstil ve Hammaddeleri", "Tütün",
+    "Yaş Meyve ve Sebze", "Zeytin ve Zeytinyağı",
+)
+PM_ULKELER = (
+    "ABD", "Almanya", "Belçika", "Çin", "Danimarka", "Finlandiya", "Fransa",
+    "Güney Kore", "Hollanda", "İspanya", "İsveç", "İtalya", "Kolombiya",
+    "Macaristan", "Meksika", "Polonya", "Portekiz", "Şili", "Tayland",
+)
+GECERLI_PM_ENDEKSLERI = frozenset({"talep", "dayaniklilik"})
+
+
+def pazar_monitoru_bulten_baglantilari(session=None) -> dict[tuple[int, int], str]:
+    """`{(yıl, ay): pdf_url}` — arşiv ana sayfasından yıl alt sayfaları,
+    oradan aylık PDF bağlantıları toplanır (dosya adı deseni kararsız,
+    bkz. modül üstü not — URL asla yeniden inşa edilmez)."""
+    http = session or requests
+    ana = http.get(PAZAR_MONITORU_INDEKS_URL, timeout=ZAMAN_ASIMI)
+    if ana.status_code != 200:
+        raise RuntimeError(f"TİM İPM arşiv ana sayfası HTTP {ana.status_code}")
+
+    yil_sayfalari: dict[int, str] = {}
+    for eslesme in _PM_YIL_BAGLANTISI.finditer(ana.text):
+        href, yil = eslesme.group(1), int(eslesme.group(2))
+        yil_sayfalari[yil] = href if href.startswith("http") else f"{TABAN}/tr/{href.lstrip('/')}"
+    if not yil_sayfalari:
+        raise RuntimeError("TİM İPM arşiv ana sayfasında yıl bağlantısı bulunamadı")
+
+    baglantilar: dict[tuple[int, int], str] = {}
+    for yil_url in yil_sayfalari.values():
+        yanit = http.get(yil_url, timeout=ZAMAN_ASIMI)
+        if yanit.status_code != 200:
+            continue
+        for eslesme in _PM_PDF_BAGLANTISI.finditer(yanit.text):
+            href = html.unescape(eslesme.group(1))
+            tarih_eslesme = _PM_DOSYA_TARIHI.search(href)
+            if not tarih_eslesme:
+                continue
+            dosya_yil, dosya_ay = int(tarih_eslesme.group(1)), int(tarih_eslesme.group(2))
+            if not (1 <= dosya_ay <= 12):
+                continue
+            tam_url = href if href.startswith("http") else f"{TABAN}{requests.utils.quote(href, safe='/:')}"
+            baglantilar[(dosya_yil, dosya_ay)] = tam_url
+    if not baglantilar:
+        raise RuntimeError("TİM İPM için hiçbir aylık PDF bağlantısı bulunamadı")
+    return baglantilar
+
+
+def _pm_sayfa_tipi(metin: str) -> str | None:
+    if "SEKTÖR SINIFLANDIRMASINA GÖRE İHRACAT TALEP ENDEKSİ" in metin:
+        return "sektor-talep"
+    if "SEKTÖR SINIFLANDIRMASINA GÖRE PAZAR DAYANIKLILIK ENDEKSİ" in metin:
+        return "sektor-dayaniklilik"
+    if "SEÇİLMİŞ ÜLKELER İÇİN İHRACAT TALEP ENDEKSİ" in metin:
+        return "ulke-talep"
+    if "SEÇİLMİŞ ÜLKELER İÇİN PAZAR DAYANIKLILIK ENDEKSİ" in metin:
+        return "ulke-dayaniklilik"
+    if "İHRACAT TALEP ENDEKSİ" in metin and "PAZAR DAYANIKLILIK ENDEKSİ" in metin:
+        return "milli"
+    return None
+
+
+def _pm_satirlari_ayikla(sayfa_metni: str, gecerli_adlar: tuple[str, ...]) -> dict[str, float]:
+    sonuc: dict[str, float] = {}
+    for satir in sayfa_metni.split("\n"):
+        eslesme = _PM_SATIR.match(satir.strip())
+        if not eslesme:
+            continue
+        ad, deger = eslesme.group(1), eslesme.group(2)
+        if ad not in gecerli_adlar:
+            continue
+        sonuc[ad] = float(deger.replace(",", "."))
+    return sonuc
+
+
+def _pm_milli_degerlerini_ayikla(sayfa_metni: str) -> dict[str, float]:
+    sonuc: dict[str, float] = {}
+    for satir in sayfa_metni.split("\n"):
+        eslesme = _PM_SATIR.match(satir.strip())
+        if not eslesme:
+            continue
+        ad, deger = eslesme.group(1), eslesme.group(2)
+        if ad == "İhracat Talep Endeksi":
+            sonuc["talep"] = float(deger.replace(",", "."))
+        elif ad == "Pazar Dayanıklılık Endeksi":
+            sonuc["dayaniklilik"] = float(deger.replace(",", "."))
+    return sonuc
+
+
+def pm_bultenini_ayristir(pdf_baytlari: bytes) -> dict[str, dict]:
+    """Bir ayın İPM bülteninden beş tabloyu çıkarır ve tam kapsandığını
+    doğrular — şablon kayması (eksik sektör/ülke/eksen) sessizce
+    geçmez, `RuntimeError` yükseltir."""
+    sonuc: dict[str, dict] = {
+        "milli": {}, "sektor-talep": {}, "sektor-dayaniklilik": {},
+        "ulke-talep": {}, "ulke-dayaniklilik": {},
+    }
+    with pdfplumber.open(io.BytesIO(pdf_baytlari)) as pdf:
+        for sayfa in pdf.pages:
+            metin = sayfa.extract_text() or ""
+            tip = _pm_sayfa_tipi(metin)
+            if tip == "milli":
+                sonuc["milli"] = _pm_milli_degerlerini_ayikla(metin)
+            elif tip in ("sektor-talep", "sektor-dayaniklilik"):
+                sonuc[tip] = _pm_satirlari_ayikla(metin, PM_SEKTORLER)
+            elif tip in ("ulke-talep", "ulke-dayaniklilik"):
+                sonuc[tip] = _pm_satirlari_ayikla(metin, PM_ULKELER)
+
+    eksik = []
+    if set(PM_SEKTORLER) - set(sonuc["sektor-talep"]):
+        eksik.append("sektor-talep")
+    if set(PM_SEKTORLER) - set(sonuc["sektor-dayaniklilik"]):
+        eksik.append("sektor-dayaniklilik")
+    if set(PM_ULKELER) - set(sonuc["ulke-talep"]):
+        eksik.append("ulke-talep")
+    if set(PM_ULKELER) - set(sonuc["ulke-dayaniklilik"]):
+        eksik.append("ulke-dayaniklilik")
+    if "talep" not in sonuc["milli"] or "dayaniklilik" not in sonuc["milli"]:
+        eksik.append("milli")
+    if eksik:
+        raise RuntimeError(
+            "TİM İhracat Pazar Monitörü şablonu değişmiş olabilir — eksik "
+            f"tablo(lar): {', '.join(eksik)}"
+        )
+    return sonuc
+
+
+def _pazar_monitoru_onbellegi_getir(onbellek: dict, session=None) -> dict[str, dict]:
+    """47 seri (2 milli + 26 sektör + 19 ülke, ikisi de yalnızca Talep
+    ekseninde — bkz. modül üstü not) aynı aylık PDF kümesini paylaşır;
+    önbelleksiz her seri kendi ayını yeniden indirip ayrıştırırdı.
+
+    Ölçüldü (2026-09-19): bazı ayların (2024 Temmuz–Kasım, 2025'in çoğu,
+    2026 Ocak) PDF'lerinde tablo/grafik sayfaları METİN OLARAK
+    ÇIKARILAMIYOR (görsel/vektör olarak gömülmüş — `extract_text()` boş
+    döner); TİM'in rapor üretim aracı görünüşe göre 2026 Şubat'tan
+    itibaren gerçek metinli PDF'e geçti (Şubat–Temmuz 2026 hepsi sağlam).
+    Bu, gerçek bir şablon kayması DEĞİL — o ayın kaynağı programatik
+    okumaya kapalı; ay atlanır (diğer TİM adaptörlerindeki "0 = henüz
+    yayımlanmamış" hoşgörüsüyle aynı ilke), pencere sessizce daralır ama
+    yanlış değer üretilmez. Hiçbir ay ayrıştırılamazsa `pazar_monitoru_
+    seri_cek` zaten "veri noktası bulunamadı" ile yükselir."""
+    if "pm_veri" in onbellek:
+        return onbellek["pm_veri"]
+    http = session or requests
+    baglantilar = pazar_monitoru_bulten_baglantilari(session=session)
+    veri: dict[str, dict] = {
+        "milli-talep": {}, "milli-dayaniklilik": {},
+        "sektor-talep": {}, "sektor-dayaniklilik": {},
+        "ulke-talep": {}, "ulke-dayaniklilik": {},
+    }
+    for (yil, ay), url in sorted(baglantilar.items()):
+        yanit = http.get(url, timeout=ZAMAN_ASIMI)
+        if yanit.status_code != 200:
+            continue  # o ay henüz yayımlanmamış/kaldırılmış olabilir
+        try:
+            ayristirilmis = pm_bultenini_ayristir(yanit.content)
+        except RuntimeError:
+            continue  # o ayın PDF'i metin çıkarılamıyor (bkz. yukarı)
+        tarih = f"{yil:04d}-{ay:02d}-01"
+        veri["milli-talep"][tarih] = ayristirilmis["milli"]["talep"]
+        veri["milli-dayaniklilik"][tarih] = ayristirilmis["milli"]["dayaniklilik"]
+        for sektor, deger in ayristirilmis["sektor-talep"].items():
+            veri["sektor-talep"].setdefault(sektor, {})[tarih] = deger
+        for sektor, deger in ayristirilmis["sektor-dayaniklilik"].items():
+            veri["sektor-dayaniklilik"].setdefault(sektor, {})[tarih] = deger
+        for ulke, deger in ayristirilmis["ulke-talep"].items():
+            veri["ulke-talep"].setdefault(ulke, {})[tarih] = deger
+        for ulke, deger in ayristirilmis["ulke-dayaniklilik"].items():
+            veri["ulke-dayaniklilik"].setdefault(ulke, {})[tarih] = deger
+    onbellek["pm_veri"] = veri
+    return veri
+
+
+def pazar_monitoru_seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
+    """`tim_pm_sektor`/`tim_pm_ulke` verilmemişse milli endeks; verilmişse
+    ilgili sektör/ülkenin `tim_pm_endeks` (talep/dayaniklilik) serisi."""
+    onbellek = {} if onbellek is None else onbellek
+    veri = _pazar_monitoru_onbellegi_getir(onbellek, session=session)
+    endeks = seri.tim_pm_endeks
+
+    if seri.tim_pm_sektor:
+        seri_verisi = veri[f"sektor-{endeks}"].get(seri.tim_pm_sektor)
+        if seri_verisi is None:
+            raise RuntimeError(
+                f"{seri.id}: '{seri.tim_pm_sektor}' sektörü İPM bültenlerinde bulunamadı"
+            )
+    elif seri.tim_pm_ulke:
+        seri_verisi = veri[f"ulke-{endeks}"].get(seri.tim_pm_ulke)
+        if seri_verisi is None:
+            raise RuntimeError(
+                f"{seri.id}: '{seri.tim_pm_ulke}' ülkesi İPM bültenlerinde bulunamadı"
+            )
+    else:
+        seri_verisi = veri[f"milli-{endeks}"]
+
+    noktalar = sorted(seri_verisi.items())
+    if not noktalar:
+        raise RuntimeError(f"{seri.id}: İPM için veri noktası bulunamadı")
+    df = pd.DataFrame(noktalar, columns=["date", "value"])
     if seri.start_date:
         df = df[df["date"] >= seri.start_date]
     return df.reset_index(drop=True)

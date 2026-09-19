@@ -4,6 +4,7 @@ import pytest
 
 from core.catalog import (
     GECERLI_AYLIK_AGG,
+    GECERLI_EVDS_FREKANSLARI,
     GECERLI_FREKANSLAR,
     GECERLI_GRAFIKLER,
     GECERLI_KAYNAK_TIPLERI,
@@ -98,7 +99,7 @@ def test_alan_degerleri_gecerli_kumelerde():
         assert seri.charts, seri.id
         assert set(seri.charts) <= GECERLI_GRAFIKLER, seri.id
         if seri.kaynak_tipi == "evds":
-            assert seri.evds_frequency in {"1", "2", "5"}, seri.id
+            assert seri.evds_frequency in GECERLI_EVDS_FREKANSLARI, seri.id
             assert seri.evds_code, seri.id
         if seri.kaynak_tipi == "yahoo":
             assert seri.yahoo_symbol, seri.id
@@ -683,19 +684,17 @@ def test_evds_serisi_osd_firma_tasiyamaz():
 
 
 def test_otomotiv_serileri_kaynak_alanlarini_tasir():
-    """Otomotiv ailesi iki kaynaktan beslenir: OSD üretim/ihracat bülteni ve
-    ODMD perakende satış raporu. Sayı değil sözleşme pinlenir — yeni marka
-    eklenmesi testi kırmamalı, eksik zorunlu alan kırmalı."""
-    from core.catalog import seri_listele
+    """Otomotiv ailesi çok kaynaklı: OSD üretim bülteni, ODMD perakende
+    raporu, TürkTraktör IR ve ECB tescil verisi. Sayı değil SÖZLEŞME
+    pinlenir — yeni marka/kaynak eklemek testi kırmamalı, kaynak tipinin
+    zorunlu alanının boş kalması kırmalı."""
+    from core.catalog import KAYNAK_ALANLARI, seri_listele
 
     seriler = seri_listele("otomotiv")
     assert seriler
-    assert {s.kaynak_tipi for s in seriler} <= {"osd", "odmd"}
     for s in seriler:
-        if s.kaynak_tipi == "osd":
-            assert s.osd_firma, s.id
-        else:
-            assert s.odmd_marka and s.odmd_kategori, s.id
+        for alan in KAYNAK_ALANLARI[s.kaynak_tipi]["zorunlu"]:
+            assert getattr(s, alan) is not None, f"{s.id}: {alan}"
 
 
 def test_otomotiv_panosu_portfoy_firmalarini_gosterir():

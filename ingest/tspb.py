@@ -189,7 +189,9 @@ def _pys_kolon_haritasi(satirlar: list[tuple]) -> dict[str, dict[str, int]]:
             continue
         etiket = str(ham_etiket).strip()
         alt = [
-            str(kategori_satiri[idx + off]).strip() if kategori_satiri[idx + off] else None
+            str(kategori_satiri[idx + off]).strip()
+            if idx + off < len(kategori_satiri) and kategori_satiri[idx + off]
+            else None
             for off in range(len(beklenen_sira))
         ]
         if alt != beklenen_sira:
@@ -299,6 +301,11 @@ def seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
     html = onbellek["html"]
 
     if seri.tspb_tablo == "kredili":
+        if seri.tspb_kategori not in KREDILI_KOLON_ETIKETLERI:
+            raise RuntimeError(
+                f"TSPB: {seri.id} — geçersiz tspb_kategori {seri.tspb_kategori!r} "
+                f"(tablo='kredili', geçerli: {sorted(KREDILI_KOLON_ETIKETLERI)})"
+            )
         satirlar = _kredili_satirlari(onbellek, html, session=session)
         kategori = seri.tspb_kategori
         noktalar = [
@@ -306,6 +313,13 @@ def seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
             if degerler[kategori] is not None
         ]
     else:
+        if seri.tspb_tablo not in PYS_TABLO_GRUP_BASLIGI:
+            raise RuntimeError(f"TSPB: {seri.id} — geçersiz tspb_tablo {seri.tspb_tablo!r}")
+        if seri.tspb_kategori not in PYS_KOLON_ETIKETLERI:
+            raise RuntimeError(
+                f"TSPB: {seri.id} — geçersiz tspb_kategori {seri.tspb_kategori!r} "
+                f"(geçerli: {sorted(PYS_KOLON_ETIKETLERI)})"
+            )
         satirlar = _pys_satirlari(onbellek, html, session=session)
         grup_etiketi = PYS_TABLO_GRUP_BASLIGI[seri.tspb_tablo]
         kategori_etiketi = PYS_KOLON_ETIKETLERI[seri.tspb_kategori]

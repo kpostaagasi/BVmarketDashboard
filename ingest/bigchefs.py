@@ -53,10 +53,16 @@ import pandas as pd
 import pdfplumber
 import requests
 
-from ingest.ir_sunum import donem_tarihi, pdf_ayikla, tr_sayi
+from ingest.ir_sunum import donem_tarihi, pdf_ayikla, pdf_metnini_normallestir, tr_sayi
 
 TABAN = "https://bigchefs.com.tr"
 DUYURULAR_URL = f"{TABAN}/duyurular/"
+# "Bilgilendirme Notu" bağlantılarının TAMAMI /duyurular/'da değil — o sayfa
+# yalnızca bazı çeyrekleri "GÜN AY YIL - ... Bilgilendirme Notu" biçiminde
+# listeliyor (ölçüldü: yalnızca 2). Çoğu çeyrek yalnızca YI ana sayfasının
+# "Finansal Bilgiler" akordiyonunda, TARİHSİZ başlıkla ("BuyukSefler 1C2026
+# Bilgilendirme Notu") yer alıyor — iki sayfa BİRLİKTE taranır.
+YI_URL = f"{TABAN}/yatirimci-iliskileri/"
 ZAMAN_ASIMI = 60
 _BASLIKLAR = {"User-Agent": "Mozilla/5.0"}
 
@@ -77,9 +83,9 @@ _BASLIK_TARIH = re.compile(r"(\d{1,2})\s+(\S+?)\s+(\d{4})\s*[-–]\s*(.+)")
 # "Şirket Profili" (aylık bildirim) / "Grup Hakkında" (çeyreklik not)
 # paragrafı — her iki belge türünde de aynı kalıp.
 _SUBE_PARAGRAFI = re.compile(
-    r"tarihi itibarıyla Türkiye'?de (\d+) şehirde (\d+) şube;? ?yurt dışında "
-    r"(\d+) ülkede (\d+) şube olmak üzere toplam (\d+) şube"
-    r"(?: ve kendi bünyesinde ([\d.]+) çalışan)? ile hizmet"
+    r"tarihi\s+itibarıyla\s+Türkiye'?de\s+(\d+)\s+şehirde\s+(\d+)\s+şube;?\s+"
+    r"yurt\s+dışında\s+(\d+)\s+ülkede\s+(\d+)\s+şube\s+olmak\s+üzere\s+toplam\s+"
+    r"(\d+)\s+şube(?:\s+ve\s+kendi\s+bünyesinde\s+([\d.]+)\s+çalışan)?\s+ile\s+hizmet"
 )
 
 # Bilgilendirme Notu'nun "Finansal ve Operasyonel Özet" tablosu satır
@@ -117,28 +123,39 @@ GECERLI_METRIKLER = (
 
 
 def _duyuru_listesi(session=None) -> list[dict]:
-    """Duyurular sayfasını kazır; her PDF için (tarih 'YYYY-MM-01', konu, url)."""
+    """İki sayfayı (duyurular + yatırımcı ilişkileri) kazır; her PDF için
+    (tarih 'YYYY-MM-01' ya da None, konu, url). Tarih yalnızca başlığın
+    KENDİSİ "GÜN AY YIL - ..." öneki taşıyorsa çözülür (aylık şube
+    bildirimleri hep taşır); taşımıyorsa None — yalnızca çeyreklik
+    Bilgilendirme Notu taraması bunu kullanır ve dönemi kendi içeriğinden
+    (`donem_tarihi`) okur, bu alana ihtiyaç duymaz."""
     http = session or requests
-    yanit = http.get(DUYURULAR_URL, headers=_BASLIKLAR, timeout=ZAMAN_ASIMI)
-    yanit.raise_for_status()
-    yanit.encoding = "utf-8"
-    sonuc = []
-    for url, ham_baslik in _DUYURU_SPAN.findall(yanit.text):
-        m = _BASLIK_TARIH.match(ham_baslik.strip())
-        if not m:
-            continue
-        gun, ay_adi, yil, konu = m.groups()
-        ay = _AYLAR.get(ay_adi.lower())
-        if ay is None:
-            continue
-        sonuc.append({"tarih": f"{yil}-{ay}-01", "konu": konu.strip(), "url": url})
+    sonuc: list[dict] = []
+    gorulen_url: set[str] = set()
+    for sayfa_url in (DUYURULAR_URL, YI_URL):
+        yanit = http.get(sayfa_url, headers=_BASLIKLAR, timeout=ZAMAN_ASIMI)
+        yanit.raise_for_status()
+        yanit.encoding = "utf-8"
+        for url, ham_baslik in _DUYURU_SPAN.findall(yanit.text):
+            if url in gorulen_url:
+                continue
+            gorulen_url.add(url)
+            ham_baslik = ham_baslik.strip()
+            m = _BASLIK_TARIH.match(ham_baslik)
+            if m:
+                gun, ay_adi, yil, konu = m.groups()
+                ay = _AYLAR.get(ay_adi.lower())
+                tarih = f"{yil}-{ay}-01" if ay else None
+                konu = konu.strip()
+            else:
+                tarih, konu = None, ham_baslik
+            sonuc.append({"tarih": tarih, "konu": konu, "url": url})
     if not sonuc:
         raise RuntimeError(
-            "BigChefs duyurular sayfasında hiç PDF bağlantısı ayrıştırılamadı "
-            "— şablon değişmiş olabilir"
+            "BigChefs duyurular/yatırımcı ilişkileri sayfalarında hiç PDF "
+            "bağlantısı ayrıştırılamadı — şablon değişmiş olabilir"
         )
     return sonuc
-
 
 def _belge_metnini_getir(url: str, onbellek: dict, session=None) -> str:
     if url in onbellek:
@@ -148,7 +165,7 @@ def _belge_metnini_getir(url: str, onbellek: dict, session=None) -> str:
     yanit.raise_for_status()
     baytlar = pdf_ayikla(yanit.content)
     with pdfplumber.open(io.BytesIO(baytlar)) as pdf:
-        metin = "\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages)
+        metin = pdf_metnini_normallestir("\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages))
     onbellek[url] = metin
     return metin
 

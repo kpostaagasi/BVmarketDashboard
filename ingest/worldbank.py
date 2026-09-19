@@ -39,6 +39,14 @@ SERI_TANIMLARI = {
     "gubre-endeksi": ("Monthly Indices", "Fertilizers"),
     "urea": ("Monthly Prices", "Urea"),
     "dap": ("Monthly Prices", "DAP"),
+    # Ölçüldü (2026-09-19): marketvisuals'ın "commodity_other.html" (Business
+    # Analytiq kaynaklı, ücretli) sayfasındaki "Doğal Kauçuk - ABD
+    # (Gerçekleşen)" kartı ile bu sütun 13 aylık pencerede oran 0,98–1,05
+    # bandında (ortalama ~1,01, trend sapması yok) — aynı küresel TSR20
+    # benchmark'ı (SGX/SICOM). "Avrupa" kartı ile Rubber RSS3 arasındaki
+    # oran ise 0,70–0,95 aralığında SÜREKLİ AÇILIYOR (aynı seri değil, eşleme
+    # YOK — bu yüzden yalnızca TSR20/ABD eklendi, RSS3/Avrupa eklenmedi).
+    "kaucuk-tsr20": ("Monthly Prices", "Rubber, TSR20"),
 }
 assert set(SERI_TANIMLARI.keys()) == GECERLI_WB_SERILERI
 
