@@ -14,7 +14,8 @@ import pandas as pd
 VARSAYILAN = "Varsayılan"
 YOY = "YoY %"
 MOM = "MoM %"
-GORUNUMLER = (VARSAYILAN, YOY, MOM)
+CEYREKLIK = "Çeyreklik"
+GORUNUMLER = (VARSAYILAN, YOY, MOM, CEYREKLIK)
 
 
 def son_tarih(df: pd.DataFrame) -> pd.Timestamp:
@@ -113,8 +114,31 @@ def seri_mom(df: pd.DataFrame) -> pd.DataFrame:
     return _seri_degisim(df, pd.DateOffset(months=1))
 
 
+def ceyreklige_cevir(df: pd.DataFrame, agg: str = "mean") -> pd.DataFrame:
+    """Seriyi çeyreklik toplulaştırır; her nokta çeyreğin İLK ayına damgalanır.
+
+    Referans panolardaki "Çeyreksel - X" kartları ayrı bir seri değil, aynı
+    serinin çeyreklik görünümüdür. `agg` serinin `monthly_agg`ıyla aynı
+    anlamda: stok serisi "last", akım serisi "sum", oran/endeks "mean".
+
+    Son çeyrek HENÜZ BİTMEMİŞSE düşürülür: eksik aylarla toplanan bir "sum"
+    çeyreği olduğundan küçük görünür ve sahte bir düşüş çizer.
+    """
+    if df.empty:
+        return df
+    donem = df.index.to_period("Q")
+    gruplu = df.groupby(donem)["value"]
+    deger = {"sum": gruplu.sum(), "last": gruplu.last()}.get(agg, gruplu.mean())
+    son_gozlem = df.index.max().to_period("M")
+    tam = deger[[d.end_time.to_period("M") <= son_gozlem for d in deger.index]]
+    return pd.DataFrame(
+        {"value": tam.to_numpy()},
+        index=pd.PeriodIndex(tam.index, freq="Q").to_timestamp(how="start"),
+    )
+
+
 def gorunum_uygula(
-    df: pd.DataFrame, gorunum: str, freq: str = "monthly"
+    df: pd.DataFrame, gorunum: str, freq: str = "monthly", agg: str = "mean"
 ) -> pd.DataFrame:
     if gorunum == VARSAYILAN:
         return df
@@ -132,4 +156,9 @@ def gorunum_uygula(
             # gösterir — yanıltıcı. Boş seri döndürmek dürüst davranış.
             return pd.DataFrame({"value": np.nan}, index=df.index)
         return seri_mom(df)
+    if gorunum == CEYREKLIK:
+        # Zaten çeyreklik/yıllık seride toplulaştırmanın anlamı yok.
+        if freq in {"quarterly", "yearly"}:
+            return df
+        return ceyreklige_cevir(df, agg)
     raise ValueError(f"Bilinmeyen görünüm: {gorunum}")

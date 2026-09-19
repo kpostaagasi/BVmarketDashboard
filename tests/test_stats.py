@@ -133,3 +133,29 @@ def test_yillik_seride_aylik_gorunum_yoy_ile_ayni_sayiyi_gostermez():
     assert yoy(df, "yearly") == pytest.approx(10.0)
     mom_serisi = gorunum_uygula(df, "MoM %", "yearly")
     assert mom_serisi["value"].isna().all()
+
+
+def test_ceyreklik_gorunum_tamamlanmamis_ceyregi_gostermez():
+    """Çeyreklik görünüm aylık seriyi toplulaştırır.
+
+    Tamamlanmamış çeyreği çizmek "sum" serilerinde sahte bir düşüş üretir;
+    beklenen davranış o çeyreği hiç göstermemek. Toplama kuralı serinin
+    `monthly_agg`ıdır: akım serisi toplanır, stok serisi son değeri alır.
+    """
+    idx = pd.date_range("2025-01-01", "2026-08-01", freq="MS")
+    df = pd.DataFrame({"value": range(1, len(idx) + 1)}, index=idx)
+
+    toplam = gorunum_uygula(df, "Çeyreklik", "monthly", "sum")
+    assert pd.Timestamp("2026-07-01") not in toplam.index
+    assert toplam.loc["2026-04-01", "value"] == pytest.approx(16 + 17 + 18)
+
+    son = gorunum_uygula(df, "Çeyreklik", "monthly", "last")
+    assert son.loc["2026-04-01", "value"] == pytest.approx(18)
+
+    # Zaten çeyreklik seride toplulaştırma yapılmaz.
+    ceyreklik = pd.DataFrame(
+        {"value": [1.0, 2.0]}, index=pd.to_datetime(["2025-01-01", "2025-04-01"])
+    )
+    pd.testing.assert_frame_equal(
+        gorunum_uygula(ceyreklik, "Çeyreklik", "quarterly"), ceyreklik
+    )

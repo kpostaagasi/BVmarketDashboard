@@ -21,6 +21,7 @@ from core.charts import (
 )
 from core.data import VeriYokHatasi, load_series, load_wide_series
 from core.stats import (
+    CEYREKLIK,
     MOM,
     VARSAYILAN,
     aralik_12a,
@@ -57,7 +58,10 @@ def yuzde_rozeti(deger: float | None) -> str:
 
 
 def grafik_agg(seri: Seri, gorunum: str) -> str:
-    """Yüzde görünümünde toplama anlamsızdır — yüzdelerin ortalaması alınır."""
+    """Yüzde görünümünde toplama anlamsızdır — yüzdelerin ortalaması alınır.
+
+    Çeyreklik görünümde veri ZATEN toplulaştırılmış gelir; ikinci kez
+    toplamak çeyrek değerlerini üst üste bindirir, bu yüzden ortalama."""
     return seri.monthly_agg if gorunum == VARSAYILAN else "mean"
 
 
@@ -167,15 +171,22 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
         _istatistik_satiri(df, seri)
 
         hesaplanacak = hareketli_ortalama_uygula(df, seri.hareketli_ortalama_gun)
-        gosterilecek = gorunum_uygula(hesaplanacak, gorunum, seri.freq)
+        gosterilecek = gorunum_uygula(
+            hesaplanacak, gorunum, seri.freq, seri.monthly_agg
+        )
         if seri.freq == "quarterly" and gorunum == MOM:
             st.caption("Çeyreklik seri: önceki çeyreğe göre değişim (QoQ %)")
+        if gorunum == CEYREKLIK and seri.freq not in {"quarterly", "yearly"}:
+            st.caption(
+                f"Çeyreklik toplulaştırma ({seri.monthly_agg}); "
+                "tamamlanmamış çeyrek gösterilmez"
+            )
         if seri.hareketli_ortalama_gun is not None:
             st.caption(
                 f"Grafikler: {seri.hareketli_ortalama_gun} günlük hareketli ortalama · "
                 "Üstteki istatistikler: ham günlük veri"
             )
-        birim = seri.unit if gorunum == VARSAYILAN else "%"
+        birim = seri.unit if gorunum in (VARSAYILAN, CEYREKLIK) else "%"
 
         for grafik in seri.charts:
             if grafik == "seasonality":
