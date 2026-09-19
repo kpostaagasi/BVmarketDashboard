@@ -8,11 +8,17 @@ istatistikli grafik sayfaları olarak sunma.
 
 ```
 app.py                    # st.navigation — sol menü katalogdan üretilir
-catalog/series.yaml       # tek doğruluk kaynağı: 132 seri tanımı
-catalog/categories.yaml   # menü ağacı: 16 kategori + her birinin KPI panosu
+catalog/series.yaml       # tek doğruluk kaynağı: 3.706 seri tanımı
+catalog/categories.yaml   # menü ağacı: 49 kategori + her birinin KPI panosu
 catalog/hisseler.yaml     # 8 BIST tickerı: kendi verisi + bağlam serileri
 core/                     # catalog, data, stats, charts, components, page, takvim
-ingest/                   # evds.py + yahoo.py + epias.py + osd.py + tim.py + bddk.py + tefas.py + eurocontrol.py + run.py (orchestrator)
+ingest/                   # 52 kaynak adaptörü (evds, yahoo, epias, osd, tim, tim_il,
+                          # tim_ulke, bddk, tefas, eurocontrol, fred, thy, pgsus, tav,
+                          # ebebek, epdk, turkcell, ttkom, odmd, eib, usk, turkbesd,
+                          # worldbank, ifo, tsb, eurostat, ecb, turkcimento, tspb, sgk,
+                          # ayd, gph, orge, tcud, dhmi, uab, ktb, iso_pmi, taid, eia,
+                          # botas, istib, tuik, trabzontb, tepav, migros, bigchefs,
+                          # turktraktor, tabgida, ithib, tmsd …) + run.py (orchestrator)
 data/<kategori>/<seri>.csv
 .github/workflows/ingest.yml    # günlük cron: ingest → commit → push
 .github/workflows/test.yml      # her push/PR: pytest
@@ -103,8 +109,11 @@ repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 | 2 | Emtia (10 seri, 2 kategori): Brent, WTI, doğalgaz, altın, gümüş, bakır, HRC çelik, platin, paladyum, alüminyum | ✅ |
 | 3 | Veri Takvimi (3a), Elektrik/EPİAŞ (3b), üretim kompozisyonu (3c), OSD otomotiv (3e), EVDS genişletme (3f), TİM sektörel ihracat (3g), BDDK bankacılık (3h), TEFAS fonlar (3i), EUROCONTROL havacılık (3j) | ✅ |
 | 4 | Hisse sayfaları (8 ticker: FROTO, TOASO, TTRAK, KARSN, OTKAR, ASUZU, THYAO, PGSUS) | ✅ |
-| 5 | Arama sayfası (132 seri tek kutudan, seçilenler tek ızgarada) | ✅ |
+| 5 | Arama sayfası (tüm seriler tek kutudan, seçilenler tek ızgarada) | ✅ |
 | 6 | EVDS genişletme II (21 seri): REK + firma döviz pozisyonu, dış ticaret endeksleri, tarım ÜFE + tarımsal girdi, piyasa beklentileri (yeni kategori) | ✅ |
-| 7 | Favoriler, AI raporları | Planlandı |
+| 7 | TEFAS fon ailesi (969 fon), TİM il×sektör (741) ve ülke×sektör (674) kırılımları | ✅ |
+| 8 | Sektör aileleri: havacılık IR derinliği, otomotiv marka/pazar (OSD+ODMD+TAİD), beyaz eşya (TÜRKBESD), çelik (TÇÜD), tekstil (İTHİB), makarna (TMSD), çimento, su ürünleri/hayvansal (EİB), çiğ süt (USK), sigorta (TSB), sermaye piyasaları (TSPB), sağlık (SGK), liman (UAB), turizm (KTB+EVDS), doğal gaz (EPDK+BOTAŞ), İSO sektörel PMI, TİM pazar monitörü | ✅ |
+| 9 | Görünümler: YoY / MoM / Çeyreklik toplulaştırma, `freq: yearly` desteği | ✅ |
+| 10 | Favoriler, AI raporları | Planlandı |
 
 Tasarım detayları: `docs/superpowers/specs/2026-08-27-streamlit-dashboard-design.md`
