@@ -46721,3 +46721,273 @@
   freq: monthly
   monthly_agg: sum
   charts: [seasonality, level]
+
+- id: perakende/mgros-yeni-magaza-acilis
+  title: MGROS Yeni Mağaza Açılışları (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: toplam-yeni-magaza-acilis
+  unit: "Adet"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/mgros-migros-format-acilis
+  title: Migros Format Açılışları (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: migros-format-magaza-acilis
+  unit: "Adet"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/mgros-jet-format-acilis
+  title: Migros Jet Format Açılışları (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: migros-jet-format-magaza-acilis
+  unit: "Adet"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/mgros-macrocenter-format-acilis
+  title: Macrocenter Format Açılışları (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: macrocenter-format-magaza-acilis
+  unit: "Adet"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/mgros-mion-format-acilis
+  title: Mion Format Açılışları (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: mion-format-magaza-acilis
+  unit: "Adet"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/mgros-one-gmv
+  title: Migros One GMV (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: migros-one-gmv
+  unit: "milyar TL"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/mgros-one-aktif-kullanici
+  title: Migros One Aktif Kullanıcı Sayısı (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: migros-one-aktif-kullanici
+  unit: "milyon"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/mgros-one-siparis-sayisi
+  title: Migros One Dijital Ekosistem - Sipariş Sayısı (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: migros-one-siparis-sayisi
+  unit: "milyon"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/mgros-moneypay-kayitli-kullanici
+  title: MoneyPay Kayıtlı Kullanıcı Sayısı (Çeyreklik)
+  category: perakende
+  kaynak: { name: Migros Kurumsal, url: "https://www.migroskurumsal.com/yatirimci-iliskileri/finansal-bilgiler" }
+  kaynak_tipi: migros
+  migros_metrik: moneypay-kayitli-kullanici
+  unit: "milyon"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kanal-buyume-magaza
+  title: ebebek Kanal Bazlı Ciro Büyümesi - Mağaza (Yıllık % Değişim)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kanal_buyume_magaza
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kanal-buyume-web
+  title: ebebek Kanal Bazlı Ciro Büyümesi - ebebek.com (Yıllık % Değişim)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kanal_buyume_web
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kanal-buyume-pazaryeri
+  title: ebebek Kanal Bazlı Ciro Büyümesi - Pazaryeri (Yıllık % Değişim)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kanal_buyume_pazaryeri
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kanal-payi-magaza
+  title: ebebek Kanal Payı - Mağaza (Satış Adedi)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kanal_payi_magaza
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kanal-payi-web
+  title: ebebek Kanal Payı - ebebek.com (Satış Adedi)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kanal_payi_web
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kanal-payi-pazaryeri
+  title: ebebek Kanal Payı - Pazaryeri (Satış Adedi)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kanal_payi_pazaryeri
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-magaza-fatura-ortalama
+  title: ebebek Mağaza Fatura Başına Ortalama Tutar (TL, Nominal)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: magaza_fatura_ortalama
+  unit: "TL"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-web-siparis-ortalama
+  title: ebebek.com Sipariş Başına Ortalama Tutar (TL, Nominal)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: web_siparis_ortalama
+  unit: "TL"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-lfl-satis-adedi
+  title: ebebek Aynı Mağaza (LFL) Satış Adedi (bin)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: lfl_satis_adedi
+  unit: "Bin Adet"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-lfl-giris-sayisi
+  title: ebebek Aynı Mağaza (LFL) Giriş Sayısı (bin)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: lfl_giris_sayisi
+  unit: "Bin"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-pl-payi-toplam
+  title: ebebek PL (Öz Marka) Adet Payı - Toplam
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: pl_payi_toplam
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-pl-payi-magaza
+  title: ebebek PL (Öz Marka) Adet Payı - Mağaza
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: pl_payi_magaza
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-pl-payi-web
+  title: ebebek PL (Öz Marka) Adet Payı - ebebek.com
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: pl_payi_web
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-pl-payi-pazaryeri
+  title: ebebek PL (Öz Marka) Adet Payı - Pazaryeri
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: pl_payi_pazaryeri
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kategori-buyume-hizli-tuketim
+  title: ebebek Kategori Adet Büyümesi - Hızlı Tüketim (Yıllık % Değişim)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kategori_buyume_hizli_tuketim
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kategori-buyume-tamamlayici
+  title: ebebek Kategori Adet Büyümesi - Tamamlayıcı Ürünler (Yıllık % Değişim)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kategori_buyume_tamamlayici
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kategori-buyume-tekstil
+  title: ebebek Kategori Adet Büyümesi - Tekstil (Yıllık % Değişim)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kategori_buyume_tekstil
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: perakende/ebebek-kategori-buyume-bebek-arac-gerec
+  title: ebebek Kategori Adet Büyümesi - Bebek Araç-Gereç (Yıllık % Değişim)
+  category: perakende
+  kaynak: { name: ebebek Yatırımcı İlişkileri, url: "https://kurumsal.ebebek.com/finansal-bilgiler" }
+  kaynak_tipi: ebebek
+  ebebek_metrik: kategori_buyume_bebek_arac_gerec
+  unit: "%"
+  freq: quarterly
+  charts: [level]
