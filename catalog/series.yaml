@@ -46673,3 +46673,51 @@
     18.09.2026 bülteni tek satır 189.659 TL/kg -> MarketVisuals "Fındık
     Levant (Ağ. Ort.)" kartının aynı tarihli latestVal'i (189.66) ile
     birebir.
+
+- id: otomotiv/renault-toplam
+  title: Renault Perakende Toplam
+  category: otomotiv
+  kaynak: { name: ODMD, url: "https://www.odmd.org.tr" }
+  kaynak_tipi: odmd
+  odmd_marka: [RENAULT]
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: otomotiv/toyota-toplam
+  title: Toyota Perakende Toplam
+  category: otomotiv
+  kaynak: { name: ODMD, url: "https://www.odmd.org.tr" }
+  kaynak_tipi: odmd
+  odmd_marka: [TOYOTA]
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: otomotiv/hyundai-toplam
+  title: Hyundai Perakende Toplam
+  category: otomotiv
+  kaynak: { name: ODMD, url: "https://www.odmd.org.tr" }
+  kaynak_tipi: odmd
+  odmd_marka: [HYUNDAI]
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: otomotiv/togg-toplam
+  title: TOGG Perakende Toplam
+  category: otomotiv
+  kaynak: { name: ODMD, url: "https://www.odmd.org.tr" }
+  kaynak_tipi: odmd
+  odmd_marka: [TOGG]
+  odmd_kategori: toplam
+  unit: adet
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]

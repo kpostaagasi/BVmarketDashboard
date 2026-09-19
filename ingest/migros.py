@@ -132,10 +132,18 @@ GECERLI_FORMAT_ACILIS_METRIKLERI = {
 }
 
 _ACILIS_CUMLESI = re.compile(
-    r"1\s*Ocak\s*[-–]\s*\d{1,2}\s+\w+\s+\d{4}\s+döneminde\s+(.+?)\s+"
+    r"1\s*Ocak\s*[-–]\s*\d{1,2}\s+\w+\s+\d{4}\s+döneminde\s+(.{1,400}?)\s+"
     r"olmak\s+üzere\s+toplam\s+([\d.]+)\s+yeni\s+mağaza\s+aç[ıi]lm[ıi]şt[ıi]r",
     re.S,
 )
+# Gövde uzunluğu SINIRLI: raporun başka bölümlerinde de "1 Ocak – [tarih]
+# döneminde ..." kalıbıyla başlayan alakasız cümleler var (ör. "esas
+# sözleşmede değişiklik yapılmamıştır" — 2024 Mart raporunda ölçüldü).
+# Sınırsız `.+?` bu alakasız cümleden başlayıp binlerce karakter sonraki
+# GERÇEK açılış cümlesinin "olmak üzere toplam ... açılmıştır" ucuna
+# atlayıp gövdeyi tamamen yanlış içerikle dolduruyordu. 400 karakter en
+# uzun gözlemlenen gövdeden (Petimo dahil tam format dökümü, ~200 kr.)
+# bolca pay bırakır.
 # Format adı → cümle gövdesindeki sayısını çeken desen. "adet" bazı
 # çeyreklerde yok (ör. 2023 3Ç: "195 Migros, 105 Migros Jet"), format
 # sırası ve tam liste (Macrokiosk/hipermarket/Toptan/Petimo/Minigros de
@@ -168,21 +176,25 @@ def format_acilislarini_ayikla(metin: str) -> dict[str, float] | None:
     return sonuc
 
 
-_CEYREK_ONCEKI_AY = {"04": "01", "07": "04", "10": "07"}
+_CEYREK_ONCEKI_AY = {"06": "03", "09": "06"}
 
 
 def _kumulatif_ceyregi_cevir(noktalar: dict[str, float]) -> dict[str, float]:
     """Yılbaşından kümülatif çeyrek-sonu değerini o çeyreğe özgü akışa
     çevirir (bkz. `ingest.bddk.kumulatifi_ayliga_cevir` — aynı desenin
-    çeyreklik hali). 1Ç (Ocak damgası) zaten tek çeyrekliktir. Sonraki
+    çeyreklik hali). Tarihler `_rapor_listesi`'nin kendi damgasını
+    kullanır (raporun kapsadığı TAKVİM AYI — Mart="03", Haziran="06",
+    Eylül="09"; bu adaptör hiç Ç4/"12" görmüyor), genel "çeyreğin ilk
+    ayı" kuralı DEĞİL. 1Ç (Mart damgası) zaten tek çeyrekliktir. Sonraki
     çeyrekler aynı yıl içindeki BİR ÖNCEKİ çeyrek damgasından farkla
     bulunur; önceki çeyrek eksikse (o çeyreğin raporu bu cümleyi
-    taşımıyorsa) bu çeyrek ATLANIR — eksiğin üstüne fark almak iki
-    çeyreği tek çeyreğe yığar ve sessizce yanlış değer üretir."""
+    taşımıyorsa — ör. 2023 3Ç'ten önce) bu çeyrek ATLANIR — eksiğin
+    üstüne fark almak iki çeyreği tek çeyreğe yığar ve sessizce yanlış
+    değer üretir."""
     sonuc: dict[str, float] = {}
     for tarih in sorted(noktalar):
         yil, ay = tarih[:4], tarih[5:7]
-        if ay == "01":
+        if ay == "03":
             sonuc[tarih] = noktalar[tarih]
             continue
         onceki_ay = _CEYREK_ONCEKI_AY.get(ay)
@@ -358,17 +370,13 @@ def ekosistem_izgarasini_ayikla(
     if len(degerler) != 30:
         raise RuntimeError(f"ekosistem ızgarası: 30 değer bekleniyordu, {len(degerler)} bulundu")
 
-    araliklar = sorted(
-        (degerler[i + 1]["x0"] - degerler[i]["x0"], i) for i in range(len(degerler) - 1)
-    )
-    kesim_noktalari = sorted(i for _, i in araliklar[-5:])
-    gruplar, basla = [], 0
-    for i in kesim_noktalari:
-        gruplar.append(degerler[basla:i + 1])
-        basla = i + 1
-    gruplar.append(degerler[basla:])
-    if len(gruplar) != 6 or any(len(g) != 5 for g in gruplar):
-        raise RuntimeError(f"ekosistem ızgarası: eşit olmayan gruplar {[len(g) for g in gruplar]}")
+    # Sabit boyutlu dilimleme: 6 grup x 5 çeyrek her zaman x0'a göre
+    # sıralandığında ARDIŞIK bloklar halinde gelir (gruplar arası boşluk
+    # bazen bir grubun KENDİ içindeki iki çeyrek kümesi arasındaki
+    # boşluktan küçük olabiliyor — ölçüldü, 2Ç2024 sunumu — bu yüzden en
+    # büyük N boşluğu ayıraç seçen bir yöntem YANLIŞ gruplar üretebilir).
+    # Toplam tam 30 doğrulandığı için basit 5'li dilimleme güvenlidir.
+    gruplar = [degerler[i:i + 5] for i in range(0, 30, 5)]
 
     ceyrekler = []
     yil, ceyrek = sunum_yili, sunum_ceyregi

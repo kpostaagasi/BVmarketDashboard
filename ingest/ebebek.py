@@ -230,12 +230,310 @@ def magaza_noktalari(session=None) -> dict[str, dict[str, int]]:
     return sonuc
 
 
+# --- Çeyreklik "Analist Toplantısı Sunumu" (Yatırımcı İlişkileri) ---
+#
+# `finansal-bilgiler` sayfasının "Finansal Sonuçlara İlişkin Sunumlar"
+# bölümü 2023 3Ç'ten bugüne çeyreklik PDF listeler (aylık KAP
+# duyurularından AYRI belge ailesi, aylık duyuru sayfasından da AYRI bir
+# URL). "NÇ Türkiye Operasyonlarına Genel Bakış" sayfası kanal bazlı
+# satış büyümesi/payı okur; bir sonraki sayfa fatura/sipariş ortalaması,
+# PL payı ve LFL'yi; "Kategoriler arası..." sayfası kategori kırılımını
+# okur. Üçü de yalnızca YAKIN GEÇMİŞTE (ölçüldü: kanal/fatura/LFL/PL
+# sayfası ilk kez 4Ç 2025'te, kategori sayfası ilk kez 4Ç 2024'te)
+# ortaya çıktı — daha eski sunumlarda sayfa hiç yok, `None`/atlama ile
+# ele alınır (hata değil).
+FINANSAL_SAYFA = "https://kurumsal.ebebek.com/finansal-bilgiler"
+
+_SUNUM_SATIRI = re.compile(
+    r'data-gtm-doc="Analist Toplantısı Sunumu[^"]*"\s*'
+    r'data-gtm-doc-group="Finansal Sonuçlara İlişkin Sunumlar">'
+    r'.*?<strong>(\d{2})\.(\d{2})\.(\d{2})</strong>'
+    r'.*?href="(https://kurumsal\.ebebek\.com/download\?path=[^"]+)"',
+    re.S,
+)
+_AY_CEYREK = {"03": 1, "06": 2, "09": 3, "12": 4}
+
+GECERLI_SUNUM_METRIKLERI = {
+    "kanal_buyume_magaza", "kanal_buyume_web", "kanal_buyume_pazaryeri",
+    "kanal_payi_magaza", "kanal_payi_web", "kanal_payi_pazaryeri",
+    "magaza_fatura_ortalama", "web_siparis_ortalama",
+    "lfl_satis_adedi", "lfl_giris_sayisi",
+    "pl_payi_toplam", "pl_payi_magaza", "pl_payi_web", "pl_payi_pazaryeri",
+    "kategori_buyume_hizli_tuketim", "kategori_buyume_tamamlayici",
+    "kategori_buyume_tekstil", "kategori_buyume_bebek_arac_gerec",
+}
+
+
+def _sunum_listesi(session=None) -> list[dict]:
+    """finansal-bilgiler sayfasının "Finansal Sonuçlara İlişkin Sunumlar"
+    bölümünden (yıl, çeyrek, url) satırlarını okur. Tarih başlığın kendi
+    metninden ("2025 2. Çeyrek" vb. — yıllar arası ifade farklı) değil,
+    belgeye eklenmiş sabit "GG.AA.YY" damgasından (her zaman dönem SONU)
+    okunur — çok daha güvenilir."""
+    http = session or requests
+    yanit = http.get(FINANSAL_SAYFA, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
+    if yanit.status_code != 200:
+        raise RuntimeError(f"ebebek finansal-bilgiler HTTP {yanit.status_code}")
+    sonuc = []
+    for _gun, ay, yy, url in _SUNUM_SATIRI.findall(yanit.text):
+        sonuc.append({"yil": 2000 + int(yy), "ceyrek": _AY_CEYREK[ay], "url": url})
+    if not sonuc:
+        raise RuntimeError(
+            "ebebek finansal-bilgiler sayfasında hiç 'Analist Toplantısı Sunumu' bulunamadı"
+        )
+    return sonuc
+
+
+def _sunum_pdfsini_getir(url: str, onbellek: dict, session=None) -> bytes | None:
+    """Ham PDF baytlarını döner (metne değil — üç ayrıştırıcı da konum
+    bilgisine ihtiyaç duyar); 404 kalıcı yokluğunda None."""
+    anahtar = ("sunum_bayt", url)
+    if anahtar in onbellek:
+        return onbellek[anahtar]
+    http = session or requests
+    yanit = http.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
+    if yanit.status_code == 404:
+        onbellek[anahtar] = None
+        return None
+    if yanit.status_code != 200:
+        raise RuntimeError(f"ebebek sunum PDF HTTP {yanit.status_code}: {url}")
+    onbellek[anahtar] = yanit.content
+    return yanit.content
+
+
+_KANAL_BUYUME_DESENI = re.compile(r"(%-?\d+,\d+|-%\d+,\d+)")
+
+
+def kanal_buyume_ve_payini_ayikla(pdf_baytlari: bytes) -> dict[str, float] | None:
+    """"NÇ Türkiye Operasyonlarına Genel Bakış" sunumunun "Satış Kanalı
+    Bazında satış adedi kırılımı" bölümünü taşıyan sayfayı bulur. Sayfa
+    yoksa (2025 4Ç'ten önce) None döner.
+
+    Mağaza/ebebek.com/Pazaryeri satış adedi BÜYÜME YÜZDELERİ ve PASTA
+    GRAFİĞİ PAYLARI gerçek metin katmanında var (regex/konumla okunabilir)
+    ama üç panelin MUTLAK bin-adet çubuk değerleri PDF'te vektör/görsel
+    olarak gömülü — metin katmanında HİÇ yok (ölçüldü: `extract_text()`
+    çıktısında "23.288" gibi hiçbir çubuk etiketi geçmiyor, yalnızca
+    başlıklar/yüzdeler geçiyor). Bu yüzden mutlak bileşen serisi yerine
+    doğrudan yüzde serileri üretilir (büyüme + pay).
+
+    Büyüme: metin sırası panel sırasıyla (Mağaza, ebebek.com, Pazaryeri)
+    eşleşir — üç panelin başlığı da bu sırada, garipleşmiyor (yalnızca
+    "Mağaza Fatura Başına..." sayfasındaki İKİ SATIRLI başlıklar
+    garipleşiyor, bkz. `_fatura_siparis_pl_lfl_ayikla`). Tek çeyreklik
+    sunumlarda (1Ç) panel başına TEK büyüme yüzdesi, çeyrek+YBİ
+    kümülatif sunan sunumlarda (2Ç/3Ç/4Ç) panel başına İKİ (çeyrek, YBİ
+    kümülatif) — yalnızca ÇEYREĞE özgü ilk değer kullanılır.
+
+    Pay: pasta grafiğinin üç dilim yüzdesi konumdan okunur ama hangi
+    sayının hangi kanala ait olduğu metin sırasından ÇIKARILAMAZ (üç
+    sayı da pasta çevresinde serbestçe konumlanmış). Mağaza/ebebek.com/
+    Pazaryeri payları HER ölçülen çeyrekte hep BÜYÜKTEN KÜÇÜĞE bu sırada
+    olduğundan (Mağaza her zaman baskın, Pazaryeri her zaman en küçük —
+    üç farklı çeyrekte doğrulandı) büyüklüğe göre eşlenir."""
+    with pdfplumber.open(io.BytesIO(pdf_baytlari)) as pdf:
+        sayfa = None
+        for p in pdf.pages:
+            t = p.extract_text() or ""
+            if "Satış Kanalı Bazında satış" in t and "Mağaza Satış Adetleri" in t:
+                sayfa = p
+                break
+        if sayfa is None:
+            return None
+        tam_metin = sayfa.extract_text() or ""
+        kelimeler = sayfa.extract_words()
+
+    idx_panel = tam_metin.find("Satış Kanalı Bazında satış")
+    legend_eslesme = re.search(r"Mağaza\s+ebebek\.com\s+Pazar\s*[Yy]eri", tam_metin)
+    if idx_panel == -1 or legend_eslesme is None:
+        raise RuntimeError("ebebek kanal sayfası: beklenen bölüm sınırları bulunamadı")
+    idx_legend = legend_eslesme.start()
+    buyume_ham = _KANAL_BUYUME_DESENI.findall(tam_metin[idx_panel:idx_legend])
+    buyume = [float(g.replace("%", "").replace(",", ".")) for g in buyume_ham]
+    if len(buyume) == 3:
+        magaza_b, web_b, pazar_b = buyume
+    elif len(buyume) == 6:
+        magaza_b, web_b, pazar_b = buyume[0], buyume[2], buyume[4]
+    else:
+        raise RuntimeError(f"ebebek kanal büyümesi: 3 ya da 6 değer bekleniyordu, {len(buyume)} bulundu")
+
+    tek_ve_iki_hane = re.compile(r"^\d{1,2}$")
+    yuzde_kelimesi = [w for w in kelimeler if w["text"] == "%"]
+    pay_degerleri = []
+    for w in kelimeler:
+        if tek_ve_iki_hane.match(w["text"]) and any(
+            abs(p["top"] - w["top"]) < 40 and abs(p["x0"] - w["x0"]) < 60 for p in yuzde_kelimesi
+        ):
+            pay_degerleri.append(float(w["text"]))
+        elif re.match(r"^\d{1,2}%$", w["text"]):
+            pay_degerleri.append(float(w["text"].rstrip("%")))
+    if len(pay_degerleri) != 3:
+        raise RuntimeError(f"ebebek kanal payı: 3 değer bekleniyordu, {len(pay_degerleri)} bulundu")
+    magaza_p, web_p, pazar_p = sorted(pay_degerleri, reverse=True)
+
+    return {
+        "kanal_buyume_magaza": magaza_b, "kanal_buyume_web": web_b, "kanal_buyume_pazaryeri": pazar_b,
+        "kanal_payi_magaza": magaza_p, "kanal_payi_web": web_p, "kanal_payi_pazaryeri": pazar_p,
+    }
+
+
+def fatura_siparis_pl_lfl_ayikla(pdf_baytlari: bytes) -> dict[str, float] | None:
+    """"Mağaza Fatura Başına Nominal Tutar" + "ebebek.com Sipariş Başına
+    Nominal Tutar" + "Satış Kanalı Bazında PL (Öz Marka) Adet Payı" +
+    "Aynı Mağaza (LFL) Satış/Giriş" hepsini TEK sayfada taşıyan sayfayı
+    bulur. Sayfa yoksa (2025 4Ç'ten önce) None döner.
+
+    Bu sayfanın başlıkları (ör. "Mağaza Fatura Başına Nominal Tutar")
+    pdfplumber'da SÜTUN BAZLI satır-satır çıkarıldığından komşu sütunların
+    metniyle karakter düzeyinde iç içe geçiyor (ölçüldü: "Dönem sonu
+    itibarıyla" ile karışıp "Dön M em a ğ so a nu z a iti b F..." gibi
+    okunuyor) — bu yüzden hiçbir etiket metinden ARANMAZ, sayfa yalnızca
+    LFL alt başlığından (garipleşmiyor) tanınır ve sayı DEĞERLERİ salt
+    KONUMDAN (x0/top) okunur:
+    - Değerler iki SATIRA ayrılır (üstte Fatura+Sipariş, altta LFL
+      Satış+Giriş) — ikisi arasındaki EN BÜYÜK dikey boşluk ayraçtır.
+    - Her satır kendi içinde x0'a göre sıralanıp TAM ORTADAN ikiye
+      bölünür (soldaki panel, sağdaki panel) — iki panel arasındaki
+      boşluk bazen panel İÇİ çeyrek-grupları arasındaki boşluktan küçük
+      olduğundan (ölçüldü) en büyük boşluğa göre bölmek YANLIŞ; sabit
+      orta nokta güvenli.
+    - Her panel içinde soldan sağa sıra hep [önceki yıl aynı çeyrek, bu
+      çeyrek, (yalnızca 2Ç/3Ç/4Ç sunumlarında) önceki yıl YBİ kümülatif,
+      bu yıl YBİ kümülatif] — yalnızca ilk iki (ÇEYREĞE özgü) kullanılır.
+    PL payı dört değeri (Toplam/Mağaza/ebebek.com/Pazaryeri) "%" sonekiyle
+    ayrı toplanır, aynı soldan-sağa sırayla."""
+    with pdfplumber.open(io.BytesIO(pdf_baytlari)) as pdf:
+        sayfa = None
+        for p in pdf.pages:
+            t = p.extract_text() or ""
+            if "Aynı Mağaza (LFL)" in t and "Adet Payı" in t:
+                sayfa = p
+                break
+        if sayfa is None:
+            return None
+        kelimeler = sayfa.extract_words()
+
+    sayi_deseni = re.compile(r"^\d[\d.,]*%?$")
+    yil_deseni = re.compile(r"^20\d{2}$")
+
+    def sayiya_cevir(metin: str) -> float:
+        return float(metin.replace(".", "").replace(",", "."))
+
+    tum_sayilar = [w for w in kelimeler if sayi_deseni.match(w["text"]) and not yil_deseni.match(w["text"])]
+    yuzdeli = sorted((w for w in tum_sayilar if w["text"].endswith("%")), key=lambda w: w["x0"])
+    if len(yuzdeli) != 4:
+        raise RuntimeError(f"ebebek PL adet payı: 4 değer bekleniyordu, {len(yuzdeli)} bulundu")
+    pl_toplam, pl_magaza, pl_web, pl_pazar = (sayiya_cevir(w["text"].rstrip("%")) for w in yuzdeli)
+
+    duz = sorted((w for w in tum_sayilar if not w["text"].endswith("%")), key=lambda w: w["top"])
+    if len(duz) < 4:
+        raise RuntimeError(f"ebebek fatura/sipariş/LFL: en az 4 değer bekleniyordu, {len(duz)} bulundu")
+    araliklar = [(duz[i + 1]["top"] - duz[i]["top"], i) for i in range(len(duz) - 1)]
+    araliklar.sort(reverse=True)
+    ayrac = araliklar[0][1]
+    satir1 = duz[: ayrac + 1]
+    satir2 = duz[ayrac + 1 : ayrac + 1 + len(satir1)]  # dipnot/sayfa no artıklarını at
+
+    def ikiye_bol(satir):
+        satir = sorted(satir, key=lambda w: w["x0"])
+        orta = len(satir) // 2
+        return (
+            [sayiya_cevir(w["text"]) for w in satir[:orta]],
+            [sayiya_cevir(w["text"]) for w in satir[orta:]],
+        )
+
+    fatura, siparis = ikiye_bol(satir1)
+    lfl_satis, lfl_giris = ikiye_bol(satir2)
+    return {
+        "magaza_fatura_ortalama": fatura[1], "web_siparis_ortalama": siparis[1],
+        "lfl_satis_adedi": lfl_satis[1], "lfl_giris_sayisi": lfl_giris[1],
+        "pl_payi_toplam": pl_toplam, "pl_payi_magaza": pl_magaza,
+        "pl_payi_web": pl_web, "pl_payi_pazaryeri": pl_pazar,
+    }
+
+
+_KATEGORI_SIRASI = (
+    "kategori_buyume_hizli_tuketim", "kategori_buyume_tamamlayici",
+    "kategori_buyume_tekstil", "kategori_buyume_bebek_arac_gerec",
+)
+
+
+def kategori_buyumesini_ayikla(pdf_baytlari: bytes) -> dict[str, float] | None:
+    """"Kategoriler arası stratejik konumlandırma..." sayfasındaki dört
+    kategorinin (Hızlı Tüketim/Tamamlayıcı/Tekstil/Bebek Araç-Gereç)
+    adet büyüme yüzdesini okur. Sayfa yoksa (2024 4Ç'ten önce) None
+    döner.
+
+    Büyüme rozetleri ("+%NN adet büyümesi") metinde her zaman 2x2
+    kutunun SATIR sırasıyla (Hızlı Tüketim, Tamamlayıcı, Tekstil, Bebek
+    Araç-Gereç) geçiyor — dört rozet güvenle sıralı okunur. Kategori
+    PAYLARI (pasta grafiği, bu fonksiyonda KULLANILMIYOR — yalnızca
+    yüzde büyüme card'ı hedefleniyor) ise metin sırasında karışıyor
+    (kutuların açıklama metinleriyle iç içe geçiyor, ölçüldü), konumdan
+    (sayfa dörtte-bir çeyreği) okunması gerekir; büyüme rozetleri bu
+    sorunu yaşamıyor çünkü rozet kutucuğu kendi başına bağımsız bir metin
+    bloğu."""
+    with pdfplumber.open(io.BytesIO(pdf_baytlari)) as pdf:
+        tam_metin = None
+        for p in pdf.pages:
+            t = p.extract_text() or ""
+            if "stratejik konumlandırmaya" in t and "Hızlı tüketim" in t:
+                tam_metin = t
+                break
+        if tam_metin is None:
+            return None
+    buyume = [
+        float(m.group(1).replace(",", "."))
+        for m in re.finditer(r"\+\s*%\s*(\d+(?:,\d+)?)", tam_metin)
+    ]
+    if len(buyume) != 4:
+        raise RuntimeError(f"ebebek kategori büyümesi: 4 değer bekleniyordu, {len(buyume)} bulundu")
+    return dict(zip(_KATEGORI_SIRASI, buyume))
+
+
+def _sunum_metriklerini_getir(onbellek: dict, session=None) -> dict[str, dict[str, float]]:
+    """Tüm "Analist Toplantısı Sunumu" PDF'lerini TARA (üç ayrı sayfa
+    türü, her biri kendi varlığını kontrol eder), on sekiz metriği
+    birleştirip {metrik: {tarih: değer}} döner. Çakışan çeyreklerde
+    SONRAKİ (daha yeni yayımlanan) sunum kazanır.
+
+    Sayfa bulunduğu halde ayrıştırma başarısızsa (`RuntimeError`) o
+    SUNUM atlanır, tüm tarama iptal edilmez: en eski sunumlar (ör. 2024
+    4Ç) daha yeni sürümlerle aynı şablonu paylaşmıyor (ölçüldü — "Pazar
+    Yeri" pasta diliminin "%" işareti farklı konumlanmış), tek bir eski
+    belgenin şablon sapması on sekiz metrikten hiçbirini düşürmemeli."""
+    if "sunum_metrikleri" in onbellek:
+        return onbellek["sunum_metrikleri"]
+    if "sunumlar" not in onbellek:
+        onbellek["sunumlar"] = _sunum_listesi(session=session)
+    birlesik: dict[str, dict[str, float]] = {m: {} for m in GECERLI_SUNUM_METRIKLERI}
+    for s in sorted(onbellek["sunumlar"], key=lambda s: (s["yil"], s["ceyrek"])):
+        baytlar = _sunum_pdfsini_getir(s["url"], onbellek, session=session)
+        if baytlar is None:
+            continue
+        ay = {1: "01", 2: "04", 3: "07", 4: "10"}[s["ceyrek"]]
+        tarih = f"{s['yil']}-{ay}-01"
+        for ayiklayici in (kanal_buyume_ve_payini_ayikla, fatura_siparis_pl_lfl_ayikla, kategori_buyumesini_ayikla):
+            try:
+                sonuc = ayiklayici(baytlar)
+            except RuntimeError:
+                continue  # bu sunumun bu sayfası şablon sapmış — atla, diğer sunumlar/sayfalar etkilenmez
+            if sonuc:
+                for metrik, deger in sonuc.items():
+                    birlesik[metrik][tarih] = deger
+    onbellek["sunum_metrikleri"] = birlesik
+    return birlesik
+
+
 def seri_cek(seri, onbellek: dict | None = None, session=None):
     """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı).
 
-    `onbellek` üç kategoriyi ("satis"/"ziyaret"/"magaza") ayrı ayrı taşır: altı
-    seri üç kategoriyi paylaşır, aksi halde her seri kendi ~35 PDF'ini
-    indirirdi.
+    `onbellek` üç aylık kategoriyi ("satis"/"ziyaret"/"magaza") ayrı ayrı
+    taşır: altı seri üç kategoriyi paylaşır, aksi halde her seri kendi
+    ~35 PDF'ini indirirdi. Çeyreklik "Analist Toplantısı Sunumu" metrik
+    ailesi (`GECERLI_SUNUM_METRIKLERI`) dördüncü, bağımsız bir önbellek
+    anahtarı ("sunum_metrikleri") kullanır — on sekiz seri aynı ~12
+    sunumu paylaşır.
     """
     onbellek = {} if onbellek is None else onbellek
     metrik = seri.ebebek_metrik
@@ -254,6 +552,11 @@ def seri_cek(seri, onbellek: dict | None = None, session=None):
             onbellek["magaza"] = magaza_noktalari(session)
         alan = {"toplam_magaza": "toplam", "standart_magaza": "standart", "mega_magaza": "mega"}[metrik]
         kendi = {tarih: deger[alan] for tarih, deger in onbellek["magaza"].items() if alan in deger}
+    elif metrik in GECERLI_SUNUM_METRIKLERI:
+        harita = _sunum_metriklerini_getir(onbellek, session=session).get(metrik, {})
+        if not harita:
+            raise RuntimeError(f"ebebek {metrik!r} için hiçbir Analist Toplantısı Sunumu'nda değer bulunamadı")
+        kendi = harita
     else:
         raise RuntimeError(f"bilinmeyen ebebek_metrik: {metrik!r} ({seri.id})")
 

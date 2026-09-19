@@ -99,6 +99,16 @@ GECERLI_TAV_OLCUTLERI = {"yolcu", "ucus"}
 GECERLI_EBEBEK_METRIKLERI = {
     "satis_adedi", "magaza_ziyaretci", "web_ziyaret",
     "toplam_magaza", "standart_magaza", "mega_magaza",
+    # Çeyreklik "Analist Toplantısı Sunumu" (bkz. ingest/ebebek.py
+    # GECERLI_SUNUM_METRIKLERI docstring'i): kanal bazlı büyüme/payı,
+    # fatura/sipariş ortalaması, LFL, PL payı, kategori büyümesi.
+    "kanal_buyume_magaza", "kanal_buyume_web", "kanal_buyume_pazaryeri",
+    "kanal_payi_magaza", "kanal_payi_web", "kanal_payi_pazaryeri",
+    "magaza_fatura_ortalama", "web_siparis_ortalama",
+    "lfl_satis_adedi", "lfl_giris_sayisi",
+    "pl_payi_toplam", "pl_payi_magaza", "pl_payi_web", "pl_payi_pazaryeri",
+    "kategori_buyume_hizli_tuketim", "kategori_buyume_tamamlayici",
+    "kategori_buyume_tekstil", "kategori_buyume_bebek_arac_gerec",
 }
 # EPDK petrol piyasası aylık sektör raporunun iki ekseni: ölçüt (üretim/
 # satış/dış ticaret yönü) ve ürün grubu. Bkz. ingest/epdk.py docstring'i.
@@ -353,7 +363,18 @@ GECERLI_TURKTRAKTOR_METRIKLERI = {"fabrika-satis", "yurtdisi-satis", "toplam-sat
 # Migros Ticaret A.Ş. (BIST: MGROS) "Ara Dönem Faaliyet Raporu"ndan çekilen
 # tek ölçüt (çeyrek sonu mağaza sayısı anlık görüntüsü). Bkz.
 # ingest/migros.py docstring'i.
-GECERLI_MIGROS_METRIKLERI = {"toplam-magaza-sayisi"}
+GECERLI_MIGROS_METRIKLERI = {
+    "toplam-magaza-sayisi",
+    # Çeyreklik format-açılış (bkz. ingest/migros.py
+    # GECERLI_FORMAT_ACILIS_METRIKLERI docstring'i).
+    "toplam-yeni-magaza-acilis", "migros-format-magaza-acilis",
+    "migros-jet-format-magaza-acilis", "macrocenter-format-magaza-acilis",
+    "mion-format-magaza-acilis",
+    # Yatırımcı Sunumu — Migros One/MoneyPay dijital ekosistem (bkz.
+    # GECERLI_DIJITAL_METRIKLERI docstring'i).
+    "migros-one-gmv", "migros-one-aktif-kullanici",
+    "migros-one-siparis-sayisi", "moneypay-kayitli-kullanici",
+}
 
 
 
