@@ -19,7 +19,7 @@ from urllib3.util.retry import Retry
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import ayd, bddk, bigchefs, botas, dhmi, ebebek, eib, ecb, epdk, epias, eurocontrol, eurostat, eurostat_turizm, evds, fred, gph, ifo, iso_pmi, istib, ithib, ktb, migros, odmd, orge, osd, pgsus, sgk, tav, tcud, tefas, tepav, thy, tim, tmsd, tsb, tspb, ttkom, tuik, turkbesd, turkcell, turkcimento, turktraktor, uab, usk, worldbank, yahoo
+from ingest import ayd, bddk, bigchefs, botas, dhmi, ebebek, eia, eib, ecb, epdk, epias, eurocontrol, eurostat, eurostat_insaat, eurostat_turizm, evds, fred, gph, ifo, iso_pmi, istib, ithib, ktb, migros, odmd, orge, osd, pgsus, sgk, taid, tav, tcud, tefas, tepav, thy, tim, tmsd, trabzontb, tsb, tspb, ttkom, tuik, turkbesd, turkcell, turkcimento, turktraktor, uab, usk, worldbank, yahoo
 
 # Koşu başına tek oturum tüm adaptörlere geçiyor; retry politikası bu yüzden
 # tek yerde tanımlanabiliyor (devredilen iş #1). Ölçüm: 111 serilik bir tam
@@ -105,7 +105,12 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          tuik_kanatli_onbellek: dict | None = None,
          botas_onbellek: dict | None = None,
          tmsd_onbellek: dict | None = None,
-         ithib_onbellek: dict | None = None):
+         ithib_onbellek: dict | None = None,
+         trabzontb_onbellek: dict | None = None,
+         eurostat_insaat_onbellek: dict | None = None,
+         taid_onbellek: dict | None = None,
+         thy_ir_onbellek: dict | None = None,
+         pgsus_ir_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
         df = evds.seri_cek(seri, api_key, session=oturum)
@@ -149,6 +154,10 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = pgsus.seri_cek(seri, onbellek=pgsus_onbellek, session=oturum)
     elif seri.kaynak_tipi == "thy":
         df = thy.seri_cek(seri, onbellek=thy_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "thy_ir":
+        df = thy.sunum_seri_cek(seri, onbellek=thy_ir_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "pgsus_ir":
+        df = pgsus.sunum_seri_cek(seri, onbellek=pgsus_ir_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tav":
         df = tav.seri_cek(seri, onbellek=tav_onbellek, session=oturum)
     elif seri.kaynak_tipi == "ebebek":
@@ -225,6 +234,14 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = tmsd.seri_cek(seri, onbellek=tmsd_onbellek, session=oturum)
     elif seri.kaynak_tipi == "ithib":
         df = ithib.seri_cek(seri, onbellek=ithib_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "eia":
+        df = eia.seri_cek(seri, session=oturum)
+    elif seri.kaynak_tipi == "trabzontb":
+        df = trabzontb.seri_cek(seri, onbellek=trabzontb_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "eurostat_insaat":
+        df = eurostat_insaat.seri_cek(seri, onbellek=eurostat_insaat_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "taid":
+        df = taid.seri_cek(seri, onbellek=taid_onbellek, session=oturum)
     else:
         raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
     return olcekle(df, seri.olcek)
@@ -318,6 +335,14 @@ def main() -> int:
     # THY 15 seri (3 segment × 5 ölçüt) aynı ~5 dosyalık kümeyi paylaşır
     # (bkz. `ingest.thy.seri_cek`).
     thy_onbellek: dict = {}
+    # THY 30 seri (çeyreklik Yatırımcı Sunumu metrikleri) aynı tek PDF'i
+    # paylaşır — trafik bültenindeki `thy_onbellek`ten AYRI (bkz.
+    # `ingest.thy.sunum_seri_cek`).
+    thy_ir_onbellek: dict = {}
+    # Pegasus 16 seri (çeyreklik Yatırımcı Sunumu metrikleri) aynı tek
+    # PDF'i paylaşır — trafik bültenindeki `pgsus_onbellek`ten AYRI (bkz.
+    # `ingest.pgsus.sunum_seri_cek`).
+    pgsus_ir_onbellek: dict = {}
     # TAV tek dosyada Ocak 2020'den bugüne tüm geçmişi taşır (yıl başına
     # değil, kümülatif pencere); 28 seri (12 varlık × ≤3 segment) aynı
     # dosyayı paylaşır (bkz. `ingest.tav.seri_cek`).
@@ -441,6 +466,15 @@ def main() -> int:
     # sayfasını (ay→PDF eşlemesi) ve her ay için aynı PDF'i paylaşır
     # (bkz. `ingest.ithib.seri_cek`).
     ithib_onbellek: dict = {}
+    # Trabzon TB 2 seri (fındık yağlık + levant) aynı günlük bülten PDF
+    # kümesini paylaşır (bkz. `ingest.trabzontb.seri_cek`).
+    trabzontb_onbellek: dict = {}
+    # Eurostat sts_copr_m (İnşaat Üretim Endeksi) 4 seri (F/F41/F42/F43)
+    # aynı API yanıtını paylaşır (bkz. `ingest.eurostat_insaat.seri_cek`).
+    eurostat_insaat_onbellek: dict = {}
+    # TAİD 1 seri (FROTO perakende kamyon) kendi bülten listesini ve marka
+    # tablosu ayrıştırmasını önbellekler (bkz. `ingest.taid.seri_cek`).
+    taid_onbellek: dict = {}
 
     with requests.Session() as oturum:
         oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
@@ -496,6 +530,11 @@ def main() -> int:
                     tuik_kanatli_onbellek=tuik_kanatli_onbellek,
                     botas_onbellek=botas_onbellek,
                     ithib_onbellek=ithib_onbellek,
+                    trabzontb_onbellek=trabzontb_onbellek,
+                    eurostat_insaat_onbellek=eurostat_insaat_onbellek,
+                    taid_onbellek=taid_onbellek,
+                    thy_ir_onbellek=thy_ir_onbellek,
+                    pgsus_ir_onbellek=pgsus_ir_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")

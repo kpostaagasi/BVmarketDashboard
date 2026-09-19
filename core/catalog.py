@@ -24,7 +24,7 @@ GECERLI_AYLIK_AGG = {"mean", "last", "sum"}
 GECERLI_KAYNAK_TIPLERI = {
     "evds", "yahoo", "epias", "osd", "tim", "tim_il", "tim_ulke", "tim_ulke_grubu", "bddk",
     "bddk_haftalik", "bddk_bdmk",
-    "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus", "thy",
+    "tefas", "eurocontrol", "fred", "tefas_fon", "pgsus", "thy", "pgsus_ir", "thy_ir",
     "tav", "ebebek",
     "epdk", "epdk_dogalgaz",
     "turkcell", "ttkom",
@@ -40,6 +40,8 @@ GECERLI_KAYNAK_TIPLERI = {
     "iso_pmi", "tim_pazar_monitoru",
     "bigchefs", "turktraktor", "migros",
     "tepav", "tmsd", "ithib",
+    "eurostat_insaat", "taid",
+    "eia", "trabzontb",
 }
 SIKLIK_ETIKETLERI = {
     "daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK",
@@ -56,9 +58,37 @@ GECERLI_PGSUS_SEGMENTLERI = {"Toplam", "İç Hat", "Dış Hat"}
 GECERLI_PGSUS_OLCUTLERI = {
     "misafir", "konma", "koltuk", "doluluk", "ask", "konma-basina-misafir",
 }
-# THY trafik bülteninin iki ekseni: yolcu segmenti ve ölçüt.
+# THY trafik bülteninin iki ekseni: yolcu segmenti ve ölçüt. "ucak-sayisi" ve
+# "uculan-nokta" TOPLAM'a özgüdür (segment kırılımı yok): filo/uçulan-hatlar
+# sayfalarının değil, aylık trafik PDF bülteninin TOPLAM tablosunun ölçütü —
+# bkz. ingest/thy.py::pdf_trafik_noktalari docstring'i.
 GECERLI_THY_SEGMENTLERI = {"Toplam", "Yurt İçi", "Yurt Dışı"}
-GECERLI_THY_OLCUTLERI = {"konma", "ask", "doluluk", "yolcu", "kargo"}
+GECERLI_THY_OLCUTLERI = {"konma", "ask", "doluluk", "yolcu", "kargo", "ucak-sayisi", "uculan-nokta"}
+# THY çeyreklik Yatırımcı Sunumu PDF'inden çekilen metrikler (trafik
+# bülteninden AYRI kaynak_tipi: farklı rapor, farklı ekseni yok — tek eksen
+# metrik adı). Bkz. ingest/thy.py::sunum_seri_cek docstring'i.
+GECERLI_THY_METRIKLERI = {
+    "rask2", "yolcu-rask", "yield", "kargo-geliri", "yakit-gideri",
+    "cask", "cask-ex-fuel", "yakit-cask", "yakit-fiyati",
+    "varlik-toplam", "yukumluluk-toplam", "ozkaynak-toplam",
+    "yukumluluk-kira", "yukumluluk-banka-kredisi", "yukumluluk-yolcu-ucus",
+    "yukumluluk-ticari-borc", "yukumluluk-diger",
+    "net-borc-favok",
+    "rask2-degisim-amerika", "rask2-degisim-avrupa", "rask2-degisim-uzak-dogu",
+    "rask2-degisim-afrika", "rask2-degisim-orta-dogu", "rask2-degisim-ic-hat",
+    "filo-genis-govde", "filo-dar-govde", "filo-kargo",
+    "filo-sahip-olunan", "filo-finansal-kira", "filo-operasyonel-kira",
+}
+# Pegasus çeyreklik Yatırımcı Sunumu PDF'inden çekilen metrikler (trafik
+# bülteninden AYRI kaynak_tipi). Bkz. ingest/pgsus.py::sunum_seri_cek
+# docstring'i.
+GECERLI_PGSUS_METRIKLERI = {
+    "satis-gelirleri", "favok", "net-kar", "yan-gelirler", "rask", "cask",
+    "net-borc", "arti-nakit",
+    "filo-b737-800", "filo-a320-ceo", "filo-a320-neo", "filo-a321-neo",
+    "filo-ortalama-yas",
+    "siparis-bakiye-a320neo", "siparis-bakiye-a321neo", "siparis-bakiye-max10",
+}
 # TAV Havalimanları trafik bülteninin üç ekseni: havalimanı (ya da TAV
 # TOPLAM), yolcu segmenti ve hangi ölçütün (yolcu sayısı mı uçuş sayısı mı)
 # okunacağı. Bkz. ingest/tav.py docstring'i.
@@ -180,6 +210,9 @@ GECERLI_BDDK_BDMK_URUNLERI = {"faktoring", "finansal_kiralama"}
 GECERLI_ISTIB_URUNLERI = {
     "piliç-eti-kemiksiz", "hindi-eti-kemikli", "hindi-eti-kemiksiz", "piliç-kanat",
 }
+# Trabzon Ticaret Borsası (TTB) günlük bülteninin "KABUKLU FINDIKLAR"
+# bölümünden okunan iki fındık türü. Bkz. ingest/trabzontb.py docstring'i.
+GECERLI_TRABZONTB_URUNLERI = {"findik-yaglik", "findik-levant"}
 # TÜİK'in Eurostat apro_mt_pwgtm aynasından okunan üç kümes hayvancılığı
 # üretim ölçütü. Bkz. ingest/tuik.py docstring'i.
 GECERLI_TUIK_KANATLI_OLCUTLERI = {"toplam-uretim", "tavuk-uretim", "kesilen-tavuk"}
@@ -249,6 +282,21 @@ GECERLI_UAB_LIMANLARI = {
 # kaynak_tipi: eurostat) eksenleriyle KARIŞTIRILMAMALI. Bkz.
 # ingest/eurostat_turizm.py docstring'i.
 GECERLI_EUROSTAT_TURIZM_RESID = {"TOTAL", "DOM", "FOR"}
+
+# Eurostat sts_copr_m ("Production in construction") veri kümesinin tek
+# ekseni: NACE Rev.2 alt sektörü. F toplam inşaatı, F41 bina inşaatını,
+# F42 bina dışı/altyapı işlerini, F43 özel inşaat faaliyetlerini kapsar.
+# Bkz. ingest/eurostat_insaat.py docstring'i — `ingest/eurostat.py`nin
+# (nrg_pc_204/205, ayrı kaynak_tipi: eurostat) eksenleriyle KARIŞTIRILMAMALI.
+GECERLI_EUROSTAT_INSAAT_NACE = {"F", "F41", "F42", "F43"}
+
+# TAİD (Ağır Ticari Araçlar Derneği) aylık basın bülteninin "Perakende
+# Satışlar Yerli/İthal Dağılımı" tablosundaki marka listesi. Bkz.
+# ingest/taid.py docstring'i.
+GECERLI_TAID_MARKALARI = {
+    "FORD TRUCKS", "ISUZU", "IVECO", "MAN", "MERCEDES", "OTOKAR", "RENAULT",
+    "SCANIA", "VOLVO",
+}
 
 # İSO (İstanbul Sanayi Odası) Türkiye Sektörel PMI raporunun iki ekseni:
 # 10 alt sektör (None ise manşet Türkiye İmalat PMI) ve 4 ölçüt. Bkz.
@@ -385,6 +433,14 @@ KAYNAK_ALANLARI = {
     },
     "thy": {
         "zorunlu": ("thy_segment", "thy_olcut"),
+        "istege_bagli": ("start_date",),
+    },
+    "thy_ir": {
+        "zorunlu": ("thy_metrik",),
+        "istege_bagli": ("start_date",),
+    },
+    "pgsus_ir": {
+        "zorunlu": ("pgsus_metrik",),
         "istege_bagli": ("start_date",),
     },
     "tav": {
@@ -539,6 +595,22 @@ KAYNAK_ALANLARI = {
         "zorunlu": ("ithib_kalem",),
         "istege_bagli": ("start_date",),
     },
+    "eurostat_insaat": {
+        "zorunlu": ("eurostat_insaat_nace",),
+        "istege_bagli": ("start_date",),
+    },
+    "taid": {
+        "zorunlu": ("taid_marka",),
+        "istege_bagli": ("start_date",),
+    },
+    "eia": {
+        "zorunlu": ("eia_series_id",),
+        "istege_bagli": ("start_date",),
+    },
+    "trabzontb": {
+        "zorunlu": ("trabzontb_urun",),
+        "istege_bagli": (),
+    },
 }
 
 # Tipe değil, kataloğa ait alanlar: kaynak tipi ne olursa olsun
@@ -641,6 +713,8 @@ class Seri:
     pgsus_olcut: str | None = None
     thy_segment: str | None = None
     thy_olcut: str | None = None
+    thy_metrik: str | None = None
+    pgsus_metrik: str | None = None
     tav_varlik: str | None = None
     tav_segment: str | None = None
     tav_olcut: str | None = None
@@ -699,6 +773,10 @@ class Seri:
     tepav_seri: str | None = None
     tmsd_kalem: str | None = None
     ithib_kalem: str | None = None
+    eurostat_insaat_nace: str | None = None
+    taid_marka: str | None = None
+    eia_series_id: str | None = None
+    trabzontb_urun: str | None = None
 
 
 def _alan_verilmis(seri: Seri, alan: str) -> bool:
@@ -885,6 +963,8 @@ def serileri_yukle() -> tuple[Seri, ...]:
             pgsus_olcut=ham.get("pgsus_olcut"),
             thy_segment=ham.get("thy_segment"),
             thy_olcut=ham.get("thy_olcut"),
+            thy_metrik=ham.get("thy_metrik"),
+            pgsus_metrik=ham.get("pgsus_metrik"),
             tav_varlik=ham.get("tav_varlik"),
             tav_segment=ham.get("tav_segment"),
             tav_olcut=ham.get("tav_olcut"),
@@ -953,6 +1033,10 @@ def serileri_yukle() -> tuple[Seri, ...]:
             tepav_seri=ham.get("tepav_seri"),
             tmsd_kalem=ham.get("tmsd_kalem"),
             ithib_kalem=ham.get("ithib_kalem"),
+            eurostat_insaat_nace=ham.get("eurostat_insaat_nace"),
+            taid_marka=ham.get("taid_marka"),
+            eia_series_id=ham.get("eia_series_id"),
+            trabzontb_urun=ham.get("trabzontb_urun"),
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)
@@ -1018,6 +1102,20 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             f"{seri.id}: geçersiz eurostat_turizm_resid "
             f"'{seri.eurostat_turizm_resid}' "
             f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_TURIZM_RESID))})"
+        )
+    if (
+        seri.kaynak_tipi == "eurostat_insaat"
+        and seri.eurostat_insaat_nace not in GECERLI_EUROSTAT_INSAAT_NACE
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz eurostat_insaat_nace "
+            f"'{seri.eurostat_insaat_nace}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_INSAAT_NACE))})"
+        )
+    if seri.kaynak_tipi == "taid" and seri.taid_marka not in GECERLI_TAID_MARKALARI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz taid_marka '{seri.taid_marka}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TAID_MARKALARI))})"
         )
     if seri.kaynak_tipi == "iso_pmi":
         if seri.iso_pmi_metrik not in GECERLI_ISO_PMI_METRIKLERI:
@@ -1134,6 +1232,16 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
                 f"{seri.id}: geçersiz thy_olcut '{seri.thy_olcut}' "
                 f"(geçerli: {', '.join(sorted(GECERLI_THY_OLCUTLERI))})"
             )
+    if seri.kaynak_tipi == "thy_ir" and seri.thy_metrik not in GECERLI_THY_METRIKLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz thy_metrik '{seri.thy_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_THY_METRIKLERI))})"
+        )
+    if seri.kaynak_tipi == "pgsus_ir" and seri.pgsus_metrik not in GECERLI_PGSUS_METRIKLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz pgsus_metrik '{seri.pgsus_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_PGSUS_METRIKLERI))})"
+        )
     if seri.kaynak_tipi == "tav":
         if seri.tav_segment not in GECERLI_TAV_SEGMENTLERI:
             raise KatalogHatasi(
@@ -1294,6 +1402,11 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(
             f"{seri.id}: geçersiz istib_urun '{seri.istib_urun}' "
             f"(geçerli: {', '.join(sorted(GECERLI_ISTIB_URUNLERI))})"
+        )
+    if seri.kaynak_tipi == "trabzontb" and seri.trabzontb_urun not in GECERLI_TRABZONTB_URUNLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz trabzontb_urun '{seri.trabzontb_urun}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TRABZONTB_URUNLERI))})"
         )
     if (
         seri.kaynak_tipi == "tuik_kanatli"

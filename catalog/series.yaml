@@ -45946,3 +45946,730 @@
   unit: "Milyon USD"
   monthly_agg: sum
   charts: [seasonality, level]
+
+- id: insaat/harcama-cari-fiyatlarla
+  title: "İnşaat Harcamaları (Cari Fiyatlarla, Milyar ₺)"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.GSYIH040.IFK.F
+  evds_frequency: "6"
+  unit: "Milyar TL"
+  freq: quarterly
+  olcek: 0.000001
+  monthly_agg: last
+  charts: [level]
+  yayin_notu: >
+    EVDS'de ayrı bir "inşaat harcaması" serisi yok; bu, GSYİH'nin Üretim
+    Yöntemiyle (A10, Cari Fiyatlarla) İnşaat (F) sektörü katma değeridir
+    (TP.GSYIH040.IFK.F, Bin TL) — MarketVisuals kartının "harcama" adı
+    gayri resmi, ölçtüğü büyüklük sektörün GSYİH'ye katkısıdır. Canlı
+    ölçüm (2026-09-20): 2026 Ç2 = 1.201.759.004,78 Bin TL / 1e6 = 1201,76
+    Milyar TL — kart değeri 1201,8 ile birebir (yuvarlama farkı).
+
+- id: insaat/uretim-endeksi-toplam
+  title: "İnşaat Üretim Endeksi - Toplam (NACE F)"
+  category: insaat
+  kaynak: { name: "Eurostat (TÜİK)", url: "https://ec.europa.eu/eurostat/databrowser/view/sts_copr_m" }
+  kaynak_tipi: eurostat_insaat
+  eurostat_insaat_nace: "F"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+  yayin_notu: >
+    Eurostat sts_copr_m (Production in construction), geo=TR, indic_bt=PRD,
+    s_adj=NSA, unit=I21. Canlı ölçüm (2026-09-20): Temmuz 2026 = 119,6 —
+    kart değeriyle (119,6) birebir eşleşti.
+
+- id: insaat/uretim-endeksi-bina
+  title: "İnşaat Üretim Endeksi - Bina (F41)"
+  category: insaat
+  kaynak: { name: "Eurostat (TÜİK)", url: "https://ec.europa.eu/eurostat/databrowser/view/sts_copr_m" }
+  kaynak_tipi: eurostat_insaat
+  eurostat_insaat_nace: "F41"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+  yayin_notu: >
+    Eurostat sts_copr_m, nace_r2=F41. Canlı ölçüm (2026-09-20): Temmuz
+    2026 = 134,3 — kart değeriyle (134,3) birebir eşleşti.
+
+- id: insaat/uretim-endeksi-bina-disi
+  title: "İnşaat Üretim Endeksi - Bina Dışı / Altyapı (F42)"
+  category: insaat
+  kaynak: { name: "Eurostat (TÜİK)", url: "https://ec.europa.eu/eurostat/databrowser/view/sts_copr_m" }
+  kaynak_tipi: eurostat_insaat
+  eurostat_insaat_nace: "F42"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+  yayin_notu: >
+    Eurostat sts_copr_m, nace_r2=F42. Canlı ölçüm (2026-09-20): Temmuz
+    2026 = 88,8 — kart değeriyle (88,8) birebir eşleşti.
+
+- id: insaat/uretim-endeksi-ozel-faaliyetler
+  title: "İnşaat Üretim Endeksi - Özel Faaliyetler (F43)"
+  category: insaat
+  kaynak: { name: "Eurostat (TÜİK)", url: "https://ec.europa.eu/eurostat/databrowser/view/sts_copr_m" }
+  kaynak_tipi: eurostat_insaat
+  eurostat_insaat_nace: "F43"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+  yayin_notu: >
+    Eurostat sts_copr_m, nace_r2=F43. Canlı ölçüm (2026-09-20): Temmuz
+    2026 = 107,3 — kart değeriyle (107,3) birebir eşleşti.
+
+- id: insaat/mineral-urunler-uretim-endeksi
+  title: "Mineral Ürünler Üretim Endeksi (Çimento/Beton Proxy)"
+  category: insaat
+  kaynak: { name: TCMB EVDS (TÜİK), url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.TSANAYMT2021.C23
+  evds_frequency: "5"
+  unit: "Endeks (2021=100)"
+  freq: monthly
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+  yayin_notu: >
+    Sanayi Üretim Endeksi'nin NACE C23 "Diğer metalik olmayan mineral
+    ürünlerin imalatı" alt sektörü (çimento/beton/cam/seramik) —
+    Mevsim ve Takvim Etkisinden Arındırılmış varyant, sanayi/uretim-
+    endeksi ile aynı yayın takvimi. Canlı ölçüm (2026-09-20): Haziran
+    2026 = 107,13 — kart değeri 106,96 ile ~%0,2 fark (revizyon).
+
+- id: insaat/malzeme-ihracati
+  title: "İnşaat Malzemesi İhracatı (Milyon USD)"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.IHRISICREV4.23
+  evds_frequency: "5"
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+  yayin_notu: >
+    Genel Ticaret Sistemine Göre Dış Ticaret (ISIC Rev.4) sektör 23
+    "Diğer Metalik Olmayan Mineral Ürünlerin İmalatı" ihracatı — kartın
+    "İnşaat Malzemesi" adlandırdığı NACE/ISIC 23 kalemi. Canlı ölçüm
+    (2026-09-20): Temmuz 2026 = 642.276,743 Bin USD / 1000 = 642,28
+    Milyon USD — kart değeriyle (642,27674) birebir.
+
+- id: insaat/malzeme-ithalati
+  title: "İnşaat Malzemesi İthalatı (Milyon USD)"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.ITHISICREV4.23
+  evds_frequency: "5"
+  unit: "Milyon USD"
+  freq: monthly
+  olcek: 0.001
+  gecikme_gunu: 25
+  charts: [seasonality, level]
+  yayin_notu: >
+    Genel Ticaret Sistemine Göre Dış Ticaret (ISIC Rev.4) sektör 23
+    ithalatı. Canlı ölçüm (2026-09-20): Temmuz 2026 = 254.823,689 Bin
+    USD / 1000 = 254,82 Milyon USD — kart değeriyle (254,82369) birebir.
+
+- id: insaat/ykfe-turkiye
+  title: "YKFE - Yeni Konutlar (TR)"
+  category: insaat
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  evds_code: TP.YKFE.TR
+  evds_frequency: "5"
+  unit: "Endeks"
+  freq: monthly
+  charts: [seasonality, level]
+  yayin_notu: >
+    Yeni Konutlar Fiyat Endeksi (YKFE), Türkiye geneli — KFE (tüm konut
+    stoku) ve YKKE (yeni kiracı KİRA endeksi, kira değil fiyat) ile
+    KARIŞTIRILMAMALI, ayrı bie_ykfe veri grubu. Canlı ölçüm
+    (2026-09-20): Ağustos 2026 = 242,37 — kart değeriyle (242,37)
+    birebir eşleşti.
+
+- id: otomotiv/froto-perakende-kamyon-taid
+  title: "FROTO - Perakende - Kamyon (TAID)"
+  category: otomotiv
+  kaynak: { name: "TAİD (Ağır Ticari Araçlar Derneği)", url: "https://www.taid.org.tr" }
+  kaynak_tipi: taid
+  taid_marka: "FORD TRUCKS"
+  start_date: "2025-01-01"
+  unit: "adet"
+  freq: monthly
+  monthly_agg: sum
+  charts: [seasonality, level]
+  yayin_notu: >
+    OSD yalnızca üretim/ihracat yayımlar; ağır ticari araç (16 ton+
+    kamyon/çekici) PERAKENDE satışı yalnızca TAİD'in aylık basın
+    bülteninde marka bazında var — ODMD'nin kategorileri (otomobil/
+    hafif_ticari/toplam) kamyon içermiyor. Canlı ölçüm (2026-09-20):
+    Ocak-Ağustos 2026'nın TAMAMI (351/443/646/613/611/454/400/464)
+    marketvisuals.net'in 2026 grafik serisiyle 8 ayın 8'inde birebir
+    eşleşti; 2025 Şubat-Aralık (544/735/726/630/524/440/590/515/676/
+    565/1105) de birebir eşleşti.
+
+- id: havacilik/thyao-toplam-ucak-sayisi
+  title: THY Toplam Uçak Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Toplam"
+  thy_olcut: ucak-sayisi
+  unit: "Uçak"
+  freq: monthly
+  charts: [level]
+
+- id: havacilik/thyao-toplam-uculan-nokta
+  title: THY Toplam Uçulan Nokta Sayısı (Aylık)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı İlişkileri, url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/trafik" }
+  kaynak_tipi: thy
+  thy_segment: "Toplam"
+  thy_olcut: uculan-nokta
+  unit: "Nokta"
+  freq: monthly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-rask2
+  title: THY RASK2 (AKTK Dahil, Çeyreklik)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: rask2
+  unit: "USc"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yolcu-rask
+  title: THY Yolcu RASK (Çeyreklik)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yolcu-rask
+  unit: "USc"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yield
+  title: "THY Yolcu Birim Geliri (R/Y, Çeyreklik)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yield
+  unit: "USc"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-kargo-geliri
+  title: THY Kargo Geliri (Çeyreklik)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: kargo-geliri
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yakit-gideri
+  title: THY Yakıt Gideri (Çeyreklik)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yakit-gideri
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-cask
+  title: THY CASK (Çeyreklik)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: cask
+  unit: "USc"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-cask-ex-fuel
+  title: THY Akaryakıt Hariç CASK (Çeyreklik)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: cask-ex-fuel
+  unit: "USc"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yakit-cask
+  title: THY Yakıt CASK (Çeyreklik)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yakit-cask
+  unit: "USc"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yakit-fiyati
+  title: THY Akaryakıt Fiyatı (Çeyreklik)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yakit-fiyati
+  unit: "USD/ton"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-toplam-varlik
+  title: THY Toplam Varlıklar (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: varlik-toplam
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-toplam-yukumluluk
+  title: THY Toplam Yükümlülükler (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yukumluluk-toplam
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-toplam-ozkaynak
+  title: THY Toplam Özkaynaklar (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: ozkaynak-toplam
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yukumluluk-kira
+  title: THY Kira Yükümlülükleri (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yukumluluk-kira
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yukumluluk-banka-kredisi
+  title: THY Banka Kredileri (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yukumluluk-banka-kredisi
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yukumluluk-yolcu-ucus
+  title: THY Yolcu Uçuş Yükümlülükleri (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yukumluluk-yolcu-ucus
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yukumluluk-ticari-borc
+  title: THY Ticari Borçlar (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yukumluluk-ticari-borc
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-yukumluluk-diger
+  title: THY Diğer Yükümlülükler (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: yukumluluk-diger
+  unit: "Milyon ABD$"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-net-borc-favok
+  title: "THY Net Borç / FAVÖK (x, Son 12 Ay)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: net-borc-favok
+  unit: "x"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-rask2-degisim-amerika
+  title: "THY Bölgesel RASK2 Değişimi — Amerika (YoY, Çeyreklik)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: rask2-degisim-amerika
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-rask2-degisim-avrupa
+  title: "THY Bölgesel RASK2 Değişimi — Avrupa (YoY, Çeyreklik)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: rask2-degisim-avrupa
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-rask2-degisim-uzak-dogu
+  title: "THY Bölgesel RASK2 Değişimi — Uzak Doğu (YoY, Çeyreklik)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: rask2-degisim-uzak-dogu
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-rask2-degisim-afrika
+  title: "THY Bölgesel RASK2 Değişimi — Afrika (YoY, Çeyreklik)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: rask2-degisim-afrika
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-rask2-degisim-orta-dogu
+  title: "THY Bölgesel RASK2 Değişimi — Orta Doğu (YoY, Çeyreklik)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: rask2-degisim-orta-dogu
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-rask2-degisim-ic-hat
+  title: "THY Bölgesel RASK2 Değişimi — İç Hat (YoY, Çeyreklik)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: rask2-degisim-ic-hat
+  unit: "%"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-filo-genis-govde
+  title: "THY Filo — Geniş Gövde (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: filo-genis-govde
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-filo-dar-govde
+  title: "THY Filo — Dar Gövde (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: filo-dar-govde
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-filo-kargo
+  title: "THY Filo — Kargo (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: filo-kargo
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-filo-sahip-olunan
+  title: "THY Filo Mülkiyeti — Sahip Olunan (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: filo-sahip-olunan
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-filo-finansal-kira
+  title: "THY Filo Mülkiyeti — Finansal Kira (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: filo-finansal-kira
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/thyao-sunum-filo-operasyonel-kira
+  title: "THY Filo Mülkiyeti — Operasyonel Kira (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: THY Yatırımcı Sunumu (Çeyreklik), url: "https://investor.turkishairlines.com/tr/mali-ve-operasyonel-veriler/sunumlar" }
+  kaynak_tipi: thy_ir
+  thy_metrik: filo-operasyonel-kira
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-satis-gelirleri
+  title: Pegasus Satış Gelirleri (Çeyreklik)
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: satis-gelirleri
+  unit: "Milyon €"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-favok
+  title: Pegasus FAVÖK (Çeyreklik)
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: favok
+  unit: "Milyon €"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-net-kar
+  title: Pegasus Net Kâr/Zarar (Çeyreklik)
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: net-kar
+  unit: "Milyon €"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-yan-gelirler
+  title: Pegasus Yan Gelirler Toplamı (Çeyreklik)
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: yan-gelirler
+  unit: "Milyon €"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-rask
+  title: "Pegasus RASK (Çeyreklik)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: rask
+  unit: "€cent"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-cask
+  title: "Pegasus CASK (Çeyreklik)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: cask
+  unit: "€cent"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-net-borc
+  title: Pegasus Net Borç (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: net-borc
+  unit: "Milyon €"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-arti-nakit
+  title: Pegasus Artı Nakit Pozisyonu (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: arti-nakit
+  unit: "Milyon €"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-filo-b737-800
+  title: "Pegasus Filo — Boeing 737-800 (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: filo-b737-800
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-filo-a320-ceo
+  title: "Pegasus Filo — Airbus A320ceo (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: filo-a320-ceo
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-filo-a320-neo
+  title: "Pegasus Filo — Airbus A320neo (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: filo-a320-neo
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-filo-a321-neo
+  title: "Pegasus Filo — Airbus A321neo (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: filo-a321-neo
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-filo-ortalama-yas
+  title: Pegasus Filo Ortalama Yaşı (Dönem Sonu)
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: filo-ortalama-yas
+  unit: "Yıl"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-siparis-bakiye-a320neo
+  title: "Pegasus Sipariş Bakiyesi — A320neo (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: siparis-bakiye-a320neo
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-siparis-bakiye-a321neo
+  title: "Pegasus Sipariş Bakiyesi — A321neo (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: siparis-bakiye-a321neo
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: havacilik/pgsus-sunum-siparis-bakiye-max10
+  title: "Pegasus Sipariş Bakiyesi — Boeing MAX-10 (Dönem Sonu)"
+  category: havacilik
+  kaynak: { name: PGSUS Yatırımcı Sunumu (Çeyreklik), url: "https://www.pegasusyatirimciiliskileri.com/tr/operasyonel-ve-finansal-veriler/yatirimci-sunumlarimiz" }
+  kaynak_tipi: pgsus_ir
+  pgsus_metrik: siparis-bakiye-max10
+  unit: "Uçak"
+  freq: quarterly
+  charts: [level]
+
+- id: emtia-enerji/dogalgaz-ttf
+  title: "Doğalgaz (Avrupa Dutch TTF)"
+  category: emtia-enerji
+  kaynak: { name: Yahoo Finance, url: "https://finance.yahoo.com/quote/TTF=F" }
+  kaynak_tipi: yahoo
+  yahoo_symbol: "TTF=F"
+  unit: "EUR/MWh"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+  yayin_notu: >-
+    Yahoo "TTF=F" = ICE Dutch TTF Natural Gas Calendar futures, EUR/MWh.
+    Doğrulandı (2026-09-20): 2026-09-17 kapanışı 76.352 -> MarketVisuals
+    "Doğalgaz (Avrupa Dutch TTF)" kartının aynı tarihli latestVal'i (76.35)
+    ile birebir.
+
+- id: emtia-enerji/jet-yakiti-abd-gulf-coast
+  title: "Jet Yakıtı (ABD Gulf Coast)"
+  category: emtia-enerji
+  kaynak: { name: "EIA (U.S. Energy Information Administration)", url: "https://www.eia.gov/dnav/pet/hist/EER_EPJK_PF4_RGC_DPGD.htm" }
+  kaynak_tipi: eia
+  eia_series_id: "EER_EPJK_PF4_RGC_DPG"
+  unit: "USD/gal"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+  yayin_notu: >-
+    EIA "dnav" sistemi (https://www.eia.gov/dnav/pet/hist_xls/
+    EER_EPJK_PF4_RGC_DPGd.xls) ANAHTARSIZ erişilir (v2 JSON API'si
+    api.eia.gov anahtar ister; paylaşımlı "DEMO_KEY" de çalışıyor ama
+    saatlik/günlük limitli — dnav bu yüzden tercih edildi, EIA_API_KEY ortam
+    değişkeni GEREKMİYOR). Doğrulandı (2026-09-20): 2026-09-15 değeri 4.705
+    -> MarketVisuals "Jet Yakıtı (ABD Gulf Coast)" kartının aynı tarihli
+    latestVal'i (4.71) ile birebir. Aynı EIA serisi havacilik/thy ve
+    havacilik/pgsus hisse sayfalarında da kart olarak görünüyor — o
+    kartlar için AYRI seri ÜRETİLMEDİ, ikisi de bu seriyi baglam olarak
+    referans vermeli (bkz. hisseler.yaml THYAO/PGSUS, mevcut
+    emtia-enerji/brent referans deseniyle aynı).
+
+- id: emtia-tarim/findik-yaglik
+  title: "Fındık Yağlık (Ağ. Ort.)"
+  category: emtia-tarim
+  kaynak: { name: "Trabzon Ticaret Borsası", url: "https://www.tb.org.tr/tr/gunluk-bultenler" }
+  kaynak_tipi: trabzontb
+  trabzontb_urun: findik-yaglik
+  unit: "TL/kg"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+  yayin_notu: >-
+    Trabzon TB günlük bülten PDF'i (uploads/files/970-DD.MM.YYYY.pdf),
+    "KABUKLU TOMBUL FINDIK(YAĞLI)" satırlarının miktar ağırlıklı ortalaması
+    (bkz. ingest/trabzontb.py). Doğrulandı (2026-09-20): 14.09.2026 bülteni
+    3 satır (186.545×6419 + 210.116×870 + 204.930×6554)/13843 = 196.7308 ->
+    MarketVisuals "Fındık Yağlık (Ağ. Ort.)" kartının aynı tarihli
+    latestVal'i (196.73) ile birebir. Bülten yalnızca hafta içi ve fiilen
+    işlem olduğunda yayımlanıyor — bazı günler veri yok, bu normaldir.
+
+- id: emtia-tarim/findik-levant
+  title: "Fındık Levant (Ağ. Ort.)"
+  category: emtia-tarim
+  kaynak: { name: "Trabzon Ticaret Borsası", url: "https://www.tb.org.tr/tr/gunluk-bultenler" }
+  kaynak_tipi: trabzontb
+  trabzontb_urun: findik-levant
+  unit: "TL/kg"
+  freq: daily
+  monthly_agg: mean
+  charts: [level, seasonality]
+  yayin_notu: >-
+    Trabzon TB günlük bülten PDF'i, "KABUKLU TOMBUL FINDIK(LEVANT)"
+    satırlarının miktar ağırlıklı ortalaması (bkz. ingest/trabzontb.py,
+    findik-yaglik ile aynı adaptör/mekanizma). Doğrulandı (2026-09-20):
+    18.09.2026 bülteni tek satır 189.659 TL/kg -> MarketVisuals "Fındık
+    Levant (Ağ. Ort.)" kartının aynı tarihli latestVal'i (189.66) ile
+    birebir.
