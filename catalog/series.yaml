@@ -45721,3 +45721,228 @@
     KDV dahil tutar, çeyrek başından değil YIL BAŞINDAN (Ocak 1) kümülatif
     — ör. 2026 Ç2 değeri Ocak-Haziran 2026 toplamıdır, yalnızca Nisan-Haziran
     değil.
+
+- id: celik/tuketim
+  title: "Nihai Mamul Çelik Tüketimi"
+  category: celik
+  kaynak: { name: TÇÜD, url: "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni" }
+  kaynak_tipi: tcud
+  tcud_kalem: tuketim
+  start_date: "2025-01-01"
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: celik/ihracat-miktar
+  title: "Çelik İhracatı (Miktar)"
+  category: celik
+  kaynak: { name: TÇÜD, url: "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni" }
+  kaynak_tipi: tcud
+  tcud_kalem: ihracat-miktar
+  start_date: "2025-01-01"
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: celik/ihracat-deger
+  title: "Çelik İhracatı (Değer)"
+  category: celik
+  kaynak: { name: TÇÜD, url: "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni" }
+  kaynak_tipi: tcud
+  tcud_kalem: ihracat-deger
+  start_date: "2025-01-01"
+  unit: "Milyon USD"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: celik/ithalat-miktar
+  title: "Çelik İthalatı (Miktar)"
+  category: celik
+  kaynak: { name: TÇÜD, url: "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni" }
+  kaynak_tipi: tcud
+  tcud_kalem: ithalat-miktar
+  start_date: "2025-01-01"
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: celik/ithalat-deger
+  title: "Çelik İthalatı (Değer)"
+  category: celik
+  kaynak: { name: TÇÜD, url: "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni" }
+  kaynak_tipi: tcud
+  tcud_kalem: ithalat-deger
+  start_date: "2025-01-01"
+  unit: "Milyon USD"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: celik/dunya-uretim
+  title: "Dünya Ham Çelik Üretimi"
+  category: celik
+  kaynak: { name: TÇÜD, url: "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni" }
+  kaynak_tipi: tcud
+  tcud_kalem: dunya-uretim
+  start_date: "2025-01-01"
+  unit: "Milyon ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: celik/cin-uretim
+  title: "Çin Ham Çelik Üretimi"
+  category: celik
+  kaynak: { name: TÇÜD, url: "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni" }
+  kaynak_tipi: tcud
+  tcud_kalem: cin-uretim
+  start_date: "2025-01-01"
+  unit: "Milyon ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: celik/hindistan-uretim
+  title: "Hindistan Ham Çelik Üretimi"
+  category: celik
+  kaynak: { name: TÇÜD, url: "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni" }
+  kaynak_tipi: tcud
+  tcud_kalem: hindistan-uretim
+  start_date: "2025-01-01"
+  unit: "Milyon ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: makarna/durum-ihracat
+  title: "Makarna İhracatı (Durum)"
+  category: makarna
+  kaynak: { name: TMSD, url: "https://www.makarna.org.tr/" }
+  kaynak_tipi: tmsd
+  tmsd_kalem: makarna-durum
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: makarna/noodle-ihracat
+  title: "Noodle İhracatı"
+  category: makarna
+  kaynak: { name: TMSD, url: "https://www.makarna.org.tr/" }
+  kaynak_tipi: tmsd
+  tmsd_kalem: noodle
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: makarna/irmik-ihracat
+  title: "İrmik İhracatı"
+  category: makarna
+  kaynak: { name: TMSD, url: "https://www.makarna.org.tr/" }
+  kaynak_tipi: tmsd
+  tmsd_kalem: irmik
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: makarna/durum-bugday-ithalat
+  title: "Durum Buğdayı İthalatı"
+  category: makarna
+  kaynak: { name: TMSD, url: "https://www.makarna.org.tr/" }
+  kaynak_tipi: tmsd
+  tmsd_kalem: durum-bugday-ithalat
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: makarna/durum-bugday-ihracat
+  title: "Durum Buğdayı İhracatı"
+  category: makarna
+  kaynak: { name: TMSD, url: "https://www.makarna.org.tr/" }
+  kaynak_tipi: tmsd
+  tmsd_kalem: durum-bugday-ihracat
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: makarna/ekmeklik-bugday-ithalat
+  title: "Ekmeklik Buğday İthalatı"
+  category: makarna
+  kaynak: { name: TMSD, url: "https://www.makarna.org.tr/" }
+  kaynak_tipi: tmsd
+  tmsd_kalem: ekmeklik-bugday-ithalat
+  unit: "Bin ton"
+  freq: monthly
+  charts: [seasonality, level]
+
+- id: tekstil/iplik
+  title: "İplik İhracatı"
+  category: tekstil
+  kaynak: { name: "İTHİB (İstanbul Tekstil ve Hammaddeleri İhracatçıları Birliği)", url: "https://www.ithib.org.tr" }
+  freq: monthly
+  kaynak_tipi: ithib
+  ithib_kalem: iplik
+  unit: "Milyon USD"
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: tekstil/teknik-tekstil
+  title: "Teknik Tekstil İhracatı"
+  category: tekstil
+  kaynak: { name: "İTHİB (İstanbul Tekstil ve Hammaddeleri İhracatçıları Birliği)", url: "https://www.ithib.org.tr" }
+  freq: monthly
+  kaynak_tipi: ithib
+  ithib_kalem: teknik-tekstil
+  unit: "Milyon USD"
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: tekstil/dokuma-kumas
+  title: "Dokuma Kumaş İhracatı"
+  category: tekstil
+  kaynak: { name: "İTHİB (İstanbul Tekstil ve Hammaddeleri İhracatçıları Birliği)", url: "https://www.ithib.org.tr" }
+  freq: monthly
+  kaynak_tipi: ithib
+  ithib_kalem: dokuma-kumas
+  unit: "Milyon USD"
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: tekstil/ev-tekstili
+  title: "Ev Tekstili İhracatı"
+  category: tekstil
+  kaynak: { name: "İTHİB (İstanbul Tekstil ve Hammaddeleri İhracatçıları Birliği)", url: "https://www.ithib.org.tr" }
+  freq: monthly
+  kaynak_tipi: ithib
+  ithib_kalem: ev-tekstili
+  unit: "Milyon USD"
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: tekstil/orme-kumas
+  title: "Örme Kumaş İhracatı"
+  category: tekstil
+  kaynak: { name: "İTHİB (İstanbul Tekstil ve Hammaddeleri İhracatçıları Birliği)", url: "https://www.ithib.org.tr" }
+  freq: monthly
+  kaynak_tipi: ithib
+  ithib_kalem: orme-kumas
+  unit: "Milyon USD"
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: tekstil/elyaf
+  title: "Elyaf İhracatı"
+  category: tekstil
+  kaynak: { name: "İTHİB (İstanbul Tekstil ve Hammaddeleri İhracatçıları Birliği)", url: "https://www.ithib.org.tr" }
+  freq: monthly
+  kaynak_tipi: ithib
+  ithib_kalem: elyaf
+  unit: "Milyon USD"
+  monthly_agg: sum
+  charts: [seasonality, level]
+
+- id: tekstil/konfeksiyon-yan-sanayi
+  title: "Konfeksiyon Yan Sanayi İhracatı"
+  category: tekstil
+  kaynak: { name: "İTHİB (İstanbul Tekstil ve Hammaddeleri İhracatçıları Birliği)", url: "https://www.ithib.org.tr" }
+  freq: monthly
+  kaynak_tipi: ithib
+  ithib_kalem: konfeksiyon-yan-sanayi
+  unit: "Milyon USD"
+  monthly_agg: sum
+  charts: [seasonality, level]

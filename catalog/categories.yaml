@@ -508,3 +508,53 @@
   - ihracat-pazar-monitoru/sektor-cimento-cam-ser-topr-ur-talep
   note: Kaynak TİM İhracat Pazar Monitörü (TİM'in kendi yayımladığı talep ve pazar
     dayanıklılık endeksleri).
+- slug: celik
+  title: Çelik Üretimi ve Dış Ticareti
+  pano:
+  - celik/tuketim
+  - celik/ihracat-miktar
+  - celik/ithalat-miktar
+  note: 'Kaynak TÇÜD''ün (Türkiye Çelik Üreticileri Derneği) aylık basın bülteni (serbest
+    metin, XLSX/PDF değil — düzenli cümle kalıpları regex ile ayrıştırılır). Türkiye''nin
+    dört miktar kalemi Bin ton''a, iki değer kalemi Milyon USD''ye normalize edilir
+    (bülten ay bazında bin/milyon ton ve milyon/milyar dolar arasında geçiş yapıyor).
+    Dünya/Çin/Hindistan ham çelik üretimi worldsteel verisine dayanır ve bültende
+    YALNIZCA yılbaşından kümülatif verilir; aylık değer ardışık ayların kümülatif
+    farkıyla türetilir (Ocak kendi başına aylıktır). Pencere 2025-01''den başlar:
+    2021-2024 bültenleri farklı fiil kalıpları ("artarak" gibi ulaç) kullanıyor ve
+    bilinçli olarak kapsam dışı bırakıldı.'
+- slug: makarna
+  title: Makarna İhracatı ve Buğday Dış Ticareti
+  pano:
+  - makarna/durum-ihracat
+  - makarna/durum-bugday-ithalat
+  - makarna/ekmeklik-bugday-ithalat
+  note: 'Kaynak TMSD''nin (Türkiye Makarna Sanayicileri Derneği) aylık PDF sektör
+    raporu (TÜİK ÖTS''ye dayanır). Rapor KAPAK adı gerçek veri ayından bir ay ileridir
+    (ölçüldü: "Temmuz 2026" kapaklı rapor 1 Ağustos''ta yayımlanır ama tabloları Haziran
+    2026''ya kadar gösterir) — adaptör bunu bugünün ayından geriye deneyerek çözer,
+    tablo etiketleri gerçek ayı belirler. Buğday/durum buğdayı serileri TAKVİM AYI
+    değil MAHSUL YILI (Temmuz-Haziran) tablosundan takvim ayına çevrilerek üretilir.
+    Her aylık PDF yalnızca son ~3 yıllık kayan bir pencere taşır (TİM''in tam geçmiş
+    dosyalarının aksine); bu adaptör TEK bir (en güncel) PDF''i çeker ve o pencereyle
+    sınırlıdır.'
+- slug: tekstil
+  title: Tekstil Sektörü İhracatı (Ürün Grupları)
+  pano:
+  - tekstil/iplik
+  - tekstil/teknik-tekstil
+  - tekstil/dokuma-kumas
+  - tekstil/ev-tekstili
+  note: 'Kaynak İTHİB''in (İstanbul Tekstil ve Hammaddeleri İhracatçıları Birliği)
+    aylık "Tekstil İhracat Değerlendirme Notu" PDF bültenindeki "Ürün Grubu Bazında
+    Tekstil Sektörü İhracatı" gruplu çubuk grafiği (tablo yok, konum tabanlı çubuk-üstü
+    etiket okuma). Yedi ürün grubu: İplik, Teknik Tekstil, Dokuma Kumaş, Ev Tekstili,
+    Örme Kumaş, Elyaf, Konfeksiyon Yan Sanayi (Milyon USD, aylık). Her bülten İKİ
+    nokta verir (o ay + aynı ay bir önceki yıl) — liste sayfasının varsayılan (~12
+    aylık) penceresi çekilerek ~22 aylık (2024-09''dan itibaren) seri elde edilir;
+    liste sayfasının tam sayfalama şeması çözülmediğinden daha eski veri yok. "Tekstil
+    Sektörü Toplam İhracat" (agrega) ve "Dokuma Kumaş"ın beş alt kırılımı (Pamuklu/SSE
+    Filament/SSE Devamsız/Bitkisel Elyaftan/Yünlü) KAPSAM DIŞI: toplam yedi grubun
+    toplamına eşit değil (ölçüldü: 2026-08 için 991 vs gerçek 944) ve alt kırılımların
+    kendi PDF sayfaları salt görsel/metinsiz grafik (extract_text/extract_tables boş)
+    — bkz. görev raporundaki `bloke`.'
