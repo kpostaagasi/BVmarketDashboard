@@ -105,3 +105,10 @@ def test_baska_fonun_satiri_reddedilir():
     with pytest.raises(RuntimeError, match="fon/tarih uyuşmazlığı"):
         tefas.fon_gecmisi("ADE", "2026-08-01", "2026-08-31",
                           SahteOturum(sirali=[SahteYanit(govde)]))
+
+
+def test_tam_gecmis_bos_izinle_bos_cerceve_dondurur():
+    df = tefas.fon_tam_gecmisi("ADE", "2026-08-01", "2026-08-31",
+                               SahteOturum(), bos_izin=True)
+    assert df.empty
+    assert "fiyat" in df.columns

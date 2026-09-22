@@ -306,8 +306,13 @@ def fon_gecmisi(
 
 def fon_tam_gecmisi(
     fon_kodu: str, bas: str, bit: str, session=None, *, tip: str = "YAT",
+    bos_izin: bool = False,
 ) -> pd.DataFrame:
-    """Tüm ayları yeniden çeker; herhangi bir pencere hatası işlemi durdurur."""
+    """Tüm ayları yeniden çeker; herhangi bir pencere hatası işlemi durdurur.
+
+    `bos_izin=True` artımlı çekim içindir: kısa pencerede (ör. bayram
+    tatili) hiç işlem günü olmaması hata değildir, boş çerçeve döner.
+    """
     ilk, son = date.fromisoformat(bas), date.fromisoformat(bit)
     if ilk > son:
         raise ValueError("TEFAS başlangıcı bitişten sonra olamaz")
@@ -320,5 +325,7 @@ def fon_tam_gecmisi(
         ilk = ay_sonu + timedelta(days=1)
     dolu = [parca for parca in parcalar if not parca.empty]
     if not dolu:
+        if bos_izin:
+            return parcalar[0].iloc[0:0]
         raise RuntimeError(f"TEFAS fon geçmişi boş ({fon_kodu})")
     return pd.concat(dolu, ignore_index=True)

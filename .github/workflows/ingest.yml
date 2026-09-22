@@ -5,6 +5,11 @@ on:
     # 06:00 UTC = 09:00 TSİ
     - cron: "0 6 * * *"
   workflow_dispatch:
+    inputs:
+      freq:
+        description: "Sıklık filtresi (boş = tüm seriler, ör. daily,weekly)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -12,6 +17,8 @@ permissions:
 jobs:
   ingest:
     runs-on: ubuntu-latest
+    # Takılan bir kaynak 6 saatlik varsayılan sınırı (360 dk) yakmasın.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +35,20 @@ jobs:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
           EPIAS_USERNAME: ${{ secrets.EPIAS_USERNAME }}
           EPIAS_PASSWORD: ${{ secrets.EPIAS_PASSWORD }}
-        run: python -m ingest.run
+          ELLE_FREQ: ${{ inputs.freq }}
+        # Günlük/haftalık seriler her gün; aylık/çeyreklik/yıllık seriler
+        # (katalogun ~%70'i) yalnızca Pazartesi ve Perşembe çekilir.
+        # Elle tetiklemede varsayılan tam koşudur.
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            FREQ="$ELLE_FREQ"
+          elif [ "$(date -u +%u)" = "1" ] || [ "$(date -u +%u)" = "4" ]; then
+            FREQ=""
+          else
+            FREQ="daily,weekly"
+          fi
+          echo "Sıklık filtresi: ${FREQ:-tümü}"
+          python -u -m ingest.run ${FREQ:+--freq "$FREQ"}
 
       - name: Değişiklikleri commit'le
         if: always()

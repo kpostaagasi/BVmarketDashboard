@@ -10,7 +10,9 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from datetime import date
+import time
+from collections import defaultdict
+from datetime import date, timedelta
 
 import pandas as pd
 import requests
@@ -34,6 +36,39 @@ RETRY = Retry(
     allowed_methods=frozenset({"GET", "POST"}),
     raise_on_status=False,
 )
+
+
+# Fon fiyatları geriye dönük revize edilmiyor. 969 fonun tüm geçmişini her
+# gün ay ay yeniden çekmek (~24.000 istek) koşuyu 6 saatlik Actions sınırına
+# taşıyordu; artık mevcut CSV'nin son tarihinden bu kadar gün geriden devam
+# edilir, örtüşen günler yeni değerle güncellenir.
+TEFAS_GERI_GUN = 7
+
+
+def tefas_fon_cek(seri: Seri, oturum, bugun: date | None = None) -> pd.DataFrame:
+    """TEFAS fon geçmişini artımlı çeker: CSV yoksa tam geçmiş, varsa ek."""
+    bugun = bugun or date.today()
+    yol = seri_yolu(seri.id)
+    eski = pd.read_csv(yol) if yol.exists() else None
+    if eski is None or eski.empty:
+        return tefas.fon_tam_gecmisi(
+            seri.tefas_kod, seri.start_date, bugun.isoformat(),
+            session=oturum, tip=seri.tefas_tip,
+        )
+    bas = max(
+        date.fromisoformat(seri.start_date),
+        date.fromisoformat(str(eski["date"].max())) - timedelta(days=TEFAS_GERI_GUN),
+    )
+    yeni = tefas.fon_tam_gecmisi(
+        seri.tefas_kod, bas.isoformat(), bugun.isoformat(),
+        session=oturum, tip=seri.tefas_tip, bos_izin=True,
+    )
+    return (
+        pd.concat([eski, yeni], ignore_index=True)
+        .drop_duplicates("date", keep="last")
+        .sort_values("date")
+        .reset_index(drop=True)
+    )
 
 
 def olcekle(df, olcek: float | None):
@@ -142,10 +177,7 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
     elif seri.kaynak_tipi == "tefas":
         df = tefas.seri_cek(seri, onbellek=tefas_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tefas_fon":
-        df = tefas.fon_tam_gecmisi(
-            seri.tefas_kod, seri.start_date, date.today().isoformat(),
-            session=oturum, tip=seri.tefas_tip,
-        )
+        df = tefas_fon_cek(seri, oturum)
     elif seri.kaynak_tipi == "eurocontrol":
         df = eurocontrol.seri_cek(seri, onbellek=ec_onbellek, session=oturum)
     elif seri.kaynak_tipi == "fred":
@@ -256,6 +288,9 @@ def seriyi_yaz(seri: Seri, df) -> int:
     `epias.baraj_doluluk_cek`), yani geriye dönük çekim mümkün değil.
     Üzerine yazmak her koşuda geçmişi silerdi; bu yüzden mevcut satırlar
     korunur, aynı günün değeri yenisiyle güncellenir.
+
+    TEFAS fonları da geçmişi korur, ama birleştirme burada değil
+    `tefas_fon_cek`te yapılır (artımlı çekim); buraya tam seri gelir.
     """
     yol = seri_yolu(seri.id)
     yol.parent.mkdir(parents=True, exist_ok=True)
@@ -280,9 +315,19 @@ def main() -> int:
     ayristirici.add_argument(
         "--only", help="Yalnızca bu seri id'sini çek (hata ayıklama için)"
     )
+    ayristirici.add_argument(
+        "--freq",
+        help="Yalnızca bu sıklıklardaki serileri çek (virgülle: daily,weekly)",
+    )
     args = ayristirici.parse_args()
 
     seriler = seri_listele()
+    if args.freq:
+        sikliklar = {f.strip() for f in args.freq.split(",") if f.strip()}
+        seriler = [s for s in seriler if s.freq in sikliklar]
+        if not seriler:
+            print(f"HATA: bu sıklıkta seri yok: {args.freq}", file=sys.stderr)
+            return 2
     if args.only:
         seriler = [s for s in seriler if s.id == args.only]
         if not seriler:
@@ -307,6 +352,8 @@ def main() -> int:
 
     basarili: list[str] = []
     hatalar: list[tuple[str, str]] = []
+    # Kaynak tipi başına toplam süre: yavaş kaynağı loglardan bulabilmek için.
+    sureler: dict[str, float] = defaultdict(float)
     # Aynı EPİAŞ ucunu paylaşan seriler (uretim + uretim-kompozisyon) yanıtı
     # bir kez çeksin diye koşu başına tek önbellek (bkz. epias.seri_cek).
     epias_onbellek: dict = {}
@@ -497,6 +544,7 @@ def main() -> int:
         for seri in seriler:
             if seri.kaynak_tipi == "epias" and tgt is None:
                 continue  # giriş başarısız — hatalar listesine zaten eklendi
+            baslangic = time.monotonic()
             try:
                 df = _cek(
                     seri, api_key, tgt, oturum,
@@ -538,11 +586,17 @@ def main() -> int:
                 )
                 adet = seriyi_yaz(seri, df)
                 basarili.append(f"{seri.id} ({adet} nokta)")
-                print(f"  ✓ {seri.id} — {adet} nokta")
+                print(f"  ✓ {seri.id} — {adet} nokta "
+                      f"({time.monotonic() - baslangic:.1f} sn)")
             except Exception as hata:  # noqa: BLE001 — modül bazlı izolasyon
                 hatalar.append((seri.id, str(hata)))
-                print(f"  ✗ {seri.id} — {hata}", file=sys.stderr)
+                print(f"  ✗ {seri.id} — {hata} "
+                      f"({time.monotonic() - baslangic:.1f} sn)", file=sys.stderr)
+            sureler[seri.kaynak_tipi] += time.monotonic() - baslangic
 
+    print("\nKaynak tipi başına süre (en yavaş 15):")
+    for tip, sure in sorted(sureler.items(), key=lambda x: -x[1])[:15]:
+        print(f"  {tip:<24} {sure / 60:6.1f} dk")
     print(f"\n{len(basarili)}/{len(seriler)} seri başarılı")
     if hatalar:
         print(f"{len(hatalar)} seri başarısız:", file=sys.stderr)

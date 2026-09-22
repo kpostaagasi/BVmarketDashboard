@@ -285,3 +285,89 @@ def test_oturum_retry_politikasi_tasir(monkeypatch):
     assert retry.total == 3
     assert 429 in retry.status_forcelist
     assert "POST" in retry.allowed_methods
+
+
+def test_tefas_fon_csv_yoksa_tam_gecmis_ceker(monkeypatch, tmp_path):
+    from datetime import date
+
+    from ingest import run
+
+    seri = seri_getir("fonlar/ade")
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: tmp_path / "yok.csv")
+    cagri = {}
+
+    def sahte(kod, bas, bit, session=None, tip="YAT", bos_izin=False):
+        cagri.update(bas=bas, bit=bit, bos_izin=bos_izin)
+        return pd.DataFrame({"date": ["2026-09-21"], "fiyat": [1.0]})
+
+    monkeypatch.setattr(run.tefas, "fon_tam_gecmisi", sahte)
+    run.tefas_fon_cek(seri, None, bugun=date(2026, 9, 22))
+    assert cagri == {"bas": seri.start_date, "bit": "2026-09-22", "bos_izin": False}
+
+
+def test_tefas_fon_csv_varsa_son_tarihten_geriye_birlestirir(monkeypatch, tmp_path):
+    """Her gün tam geçmiş ~24.000 istek demekti (6 saatlik Actions sınırı)."""
+    from datetime import date
+
+    from ingest import run
+
+    yol = tmp_path / "ade.csv"
+    pd.DataFrame({
+        "date": ["2026-09-01", "2026-09-15", "2026-09-18"],
+        "fiyat": [1.0, 2.0, 3.0],
+    }).to_csv(yol, index=False)
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: yol)
+    cagri = {}
+
+    def sahte(kod, bas, bit, session=None, tip="YAT", bos_izin=False):
+        cagri.update(bas=bas, bos_izin=bos_izin)
+        return pd.DataFrame({"date": ["2026-09-18", "2026-09-21"], "fiyat": [3.5, 4.0]})
+
+    monkeypatch.setattr(run.tefas, "fon_tam_gecmisi", sahte)
+    df = run.tefas_fon_cek(seri_getir("fonlar/ade"), None, bugun=date(2026, 9, 22))
+    assert cagri == {"bas": "2026-09-11", "bos_izin": True}
+    assert df.to_dict("list") == {
+        "date": ["2026-09-01", "2026-09-15", "2026-09-18", "2026-09-21"],
+        "fiyat": [1.0, 2.0, 3.5, 4.0],
+    }
+
+
+def test_tefas_fon_artimli_bos_pencere_eski_veriyi_korur(monkeypatch, tmp_path):
+    from datetime import date
+
+    from ingest import run
+
+    yol = tmp_path / "ade.csv"
+    pd.DataFrame({"date": ["2026-09-18"], "fiyat": [3.0]}).to_csv(yol, index=False)
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: yol)
+    monkeypatch.setattr(
+        run.tefas, "fon_tam_gecmisi",
+        lambda *a, **k: pd.DataFrame(columns=["date", "fiyat"]),
+    )
+    df = run.tefas_fon_cek(seri_getir("fonlar/ade"), None, bugun=date(2026, 9, 22))
+    assert df.to_dict("list") == {"date": ["2026-09-18"], "fiyat": [3.0]}
+
+
+def test_main_freq_filtresi_yalnizca_secilen_sikliklari_ceker(monkeypatch):
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setenv("EPIAS_USERNAME", "sahte")
+    monkeypatch.setenv("EPIAS_PASSWORD", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--freq", "weekly, yearly"])
+    monkeypatch.setattr(run.epias, "tgt_al", lambda k, p, session=None: "TGT")
+    tum_adaptorleri_stubla(monkeypatch)
+    yazilanlar = []
+    monkeypatch.setattr(
+        run, "seriyi_yaz", lambda seri, df: yazilanlar.append(seri) or len(df),
+    )
+    assert run.main() == 0
+    beklenen = {s.id for s in seri_listele() if s.freq in {"weekly", "yearly"}}
+    assert beklenen and {s.id for s in yazilanlar} == beklenen
+
+
+def test_main_freq_filtresi_bos_kalirsa_hata(monkeypatch):
+    from ingest import run
+
+    monkeypatch.setattr(sys, "argv", ["run.py", "--freq", "saatlik"])
+    assert run.main() == 2
