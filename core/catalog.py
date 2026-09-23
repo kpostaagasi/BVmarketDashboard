@@ -678,10 +678,26 @@ class Kaynak:
     url: str
 
 
+# Menü grupları, gösterim sırasıyla. Kategori sayısı 49'a çıkınca düz
+# liste menüde kaybolmaya başladı; her kategori bu gruplardan birine ait
+# olmak ZORUNDA. Yeni kategori mevcut bir grubu seçer (YAML düzenlemesi);
+# yeni grup açmak bilinçli bir kod değişikliğidir, çünkü menü sırasını da
+# belirler.
+KATEGORI_GRUPLARI = (
+    "Makro & Piyasa",
+    "Dış Ticaret",
+    "Sanayi & İnşaat",
+    "Finans",
+    "Enerji & Emtia",
+    "Tüketim & Hizmet",
+)
+
+
 @dataclass(frozen=True)
 class Kategori:
     slug: str
     title: str
+    grup: str
     note: str | None = None
     pano: tuple[str, ...] = ()
 
@@ -849,10 +865,17 @@ def kategorileri_yukle() -> tuple[Kategori, ...]:
         if slug in gorulen:
             raise KatalogHatasi(f"Kategori slug'ı tekrar ediyor: {slug}")
         gorulen.add(slug)
+        grup = ham["grup"]
+        if grup not in KATEGORI_GRUPLARI:
+            raise KatalogHatasi(
+                f"{slug}: bilinmeyen grup {grup!r} — "
+                f"geçerliler: {', '.join(KATEGORI_GRUPLARI)}"
+            )
         kategoriler.append(
             Kategori(
                 slug=slug,
                 title=ham["title"],
+                grup=grup,
                 note=ham.get("note"),
                 pano=tuple(ham.get("pano", ())),
             )

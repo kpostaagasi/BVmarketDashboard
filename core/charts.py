@@ -85,10 +85,21 @@ def _temayi_uygula(fig: go.Figure, birim: str) -> go.Figure:
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color=RENKLER["metin_soluk"], size=12),
+        font=dict(
+            color=RENKLER["metin_soluk"], size=12,
+            family="Inter, system-ui, sans-serif",
+        ),
+        # Ondalık virgül, binlik nokta: hover ve eksen etiketleri KPI ve
+        # istatistik satırıyla aynı yazımı kullansın (1.234,56).
+        separators=",.",
         margin=dict(l=8, r=8, t=8, b=8),
-        height=280,
+        height=270,
         hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor=RENKLER["sayfa_zemini"],
+            bordercolor=RENKLER["izgara"],
+            font=dict(color=RENKLER["metin"], size=12),
+        ),
         legend=dict(
             orientation="h",
             yanchor="bottom",

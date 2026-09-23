@@ -6,22 +6,37 @@ Sayfalar bildirimseldir: katalogdaki her kategori için bir kapanış
 
 from __future__ import annotations
 
+from datetime import date
+from html import escape
 from typing import Callable
 
 import pandas as pd
 import streamlit as st
 
 from core.catalog import (
+    KATEGORI_GRUPLARI,
     Hisse,
     Kategori,
     KatalogHatasi,
     SIKLIK_ETIKETLERI,
     Seri,
+    hisseleri_yukle,
     kategorileri_yukle,
     seri_getir,
     seri_listele,
 )
-from core.components import fon_karti, grafik_karti, kompozisyon_karti, kpi_satiri
+from core.components import (
+    degisim_rozeti,
+    donem_etiketi,
+    fon_karti,
+    grafik_karti,
+    kisa_sayi,
+    kompozisyon_karti,
+    kpi_satiri,
+    piyasa_karti_html,
+)
+from core.data import VeriYokHatasi, load_series
+from core.ozet import OzetSatiri, one_cikanlar, ozet_uret, son_yayimlananlar
 from core.stats import GORUNUMLER, VARSAYILAN
 from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
 
@@ -272,23 +287,148 @@ def hisse_sayfasi_yap(hisse: Hisse) -> Callable[[], None]:
     return sayfa
 
 
+# Ana sayfanın piyasa şeridi. Günlük seriler; her gün değişen, "bugün ne
+# oldu" sorusunun cevabı. Bilinmeyen id `seri_getir`de KeyError verir.
+PIYASA_SERIDI = (
+    "ekonomi-makro/usd-try",
+    "ekonomi-makro/eur-try",
+    "ekonomi-makro/bist100",
+    "emtia-metaller/altin",
+    "emtia-enerji/brent",
+    "ekonomi-makro/politika-faizi",
+)
+
+
+def ozet_adaylari() -> tuple[str, ...]:
+    """Öne çıkanlar için aday seriler: kategori panoları + hisse "kendi".
+
+    Gerekçe `core/ozet.py` modül docstring'inde. Sıra korunur, tekrar atılır;
+    geniş (bileşenli) seriler tek sayı taşımadığı için dışarıda.
+    """
+    idler: dict[str, None] = {}
+    for kategori in kategorileri_yukle():
+        idler.update(dict.fromkeys(kategori.pano))
+    for hisse in hisseleri_yukle():
+        idler.update(dict.fromkeys(hisse.kendi))
+    return tuple(
+        i for i in idler
+        if not seri_getir(i).epias_bilesenler and "fon" not in seri_getir(i).charts
+    )
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def _ozet_satirlari(idler: tuple[str, ...], bugun: date) -> list[OzetSatiri]:
+    """Bozuk ya da eksik CSV bir satırı düşürür, ana sayfayı değil."""
+    satirlar = []
+    for seri_id in idler:
+        try:
+            df = load_series(seri_id)
+        except VeriYokHatasi:
+            continue
+        satir = ozet_uret(seri_getir(seri_id), df, bugun)
+        if satir is not None:
+            satirlar.append(satir)
+    return satirlar
+
+
+def _ozet_rozeti(satir: OzetSatiri) -> str:
+    if "%" in satir.seri.unit:
+        return degisim_rozeti(satir.yoy_puan, "YoY", puan=True)
+    return degisim_rozeti(satir.yoy, "YoY")
+
+
+def ozet_listesi_html(
+    satirlar: list[OzetSatiri], kategori_basliklari: dict[str, str]
+) -> str:
+    """Öne çıkan / son yayımlanan satırları: başlık → kategori sayfasına link.
+
+    Link düz <a>: `st.page_link` bir tablo hücresine konamıyor. Bedeli tam
+    sayfa yüklemesi; ana sayfadan bir kategoriye geçişte kabul edilebilir.
+    """
+    if not satirlar:
+        return "<p class='bv-kart-meta'>Şu an listelenecek seri yok.</p>"
+    satir_html = []
+    for s in satirlar:
+        seri = s.seri
+        satir_html.append(
+            "<tr>"
+            f"<td><a href='./{seri.category}' target='_self' "
+            f"style='color:inherit;text-decoration:none'>{escape(seri.title)}</a>"
+            f"<br><span class='bv-kart-meta'>"
+            f"{escape(kategori_basliklari[seri.category])} · "
+            f"{donem_etiketi(s.son_tarih, seri.freq)}</span></td>"
+            f"<td class='sag'>{kisa_sayi(s.son_deger)}<br>"
+            f"<span class='bv-kart-meta'>{escape(seri.unit)}</span></td>"
+            f"<td class='sag'>{_ozet_rozeti(s)}</td>"
+            "</tr>"
+        )
+    return f"<table class='bv-liste'>{''.join(satir_html)}</table>"
+
+
 def genel_bakis_yap(
     eslesmeler: list[tuple[Kategori, "st.Page"]],
 ) -> Callable[[], None]:
     def sayfa() -> None:
+        tum_seriler = seri_listele()
+        kaynaklar = sorted({s.kaynak.name for s in tum_seriler})
+        basliklar = {k.slug: k.title for k, _ in eslesmeler}
+
         st.title("BV Market Dashboard")
-        kaynaklar = sorted({s.kaynak.name for s in seri_listele()})
-        st.caption(
-            "Türkiye ekonomisi ve küresel emtia için veri ve grafikler · "
-            f"Kaynak: {', '.join(kaynaklar)}"
+        st.html(
+            "<div class='bv-hero-alt'>Türkiye ekonomisi, sektörler ve küresel "
+            "emtia için veri ve grafikler</div>"
+            "<div class='bv-sayac'>"
+            f"<div><b>{_tr_tam(len(tum_seriler))}</b><span>seri</span></div>"
+            f"<div><b>{len(eslesmeler)}</b><span>kategori</span></div>"
+            f"<div><b>{len(kaynaklar)}</b><span>veri kaynağı</span></div>"
+            f"<div><b>{len(hisseleri_yukle())}</b><span>hisse sayfası</span></div>"
+            "</div>"
         )
-        sutunlar = st.columns(2)
-        for sira, (kategori, hedef) in enumerate(eslesmeler):
-            with sutunlar[sira % 2], st.container(border=True):
-                st.page_link(hedef, label=f"**{kategori.title}**")
-                st.caption(f"{len(seri_listele(kategori.slug))} seri")
+
+        st.html("<div class='bv-bolum'>Piyasalar</div>")
+        piyasa = [seri_getir(i) for i in PIYASA_SERIDI]
+        for sutun, seri in zip(st.columns(len(piyasa)), piyasa):
+            with sutun:
+                st.html(piyasa_karti_html(seri))
+
+        satirlar = _ozet_satirlari(ozet_adaylari(), date.today())
+        artan, dusen = one_cikanlar(satirlar)
+        sol, sag = st.columns([3, 2], gap="large")
+        with sol:
+            st.html("<div class='bv-bolum'>Dikkat çekenler · yıllık değişim</div>")
+            sekme_artan, sekme_dusen = st.tabs(["En çok artan", "En çok düşen"])
+            with sekme_artan:
+                st.html(ozet_listesi_html(artan, basliklar))
+            with sekme_dusen:
+                st.html(ozet_listesi_html(dusen, basliklar))
+        with sag:
+            st.html("<div class='bv-bolum'>Son yayımlanan veriler</div>")
+            st.html(ozet_listesi_html(son_yayimlananlar(satirlar, adet=7), basliklar))
+        st.caption(
+            "Aday küme: kategori panoları ve hisse sayfalarındaki şirket verileri. "
+            "Birimi yüzde olan seriler (faiz, oran) ve bayat seriler yıllık "
+            "sıralamaya girmez."
+        )
+
+        for grup in KATEGORI_GRUPLARI:
+            gruptakiler = [(k, h) for k, h in eslesmeler if k.grup == grup]
+            if not gruptakiler:
+                continue
+            st.html(f"<div class='bv-bolum'>{escape(grup)}</div>")
+            sutunlar = st.columns(4)
+            for sira, (kategori, hedef) in enumerate(gruptakiler):
+                with sutunlar[sira % 4], st.container(key=f"kutu-{kategori.slug}"):
+                    st.page_link(hedef, label=f"**{kategori.title}**")
+                    st.caption(f"{len(seri_listele(kategori.slug))} seri")
+
+        with st.expander(f"Veri kaynakları ({len(kaynaklar)})"):
+            st.caption(" · ".join(kaynaklar))
 
     return sayfa
+
+
+def _tr_tam(sayi: int) -> str:
+    return f"{sayi:,}".replace(",", ".")
 
 
 def fon_sayfasi() -> None:

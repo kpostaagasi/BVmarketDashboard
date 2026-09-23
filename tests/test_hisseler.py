@@ -59,7 +59,7 @@ def _gecici_katalog(tmp_path, icerik: str):
     from core import catalog
 
     (tmp_path / "categories.yaml").write_text(
-        "- slug: otomotiv\n  title: Otomotiv\n  pano: [otomotiv/x]\n",
+        "- slug: otomotiv\n  title: Otomotiv\n  grup: Sanayi & İnşaat\n  pano: [otomotiv/x]\n",
         encoding="utf-8",
     )
     (tmp_path / "series.yaml").write_text(

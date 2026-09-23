@@ -40,7 +40,7 @@ def test_pano_serileri_pano_sirasini_korur():
 
     a = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), id="k/a")
     b = dataclasses.replace(seri_getir("enflasyon/tufe-genel"), id="k/b")
-    kategori = Kategori(slug="k", title="K", pano=("k/b", "k/a"))
+    kategori = Kategori(slug="k", title="K", grup="Finans", pano=("k/b", "k/a"))
     assert [s.id for s in pano_serileri(kategori, [a, b])] == ["k/b", "k/a"]
 
 
@@ -55,7 +55,7 @@ def test_pano_bossa_seri_listesi_degismeden_donuyor():
         dataclasses.replace(seri_getir("enflasyon/tufe-genel"), id=f"k/{i}")
         for i in range(6)
     ]
-    kategori = Kategori(slug="k", title="K")
+    kategori = Kategori(slug="k", title="K", grup="Finans")
     assert pano_serileri(kategori, seriler) == seriler
 
 
@@ -65,7 +65,7 @@ def test_pano_bilinmeyen_id_hata_verir():
     from core.catalog import Kategori, KatalogHatasi, seri_getir
     from core.page import pano_serileri
 
-    kategori = Kategori(slug="k", title="K", pano=("k/yok",))
+    kategori = Kategori(slug="k", title="K", grup="Finans", pano=("k/yok",))
     with pytest.raises(KatalogHatasi):
         pano_serileri(kategori, [seri_getir("enflasyon/tufe-genel")])
 
@@ -80,7 +80,7 @@ def test_pano_acik_listede_genis_seri_hata_verir():
     from core.page import pano_serileri
 
     genis = seri_getir("elektrik/uretim-kompozisyon")
-    kategori = Kategori(slug="k", title="K", pano=(genis.id,))
+    kategori = Kategori(slug="k", title="K", grup="Finans", pano=(genis.id,))
     with pytest.raises(KatalogHatasi):
         pano_serileri(kategori, [genis])
 

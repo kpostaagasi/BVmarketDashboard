@@ -253,6 +253,7 @@ def test_kategori_pano_alani_tuple_olarak_okunur(tmp_path, monkeypatch):
     (tmp_path / "categories.yaml").write_text(
         "- slug: elektrik\n"
         "  title: Elektrik\n"
+        "  grup: Enerji & Emtia\n"
         "  pano: [elektrik/uretim, elektrik/ptf]\n",
         encoding="utf-8",
     )
@@ -269,7 +270,7 @@ def test_kategori_pano_yoksa_bos_tuple(tmp_path, monkeypatch):
     from core import catalog
 
     (tmp_path / "categories.yaml").write_text(
-        "- slug: enflasyon\n  title: Enflasyon\n", encoding="utf-8"
+        "- slug: enflasyon\n  title: Enflasyon\n  grup: Makro & Piyasa\n", encoding="utf-8"
     )
     monkeypatch.setattr(catalog, "KATALOG_DIZINI", tmp_path)
     catalog.kategorileri_yukle.cache_clear()
@@ -311,7 +312,7 @@ def test_olcek_yaml_dan_float_olarak_okunur(tmp_path, monkeypatch):
     from core import catalog
 
     (tmp_path / "categories.yaml").write_text(
-        "- slug: elektrik\n  title: Elektrik\n", encoding="utf-8"
+        "- slug: elektrik\n  title: Elektrik\n  grup: Enerji & Emtia\n", encoding="utf-8"
     )
     (tmp_path / "series.yaml").write_text(
         "- id: elektrik/uretim\n"
@@ -753,3 +754,25 @@ def test_gunluk_gorunum_aylik_seriyi_reddeder():
         _dogrula_ham(_ham_seri(charts=["daily_seasonality", "level"]))
     with pytest.raises(KatalogHatasi, match="hareketli_ortalama_gun"):
         _dogrula_ham(_ham_seri(hareketli_ortalama_gun=7))
+
+
+def test_her_kategorinin_grubu_tanimli_gruplardan():
+    from core.catalog import KATEGORI_GRUPLARI
+
+    for kategori in kategorileri_yukle():
+        assert kategori.grup in KATEGORI_GRUPLARI, kategori.slug
+
+
+def test_bilinmeyen_grup_hata_verir(tmp_path, monkeypatch):
+    from core import catalog
+
+    (tmp_path / "categories.yaml").write_text(
+        "- slug: x\n  title: X\n  grup: Uydurma\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(catalog, "KATALOG_DIZINI", tmp_path)
+    catalog.kategorileri_yukle.cache_clear()
+    try:
+        with pytest.raises(catalog.KatalogHatasi, match="bilinmeyen grup"):
+            catalog.kategorileri_yukle()
+    finally:
+        catalog.kategorileri_yukle.cache_clear()
