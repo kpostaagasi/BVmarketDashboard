@@ -14,6 +14,14 @@ on:
 permissions:
   contents: write
 
+# Aynı anda tek veri koşusu: 23 Eylül'de gecikmeli zamanlanmış koşu elle
+# başlatılanla üst üste bindi, ikisi aynı CSV'leri yazdı ve ikincinin push'u
+# içerik çakışmasıyla düştü. Yeni koşu öncekini iptal etmez, bitmesini bekler
+# (GitHub en fazla bir bekleyen koşu tutar; üçüncüsü gelirse bekleyen düşer).
+concurrency:
+  group: veri-guncelle
+  cancel-in-progress: false
+
 jobs:
   ingest:
     runs-on: ubuntu-latest
@@ -65,8 +73,11 @@ jobs:
             # Koşu sürerken main'e başka commit gelirse düz push reddediliyor
             # ve günün verisi kayboluyordu (23 Eylül: 203 CSV). İş yalnızca
             # data/ yazdığı için kod commit'lerinin üstüne rebase çakışmaz.
+            # Yine de aynı CSV'yi başka bir veri commit'i değiştirdiyse
+            # `-X theirs` bu koşunun (rebase'de yeniden oynanan commit'in)
+            # yeni çektiği dosyayı seçer.
             for deneme in 1 2 3 4 5; do
-              git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+              git pull --rebase -X theirs origin "${GITHUB_REF_NAME}" && git push && exit 0
               git rebase --abort 2>/dev/null || true
               echo "Push reddedildi (deneme $deneme), yeniden deneniyor..."
               sleep $((deneme * 5))
