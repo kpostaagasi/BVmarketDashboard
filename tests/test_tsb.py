@@ -94,6 +94,17 @@ def test_sheet_degerleri_sirket_kodundan_deger_okur():
     assert degerler[1020] == pytest.approx(120434918659.72)
 
 
+def test_sheet_degerleri_sondaki_bosluklu_sheet_adini_bulur():
+    """Ölçüldü: 2016-09 'Hayat ' / 'Hastalık-Sağlık ', 2019-03 'Hayat ' —
+    birebir karşılaştırma 8 seriyi 'sheet yok' diye düşürüyordu."""
+    baytlar = _workbook_baytlari({
+        "Hayat ": [(1, "Agesa", 3006, 5.0, 0.2)],
+        "Hayatdışı": [(1, "X", 1020, 9.0, 0.1)],
+    })
+    wb = openpyxl.load_workbook(BytesIO(baytlar), data_only=True)
+    assert sheet_degerleri(wb, "Hayat") == {3006: 5.0}
+
+
 def test_sheet_degerleri_sheet_yoksa_hata():
     baytlar = _workbook_baytlari({"Hayat": [(1, "X", 1, 1.0, 1.0)]})
     wb = openpyxl.load_workbook(BytesIO(baytlar), data_only=True)

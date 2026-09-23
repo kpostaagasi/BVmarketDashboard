@@ -43301,6 +43301,7 @@
   tsb_rapor: "Prim Üretimleri Sıralama"
   tsb_sheet: Hayat
   tsb_sirket_kodu: 3006
+  start_date: "2020-01-01"
   unit: "Milyon TL"
   freq: monthly
   olcek: 0.000001
@@ -43315,6 +43316,7 @@
   tsb_rapor: "Prim Üretimleri Sıralama"
   tsb_sheet: Hayat
   tsb_sirket_kodu: 3004
+  start_date: "2020-01-01"
   unit: "Milyon TL"
   freq: monthly
   olcek: 0.000001
@@ -43329,6 +43331,7 @@
   tsb_rapor: "Prim Üretimleri Sıralama"
   tsb_sheet: Hayat
   tsb_sirket_kodu: 9003
+  start_date: "2020-01-01"
   unit: "Milyon TL"
   freq: monthly
   olcek: 0.000001
@@ -43347,6 +43350,7 @@
   tsb_rapor: "Prim Üretimleri Sıralama"
   tsb_sheet: "Hastalık-Sağlık"
   tsb_sirket_kodu: 9003
+  start_date: "2020-01-01"
   unit: "Milyar TL"
   freq: monthly
   olcek: 0.000000001
@@ -43361,6 +43365,7 @@
   tsb_rapor: "Prim Üretimleri Sıralama"
   tsb_sheet: "Hastalık-Sağlık"
   tsb_sirket_kodu: 1005
+  start_date: "2020-01-01"
   unit: "Milyon TL"
   freq: monthly
   olcek: 0.000001
@@ -43375,6 +43380,7 @@
   tsb_rapor: "Prim Üretimleri Sıralama"
   tsb_sheet: "Hastalık-Sağlık"
   tsb_sirket_kodu: 1020
+  start_date: "2020-01-01"
   unit: "Milyon TL"
   freq: monthly
   olcek: 0.000001
@@ -43389,6 +43395,7 @@
   tsb_rapor: "Prim Üretimleri Sıralama"
   tsb_sheet: "Hastalık-Sağlık"
   tsb_sirket_kodu: 1003
+  start_date: "2020-01-01"
   unit: "Milyon TL"
   freq: monthly
   olcek: 0.000001
@@ -43403,6 +43410,7 @@
   tsb_rapor: "Prim Üretimleri Sıralama"
   tsb_sheet: "Hastalık-Sağlık"
   tsb_sirket_kodu: 1032
+  start_date: "2020-01-01"
   unit: "Milyon TL"
   freq: monthly
   olcek: 0.000001

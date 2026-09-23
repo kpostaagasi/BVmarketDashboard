@@ -121,9 +121,15 @@ def sheet_degerleri(wb: openpyxl.Workbook, sheet: str) -> dict[int, float]:
     olabiliyor (bkz. modül docstring'i) — isimden tanınıp `SEKTOR_KODU`ya
     normalize edilir.
     """
-    if sheet not in wb.sheetnames:
+    # Bazı eski dosyalarda sheet adlarının sonunda boşluk var (ölçüldü:
+    # 2016-09 'Hayat ' / 'Hastalık-Sağlık ', 2019-03 'Hayat '); birebir
+    # karşılaştırma bunları "yok" sayıyordu. Kenar boşlukları ve Unicode
+    # biçimi (bkz. modül docstring'i, NFD/NFC) yok sayılarak eşleştirilir.
+    aranan = normalize("NFC", sheet).strip()
+    eslesen = [ad for ad in wb.sheetnames if normalize("NFC", ad).strip() == aranan]
+    if not eslesen:
         raise RuntimeError(f"TSB workbook'unda '{sheet}' sheet'i yok")
-    ws = wb[sheet]
+    ws = wb[eslesen[0]]
     basliklar_gorundu = False
     degerler: dict[int, float] = {}
     for satir in ws.iter_rows(values_only=True):
