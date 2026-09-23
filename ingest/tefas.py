@@ -40,7 +40,11 @@ import requests
 from core.catalog import GECERLI_TEFAS_OLCUTLERI, GECERLI_TEFAS_TIPLERI
 
 UC = "https://www.tefas.gov.tr/api/funds/fonGnlBlgSiraliGetir"
-ZAMAN_ASIMI = 90
+# 90 sn'lik zaman aşımı, oturum katmanının kendi yeniden denemeleriyle
+# çarpılınca tek gün için ~20 dk bekleniyordu ve koşu iş sınırına takılıyordu
+# (22 Eylül 2026 koşusu: tek seride 85 dk). Uç sağlıklıyken yanıt 1 sn'nin
+# altında; 30 sn hâlâ bolca üstünde.
+ZAMAN_ASIMI = 30
 AZAMI_GECMIS_YIL = 3
 # Bir günde 2.037 fon döndü; tavan bolca üstünde tutuluyor ki fon sayısı
 # arttığında sessizce kırpılmasın (kırpılma sessiz eksik veri demek).
@@ -54,6 +58,12 @@ GERI_CEKILME_SANIYE = 45.0
 AZAMI_DENEME = 3
 
 _son_istek: float | None = None
+
+# Fon CSV sözleşmesi: uç alan adları → sütun adları.
+FON_SUTUNLARI = {
+    "tarih": "date", "fiyat": "fiyat", "tedPaySayisi": "pay",
+    "kisiSayisi": "hesap", "portfoyBuyukluk": "buyukluk",
+}
 
 BASLIKLAR = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
@@ -277,10 +287,7 @@ def fon_gecmisi(
     if sonuc.get("errorCode"):
         raise RuntimeError(f"TEFAS uygulama hatası ({fon_kodu}): {mesaj}")
     satirlar = sonuc["resultList"]
-    sutunlar = {
-        "tarih": "date", "fiyat": "fiyat", "tedPaySayisi": "pay",
-        "kisiSayisi": "hesap", "portfoyBuyukluk": "buyukluk",
-    }
+    sutunlar = FON_SUTUNLARI
     if not satirlar:
         if "out of bounds" not in mesaj and "bulunamadı" not in mesaj.lower():
             raise RuntimeError(f"TEFAS beklenmeyen boş yanıt ({fon_kodu}): {mesaj}")
@@ -289,19 +296,65 @@ def fon_gecmisi(
         raise RuntimeError(f"TEFAS uygulama hatası ({fon_kodu}): {mesaj}")
     if len(satirlar) >= SAYFA_TAVANI or int(sonuc["toplamSayi"]) != len(satirlar):
         raise RuntimeError(f"TEFAS eksik pencere ({fon_kodu} {bas} → {bit})")
-    df = pd.DataFrame(satirlar)
-    tarihler = pd.to_datetime(df["tarih"], errors="raise")
-    if (df["fonKodu"] != fon_kodu).any() or not tarihler.between(bas, bit).all():
+    ham = pd.DataFrame(satirlar)
+    tarihler = pd.to_datetime(ham["tarih"], errors="raise")
+    if (ham["fonKodu"] != fon_kodu).any() or not tarihler.between(bas, bit).all():
         raise RuntimeError(f"TEFAS fon/tarih uyuşmazlığı ({fon_kodu})")
     if tarihler.duplicated().any():
         raise RuntimeError(f"TEFAS yinelenen tarih ({fon_kodu})")
-    df = df[list(sutunlar)].rename(columns=sutunlar)
-    df["date"] = tarihler.dt.strftime("%Y-%m-%d")
+    return _fon_cercevesi(satirlar, fon_kodu)
+
+
+def _fon_cercevesi(satirlar: list[dict], fon_kodu: str) -> pd.DataFrame:
+    """Ham fon satırlarını CSV sözleşmesine (`date,fiyat,pay,hesap,buyukluk`)
+    çevirir. Fiyat hassasiyeti korunur; eksik alan sessizce geçilmez."""
+    df = pd.DataFrame(satirlar)[list(FON_SUTUNLARI)].rename(columns=FON_SUTUNLARI)
+    df["date"] = pd.to_datetime(df["date"], errors="raise").dt.strftime("%Y-%m-%d")
     for sutun in ("fiyat", "pay", "hesap", "buyukluk"):
         df[sutun] = pd.to_numeric(df[sutun], errors="raise")
     if df.isna().any().any():
         raise RuntimeError(f"TEFAS eksik alan ({fon_kodu})")
     return df.sort_values("date").reset_index(drop=True)
+
+
+def gun_fonlari(tip: str, gun: date, onbellek: dict, session=None):
+    """Bir günün TÜM fonları, fon kodundan satıra eşlenmiş. Yayın yoksa None.
+
+    Fon kodu vermeden atılan istek o günün tamamını (2.039 fon) tek yanıtta
+    döndürüyor — fon başına ayrı istek 7 sn'lik hız sınırı ritmiyle 969 fon
+    için ~113 dk ederken, gün başına tek istek aynı işi ~7 sn'de bitiriyor.
+    """
+    anahtar = (tip, gun.isoformat())
+    if anahtar not in onbellek:
+        satirlar = _gun_cek(tip, gun, session)
+        onbellek[anahtar] = (
+            None if satirlar is None
+            else {satir["fonKodu"]: satir for satir in satirlar}
+        )
+    return onbellek[anahtar]
+
+
+def fon_artimi(fon_kodu: str, bas: str, bit: str, session=None, *,
+               tip: str = "YAT", onbellek: dict | None = None) -> pd.DataFrame:
+    """Tek fonun `bas`–`bit` aralığındaki satırları, GÜN önbelleğinden.
+
+    Aynı aralığı paylaşan yüzlerce fon aynı gün yanıtlarını okur; fon
+    sayısından bağımsız olarak istek sayısı = işlem günü sayısıdır.
+    Fon o gün listede yoksa (yeni kurulan/kapanan fon) o gün atlanır.
+    """
+    onbellek = {} if onbellek is None else onbellek
+    gun, son = date.fromisoformat(bas), date.fromisoformat(bit)
+    if gun > son:
+        raise ValueError("TEFAS başlangıcı bitişten sonra olamaz")
+    satirlar = []
+    while gun <= son:
+        gunun_fonlari = gun_fonlari(tip, gun, onbellek, session)
+        if gunun_fonlari and fon_kodu in gunun_fonlari:
+            satirlar.append(gunun_fonlari[fon_kodu])
+        gun += timedelta(days=1)
+    if not satirlar:
+        return pd.DataFrame(columns=list(FON_SUTUNLARI.values()))
+    return _fon_cercevesi(satirlar, fon_kodu)
 
 
 def fon_tam_gecmisi(

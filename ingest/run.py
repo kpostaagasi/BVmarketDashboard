@@ -43,10 +43,20 @@ RETRY = Retry(
 # taşıyordu; artık mevcut CSV'nin son tarihinden bu kadar gün geriden devam
 # edilir, örtüşen günler yeni değerle güncellenir.
 TEFAS_GERI_GUN = 7
+# Ardışık bu kadar seri aynı kaynakta düşerse kaynağın tamamı o koşuda
+# geçilir: yanıt vermeyen bir uç, seri başına dakikalar yiyip işi zaman
+# sınırına taşıyordu (22 Eylül 2026: TEFAS'ta tek seride 85 dk).
+ARDISIK_HATA_TAVANI = 5
 
 
-def tefas_fon_cek(seri: Seri, oturum, bugun: date | None = None) -> pd.DataFrame:
-    """TEFAS fon geçmişini artımlı çeker: CSV yoksa tam geçmiş, varsa ek."""
+def tefas_fon_cek(seri: Seri, oturum, bugun: date | None = None,
+                  gun_onbellek: dict | None = None) -> pd.DataFrame:
+    """TEFAS fon geçmişini artımlı çeker: CSV yoksa tam geçmiş, varsa ek.
+
+    Artım GÜN ucundan okunur (`tefas.fon_artimi`): aynı günleri paylaşan
+    969 fon tek yanıt kümesini böler, istek sayısı fon sayısına değil gün
+    sayısına bağlıdır.
+    """
     bugun = bugun or date.today()
     yol = seri_yolu(seri.id)
     eski = pd.read_csv(yol) if yol.exists() else None
@@ -59,9 +69,9 @@ def tefas_fon_cek(seri: Seri, oturum, bugun: date | None = None) -> pd.DataFrame
         date.fromisoformat(seri.start_date),
         date.fromisoformat(str(eski["date"].max())) - timedelta(days=TEFAS_GERI_GUN),
     )
-    yeni = tefas.fon_tam_gecmisi(
+    yeni = tefas.fon_artimi(
         seri.tefas_kod, bas.isoformat(), bugun.isoformat(),
-        session=oturum, tip=seri.tefas_tip, bos_izin=True,
+        session=oturum, tip=seri.tefas_tip, onbellek=gun_onbellek,
     )
     return (
         pd.concat([eski, yeni], ignore_index=True)
@@ -145,7 +155,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          eurostat_insaat_onbellek: dict | None = None,
          taid_onbellek: dict | None = None,
          thy_ir_onbellek: dict | None = None,
-         pgsus_ir_onbellek: dict | None = None):
+         pgsus_ir_onbellek: dict | None = None,
+         tefas_gun_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
         df = evds.seri_cek(seri, api_key, session=oturum)
@@ -177,7 +188,7 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
     elif seri.kaynak_tipi == "tefas":
         df = tefas.seri_cek(seri, onbellek=tefas_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tefas_fon":
-        df = tefas_fon_cek(seri, oturum)
+        df = tefas_fon_cek(seri, oturum, gun_onbellek=tefas_gun_onbellek)
     elif seri.kaynak_tipi == "eurocontrol":
         df = eurocontrol.seri_cek(seri, onbellek=ec_onbellek, session=oturum)
     elif seri.kaynak_tipi == "fred":
@@ -368,6 +379,10 @@ def main() -> int:
     # TEFAS: ay sonu anlık görüntüsü (tip, ay) başına tek istek; dört ölçüt
     # aynı yanıttan üretilir (bkz. tefas.seri_cek).
     tefas_onbellek: dict = {}
+    # TEFAS fon artımları gün başına tek yanıt paylaşır: (tip, gün) →
+    # {fon kodu: satır}. 969 fon ~10 günlük pencereyi paylaştığı için istek
+    # sayısı 969'dan ~20'ye iner (bkz. `ingest.tefas.gun_fonlari`).
+    tefas_gun_onbellek: dict = {}
     # EUROCONTROL'ün üç JSON dosyası (2–5 MB) koşu başına bir kez inilir.
     ec_onbellek: dict = {}
     # İl×sektör bülteni AYLIKTIR (yıllık değil): 741 seri aynı ~40 aylık
@@ -525,6 +540,10 @@ def main() -> int:
 
     with requests.Session() as oturum:
         oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
+        # TEFAS kendi yeniden denemesini yönetiyor (429'da geri çekilme).
+        # Oturum katmanı da denerse süreler çarpılıyor: 3 × 3 deneme ×
+        # zaman aşımı, tek gün için ~20 dk.
+        oturum.mount("https://www.tefas.gov.tr", HTTPAdapter(max_retries=0))
         epias_seriler = [s for s in seriler if s.kaynak_tipi == "epias"]
         if epias_seriler:
             try:
@@ -541,9 +560,16 @@ def main() -> int:
                         file=sys.stderr,
                     )
 
+        ardisik_hata: dict[str, int] = defaultdict(int)
         for seri in seriler:
             if seri.kaynak_tipi == "epias" and tgt is None:
                 continue  # giriş başarısız — hatalar listesine zaten eklendi
+            if ardisik_hata[seri.kaynak_tipi] >= ARDISIK_HATA_TAVANI:
+                mesaj = (f"{seri.kaynak_tipi} kaynağı {ARDISIK_HATA_TAVANI} "
+                         "ardışık hatadan sonra geçildi")
+                hatalar.append((seri.id, mesaj))
+                print(f"  ✗ {seri.id} — {mesaj}", file=sys.stderr)
+                continue
             baslangic = time.monotonic()
             try:
                 df = _cek(
@@ -583,12 +609,15 @@ def main() -> int:
                     taid_onbellek=taid_onbellek,
                     thy_ir_onbellek=thy_ir_onbellek,
                     pgsus_ir_onbellek=pgsus_ir_onbellek,
+                    tefas_gun_onbellek=tefas_gun_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
+                ardisik_hata[seri.kaynak_tipi] = 0
                 basarili.append(f"{seri.id} ({adet} nokta)")
                 print(f"  ✓ {seri.id} — {adet} nokta "
                       f"({time.monotonic() - baslangic:.1f} sn)")
             except Exception as hata:  # noqa: BLE001 — modül bazlı izolasyon
+                ardisik_hata[seri.kaynak_tipi] += 1
                 hatalar.append((seri.id, str(hata)))
                 print(f"  ✗ {seri.id} — {hata} "
                       f"({time.monotonic() - baslangic:.1f} sn)", file=sys.stderr)
