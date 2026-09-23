@@ -223,8 +223,13 @@ def _anlik_getir(tip: str, ay_sonu: date, onbellek: dict, session=None):
 
 
 def seri_cek(seri, onbellek: dict | None = None, session=None,
-             bugun: date | None = None) -> pd.DataFrame:
-    """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı).
+             bugun: date | None = None, son_ay: int | None = None) -> pd.DataFrame:
+    """Tam pencereyi yeniden çeker; `son_ay` verilirse yalnızca son N ay sonu.
+
+    `son_ay` artımlı koşu içindir: geçmiş ay sonlarının anlık görüntüsü
+    değişmez, 37 ay sonunu her koşuda yeniden çekmek 7 sn hız sınırı
+    ritmiyle ~34 dk ediyordu (23 Eylül 2026 koşusu). Birleştirme
+    `ingest.run.seriyi_yaz`da, ölçeklemeden sonra yapılır.
 
     Her ay sonu için tek istek atılır ve sonuç `onbellek`te paylaşılır:
     aynı `tefas_tip`i kullanan dört ölçüt (büyüklük, hesap, fon sayısı,
@@ -238,7 +243,10 @@ def seri_cek(seri, onbellek: dict | None = None, session=None,
     onbellek = {} if onbellek is None else onbellek
 
     noktalar: dict[str, float] = {}
-    for ay_sonu in ay_sonlari(bugun):
+    aylar = ay_sonlari(bugun)
+    if son_ay is not None:
+        aylar = aylar[-son_ay:]
+    for ay_sonu in aylar:
         toplam = _anlik_getir(seri.tefas_tip, ay_sonu, onbellek, session)
         if toplam is None:
             continue

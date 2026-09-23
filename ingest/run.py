@@ -47,6 +47,9 @@ TEFAS_GERI_GUN = 7
 # geçilir: yanıt vermeyen bir uç, seri başına dakikalar yiyip işi zaman
 # sınırına taşıyordu (22 Eylül 2026: TEFAS'ta tek seride 85 dk).
 ARDISIK_HATA_TAVANI = 5
+# TEFAS sektör toplamları: CSV varsa yalnızca son bu kadar ay sonu yeniden
+# çekilir (cari ay + biten ay); eskiler CSV'den korunur (bkz. `seriyi_yaz`).
+TEFAS_SEKTOR_SON_AY = 2
 
 
 def tefas_fon_cek(seri: Seri, oturum, bugun: date | None = None,
@@ -186,7 +189,10 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
     elif seri.kaynak_tipi == "bddk_bdmk":
         df = bddk.seri_cek_bdmk(seri, onbellek=bddk_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tefas":
-        df = tefas.seri_cek(seri, onbellek=tefas_onbellek, session=oturum)
+        son_ay = TEFAS_SEKTOR_SON_AY if seri_yolu(seri.id).exists() else None
+        df = tefas.seri_cek(
+            seri, onbellek=tefas_onbellek, session=oturum, son_ay=son_ay,
+        )
     elif seri.kaynak_tipi == "tefas_fon":
         df = tefas_fon_cek(seri, oturum, gun_onbellek=tefas_gun_onbellek)
     elif seri.kaynak_tipi == "eurocontrol":
@@ -300,12 +306,18 @@ def seriyi_yaz(seri: Seri, df) -> int:
     Üzerine yazmak her koşuda geçmişi silerdi; bu yüzden mevcut satırlar
     korunur, aynı günün değeri yenisiyle güncellenir.
 
+    TEFAS sektör toplamları da biriktirilir: `_cek` CSV varken yalnızca son
+    `TEFAS_SEKTOR_SON_AY` ay sonunu çeker. Birleştirme burada, ölçeklemeden
+    SONRA yapılır — bazı serilerin `olcek`i var ve CSV'deki eski değerler
+    zaten ölçekli; `_cek` içinde birleştirmek onları ikinci kez ölçeklerdi.
+
     TEFAS fonları da geçmişi korur, ama birleştirme burada değil
     `tefas_fon_cek`te yapılır (artımlı çekim); buraya tam seri gelir.
     """
     yol = seri_yolu(seri.id)
     yol.parent.mkdir(parents=True, exist_ok=True)
-    if seri.epias_ucu == "baraj-doluluk" and yol.exists():
+    biriken = seri.epias_ucu == "baraj-doluluk" or seri.kaynak_tipi == "tefas"
+    if biriken and yol.exists():
         df = (
             pd.concat([pd.read_csv(yol), df], ignore_index=True)
             .drop_duplicates("date", keep="last")

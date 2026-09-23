@@ -18,7 +18,9 @@ jobs:
   ingest:
     runs-on: ubuntu-latest
     # Takılan bir kaynak 6 saatlik varsayılan sınırı (360 dk) yakmasın.
-    timeout-minutes: 90
+    # Repo public: dakika ücretsiz, sınırın işi yalnızca takılmayı kesmek.
+    # 23 Eylül tam koşusu 90 dk'da 2.807/3.706 seride kesildi.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 

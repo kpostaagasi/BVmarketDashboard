@@ -237,3 +237,22 @@ def test_seri_cek_start_date_oncesini_kirpar(monkeypatch):
                   bugun=date(2024, 2, 29))
     assert list(df["date"]) == ["2024-02-01"]
     assert list(df["value"]) == [200.0]
+
+
+def test_seri_cek_son_ay_yalnizca_son_ay_sonlarini_ister(monkeypatch):
+    from core.catalog import seri_getir
+
+    istenen = []
+
+    def sahte_anlik(tip, ay_sonu, onbellek, session=None):
+        istenen.append(ay_sonu)
+        return {"buyukluk": 1.0, "hesap": 1.0, "fon-sayisi": 1.0,
+                "ortalama-buyukluk": 1.0}
+
+    monkeypatch.setattr(tefas, "_anlik_getir", sahte_anlik)
+    # Autouse fixture ay listesini tek aya indiriyor; burada gerçeği gerekli.
+    monkeypatch.setattr(tefas, "ay_sonlari", ay_sonlari)
+    seri = seri_getir("fonlar/yatirim-fonu-buyukluk")
+    df = tefas.seri_cek(seri, bugun=date(2026, 9, 23), son_ay=2)
+    assert istenen == [date(2026, 8, 31), date(2026, 9, 23)]
+    assert df["date"].tolist() == ["2026-08-01", "2026-09-01"]

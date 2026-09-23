@@ -452,3 +452,44 @@ def test_main_arada_basari_ardisik_sayaci_sifirlar(monkeypatch):
     assert run.main() == 1
     # 24 yıllık turkbesd serisi: hatalar ardışık olmadığı için hiçbiri geçilmez.
     assert sira["n"] == 24
+
+
+def test_cek_tefas_sektor_csv_varsa_son_aylari_ister(monkeypatch, tmp_path):
+    """37 ay sonunu her koşuda yeniden çekmek ~34 dk ediyordu."""
+    from ingest import run
+
+    yol = tmp_path / "var.csv"
+    gorulen = []
+
+    def sahte(seri, onbellek=None, session=None, son_ay=None):
+        gorulen.append(son_ay)
+        return sahte_df()
+
+    monkeypatch.setattr(run.tefas, "seri_cek", sahte)
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: yol)
+    seri = seri_getir("fonlar/yatirim-fonu-buyukluk")
+    run._cek(seri, None, None, None)
+    yol.write_text("date,value\n2026-08-01,1.0\n")
+    run._cek(seri, None, None, None)
+    assert gorulen == [None, run.TEFAS_SEKTOR_SON_AY]
+
+
+def test_seriyi_yaz_tefas_sektor_olcekli_eski_degerleri_korur(monkeypatch, tmp_path):
+    """Birleştirme ölçeklemeden sonra: eski (ölçekli) değerler ikinci kez
+    ölçeklenmemeli, son aylar yenisiyle güncellenmeli."""
+    from ingest import run
+
+    yol = tmp_path / "buyukluk.csv"
+    pd.DataFrame({
+        "date": ["2026-07-01", "2026-08-01", "2026-09-01"],
+        "value": [9000.0, 9800.0, 8500.0],
+    }).to_csv(yol, index=False)
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: yol)
+    seri = seri_getir("fonlar/yatirim-fonu-buyukluk")
+    yeni = pd.DataFrame({"date": ["2026-08-01", "2026-09-01"],
+                         "value": [9895.37287, 8600.0]})
+    assert run.seriyi_yaz(seri, yeni) == 3
+    assert pd.read_csv(yol).to_dict("list") == {
+        "date": ["2026-07-01", "2026-08-01", "2026-09-01"],
+        "value": [9000.0, 9895.37287, 8600.0],
+    }
