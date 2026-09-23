@@ -88,6 +88,12 @@ def test_kisa_sayi_binin_ustunde_ondaliksiz():
     assert kisa_sayi(None) == "—"
 
 
+def test_kisa_sayi_tam_sayida_ondalik_yazmaz():
+    from core.components import kisa_sayi
+
+    assert kisa_sayi(672.0) == "672"
+
+
 def test_degisim_rozeti_puan_modunda_puan_yazar():
     from core.components import degisim_rozeti
 

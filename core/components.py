@@ -68,12 +68,14 @@ def yuzde_rozeti(deger: float | None) -> str:
 def kisa_sayi(deger: float | None) -> str:
     """KPI için: büyük sayıda kuruş gürültüdür, küçük sayıda bilgidir.
 
-    |x| ≥ 1.000 ondalıksız, altı iki basamak. `sayi_bicimle`den ayrı tutulur;
-    grafik kartı ve tablo tam hassasiyeti göstermeye devam eder.
+    |x| ≥ 1.000 ya da tam sayıysa (uçuş, adet) ondalıksız, değilse iki
+    basamak. `sayi_bicimle`den ayrı tutulur; grafik kartı ve tablo tam
+    hassasiyeti göstermeye devam eder.
     """
     if deger is None:
         return "—"
-    return _tr_sayi(deger, 0 if abs(deger) >= 1000 else 2).removesuffix(",")
+    tam = abs(deger) >= 1000 or float(deger).is_integer()
+    return _tr_sayi(deger, 0 if tam else 2).removesuffix(",")
 
 
 def degisim_rozeti(deger: float | None, etiket: str, puan: bool = False) -> str:
@@ -102,6 +104,9 @@ def kivilcim_svg(
 ) -> str:
     """Eksensiz mini çizgi (sparkline) — data-URI'li <img> içinde SVG.
 
+    `preserveAspectRatio='none'`: telefonda CSS resmi kart genişliğine
+    yayar; çizgi esner, kalınlığı `non-scaling-stroke` ile sabit kalır.
+
     Plotly figürü değil: bir KPI satırında dört ek iframe/figür sayfayı
     ağırlaştırırdı, 40 noktalık bir polyline yeterli. Satır içi <svg>
     değil: `st.html`in temizleyicisi <svg>'yi siliyor, <img> data-URI'sini
@@ -120,9 +125,10 @@ def kivilcim_svg(
     )
     svg = (
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{en}' height='{boy}' "
-        f"viewBox='0 0 {en} {boy}'>"
+        f"viewBox='0 0 {en} {boy}' preserveAspectRatio='none'>"
         f"<polyline points='{noktalar}' fill='none' stroke='{renk}' "
-        f"stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round'/></svg>"
+        f"stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round' "
+        f"vector-effect='non-scaling-stroke'/></svg>"
     )
     kodlu = b64encode(svg.encode()).decode()
     return (

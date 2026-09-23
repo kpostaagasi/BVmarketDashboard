@@ -137,6 +137,12 @@ h2, h3 {{ letter-spacing: -0.01em; }}
   transition: border-color .15s ease;
 }}
 [class*="st-key-kutu-"]:hover {{ border-color: {RENKLER["vurgu"]}; }}
+/* page_link tek satıra kesiyor; dar kutuda "İhracat (Ülke × Se…" kalıyordu */
+[class*="st-key-kutu-"] [data-testid="stPageLink-NavLink"],
+[class*="st-key-kutu-"] [data-testid="stPageLink-NavLink"] * {{
+  white-space: normal !important; overflow: visible !important;
+  text-overflow: clip !important; height: auto !important;
+}}
 
 /* KPI kartı (saf HTML, bkz. core/components.py::kpi_karti_html) */
 .bv-kpi {{
@@ -189,7 +195,8 @@ h2, h3 {{ letter-spacing: -0.01em; }}
 /* Ana sayfa */
 .bv-hero-alt {{ color: {RENKLER["metin_soluk"]}; font-size: 0.95rem;
   margin-top: -0.4rem; }}
-.bv-sayac {{ display: flex; gap: 2rem; flex-wrap: wrap; margin: 0.6rem 0 0.4rem 0; }}
+.bv-sayac {{ display: grid; grid-template-columns: repeat(4, auto);
+  justify-content: start; gap: 0.6rem 2rem; margin: 0.6rem 0 0.4rem 0; }}
 .bv-sayac div {{ display: flex; flex-direction: column; }}
 .bv-sayac b {{ font-size: 1.4rem; font-weight: 700; color: {RENKLER["vurgu"]}; }}
 .bv-sayac span {{ font-size: 0.75rem; color: {RENKLER["metin_soluk"]};
@@ -202,4 +209,39 @@ h2, h3 {{ letter-spacing: -0.01em; }}
 .bv-liste td.soluk {{ color: {RENKLER["metin_soluk"]}; font-size: 0.75rem; }}
 .bv-liste td.sag {{ text-align: right; white-space: nowrap; }}
 .bv-liste tr:last-child td {{ border-bottom: none; }}
+.bv-tarih {{ white-space: nowrap; }}
+
+/* Piyasa şeridi: st.columns yerine CSS grid — telefonda Streamlit
+   sütunları alt alta dizip altı kartı iki ekran boyuna yayıyordu; grid
+   dar ekranda ikişerli, geniş ekranda altılı akar. */
+.bv-serit {{ display: grid; gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }}
+
+/* Telefon (Streamlit'in sütun yığma eşiği 640 px) */
+@media (max-width: 640px) {{
+  [data-testid="stMainBlockContainer"] {{ padding-top: 3.5rem; }}
+  h1 {{ font-size: 1.55rem !important; }}
+  .bv-sayac {{ grid-template-columns: repeat(2, auto); }}
+  .bv-sayac b {{ font-size: 1.2rem; }}
+  /* KPI: mini grafik sayının altına iner ve kart genişliğine yayılır */
+  .bv-kpi {{ padding: 0.7rem 0.75rem; }}
+  .bv-kpi-govde {{ flex-direction: column; align-items: stretch; }}
+  .bv-kpi-deger {{ font-size: 1.3rem; }}
+  .bv-kivilcim {{ width: 100%; height: 24px; }}
+  .bv-liste {{ font-size: 0.8rem; }}
+  .bv-liste td {{ padding: 0.4rem 0.2rem; }}
+  /* KPI satırı ve kategori kutuları: Streamlit bunları tek sütuna
+     yığıyor; ikişerli ızgara ekran boyunu yarıya indirir. */
+  [data-testid="stHorizontalBlock"]:has(.bv-kpi),
+  [data-testid="stHorizontalBlock"]:has([class*="st-key-kutu-"]) {{
+    flex-direction: row !important; flex-wrap: wrap !important;
+    gap: 0.6rem !important;
+  }}
+  [data-testid="stHorizontalBlock"]:has(.bv-kpi) > [data-testid="stColumn"],
+  [data-testid="stHorizontalBlock"]:has([class*="st-key-kutu-"]) > [data-testid="stColumn"] {{
+    flex: 1 1 calc(50% - 0.3rem) !important;
+    width: calc(50% - 0.3rem) !important;
+    min-width: calc(50% - 0.3rem) !important;
+  }}
+}}
 """

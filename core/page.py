@@ -356,7 +356,8 @@ def ozet_listesi_html(
             f"style='color:inherit;text-decoration:none'>{escape(seri.title)}</a>"
             f"<br><span class='bv-kart-meta'>"
             f"{escape(kategori_basliklari[seri.category])} · "
-            f"{donem_etiketi(s.son_tarih, seri.freq)}</span></td>"
+            f"<span class='bv-tarih'>{donem_etiketi(s.son_tarih, seri.freq)}"
+            "</span></span></td>"
             f"<td class='sag'>{kisa_sayi(s.son_deger)}<br>"
             f"<span class='bv-kart-meta'>{escape(seri.unit)}</span></td>"
             f"<td class='sag'>{_ozet_rozeti(s)}</td>"
@@ -386,10 +387,8 @@ def genel_bakis_yap(
         )
 
         st.html("<div class='bv-bolum'>Piyasalar</div>")
-        piyasa = [seri_getir(i) for i in PIYASA_SERIDI]
-        for sutun, seri in zip(st.columns(len(piyasa)), piyasa):
-            with sutun:
-                st.html(piyasa_karti_html(seri))
+        kartlar = "".join(piyasa_karti_html(seri_getir(i)) for i in PIYASA_SERIDI)
+        st.html(f"<div class='bv-serit'>{kartlar}</div>")
 
         satirlar = _ozet_satirlari(ozet_adaylari(), date.today())
         artan, dusen = one_cikanlar(satirlar)
@@ -415,11 +414,15 @@ def genel_bakis_yap(
             if not gruptakiler:
                 continue
             st.html(f"<div class='bv-bolum'>{escape(grup)}</div>")
-            sutunlar = st.columns(4)
-            for sira, (kategori, hedef) in enumerate(gruptakiler):
-                with sutunlar[sira % 4], st.container(key=f"kutu-{kategori.slug}"):
-                    st.page_link(hedef, label=f"**{kategori.title}**")
-                    st.caption(f"{len(seri_listele(kategori.slug))} seri")
+            # Dörtlü SATIRLAR: tek st.columns(4) içine sira % 4 ile
+            # dağıtmak sütun-öncelikli sıra üretir; telefonda sütunlar alt
+            # alta yığılınca kategoriler karışık sırada görünüyordu.
+            for bas in range(0, len(gruptakiler), 4):
+                satir = gruptakiler[bas:bas + 4]
+                for sutun, (kategori, hedef) in zip(st.columns(4), satir):
+                    with sutun, st.container(key=f"kutu-{kategori.slug}"):
+                        st.page_link(hedef, label=f"**{kategori.title}**")
+                        st.caption(f"{len(seri_listele(kategori.slug))} seri")
 
         with st.expander(f"Veri kaynakları ({len(kaynaklar)})"):
             st.caption(" · ".join(kaynaklar))
