@@ -62,5 +62,14 @@ jobs:
             echo "Veride değişiklik yok."
           else
             git commit -m "data: güncelleme $(date -u +%Y-%m-%d)"
-            git push
+            # Koşu sürerken main'e başka commit gelirse düz push reddediliyor
+            # ve günün verisi kayboluyordu (23 Eylül: 203 CSV). İş yalnızca
+            # data/ yazdığı için kod commit'lerinin üstüne rebase çakışmaz.
+            for deneme in 1 2 3 4 5; do
+              git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+              git rebase --abort 2>/dev/null || true
+              echo "Push reddedildi (deneme $deneme), yeniden deneniyor..."
+              sleep $((deneme * 5))
+            done
+            exit 1
           fi
