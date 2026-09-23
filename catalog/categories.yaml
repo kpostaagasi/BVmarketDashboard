@@ -1,5 +1,6 @@
 - slug: ekonomi-makro
   title: Ekonomi & Makro
+  grup: Makro & Piyasa
   pano:
   - ekonomi-makro/usd-try
   - ekonomi-makro/politika-faizi
@@ -7,6 +8,7 @@
   - ekonomi-makro/butce-dengesi
 - slug: enflasyon
   title: Enflasyon Verileri
+  grup: Makro & Piyasa
   pano:
   - enflasyon/tufe-genel
   - enflasyon/cekirdek-c
@@ -14,6 +16,7 @@
   - enflasyon/beklenti-12a
 - slug: sanayi
   title: Sanayi & Reel Kesim
+  grup: Sanayi & İnşaat
   pano:
   - sanayi/uretim-endeksi
   - sanayi/kapasite-kullanim
@@ -24,6 +27,7 @@
     gelir.
 - slug: dis-ticaret
   title: Dış Ticaret & Ödemeler Dengesi
+  grup: Dış Ticaret
   pano:
   - dis-ticaret/ihracat
   - dis-ticaret/ithalat
@@ -33,6 +37,7 @@
     ay geriden gelir.
 - slug: ihracat
   title: İhracat (Sektörel)
+  grup: Dış Ticaret
   pano:
   - ihracat/toplam
   - ihracat/otomotiv
@@ -44,6 +49,7 @@
     (Temmuz 2026: 22.029 karşı 25.623 milyon USD), ikisi seviye olarak karşılaştırılmamalıdır.'
 - slug: bankacilik
   title: Bankacılık
+  grup: Finans
   pano:
   - bankacilik/net-donem-kari
   - bankacilik/net-faiz-geliri
@@ -56,6 +62,7 @@
     ederler).
 - slug: para-banka
   title: Para & Banka
+  grup: Makro & Piyasa
   pano:
   - para-banka/kredi-hacmi
   - para-banka/mevduat
@@ -65,6 +72,7 @@
     son değeri alınır, toplanmaz. Rezervler haftalık (Cuma) yayımlanır.
 - slug: fonlar
   title: Yatırım Fonları
+  grup: Finans
   pano:
   - fonlar/yatirim-fonu-buyukluk
   - fonlar/yatirim-fonu-hesap
@@ -76,6 +84,7 @@
     yani yatırımcı sayısı değildir.'
 - slug: havacilik
   title: Havacılık
+  grup: Tüketim & Hizmet
   pano:
   - havacilik/turkiye
   - havacilik/thy
@@ -88,6 +97,7 @@
     serileri o havalimanına iniş/kalkışları.'
 - slug: insaat
   title: İnşaat
+  grup: Sanayi & İnşaat
   pano:
   - insaat/konut-satis-toplam
   - insaat/konut-satis-ipotekli
@@ -95,6 +105,7 @@
   - insaat/kira-endeksi
 - slug: kredi-karti
   title: Kredi Kartı Harcamaları
+  grup: Tüketim & Hizmet
   pano:
   - kredi-karti/harcama-toplam
   - kredi-karti/market
@@ -104,6 +115,7 @@
     nominal TL olduğu için seviye karşılaştırmaları enflasyon içerir.
 - slug: emtia-enerji
   title: Emtia · Enerji
+  grup: Enerji & Emtia
   pano:
   - emtia-enerji/brent
   - emtia-enerji/wti
@@ -112,6 +124,7 @@
     grafikte görülen sıçrama piyasa hareketi değil kontrat roll'üdür.
 - slug: emtia-metaller
   title: Emtia · Metaller
+  grup: Enerji & Emtia
   pano:
   - emtia-metaller/altin
   - emtia-metaller/gumus
@@ -121,6 +134,7 @@
     grafikte görülen sıçrama piyasa hareketi değil kontrat roll'üdür.
 - slug: elektrik
   title: Elektrik
+  grup: Enerji & Emtia
   pano:
   - elektrik/uretim
   - elektrik/ptf
@@ -128,6 +142,7 @@
     indirgenmiştir.
 - slug: otomotiv
   title: Otomotiv
+  grup: Sanayi & İnşaat
   pano:
   - otomotiv/ford-otosan
   - otomotiv/tofas
@@ -137,6 +152,7 @@
     eden ayın 12–18'i arasında yayımlanır.
 - slug: beklentiler
   title: Beklentiler (Piyasa Anketi)
+  grup: Makro & Piyasa
   pano:
   - beklentiler/tufe-yilsonu
   - beklentiler/politika-faizi-12a
@@ -148,6 +164,7 @@
     okunur. Cari denge beklentisinde negatif değer açık demektir.'
 - slug: ihracat-il
   title: İhracat (İl × Sektör)
+  grup: Dış Ticaret
   pano:
   - ihracat-il/istanbul-toplam
   - ihracat-il/bursa-toplam
@@ -159,6 +176,7 @@
     bir fazlalık taşır ve referans site parite ölçütü sektör toplamıdır.
 - slug: ihracat-ulke
   title: İhracat (Ülke × Sektör)
+  grup: Dış Ticaret
   pano:
   - ihracat-ulke/almanya-toplam
   - ihracat-ulke/abd-toplam
@@ -170,6 +188,7 @@
     satırlarının toplamıdır.
 - slug: perakende
   title: Perakende (Şirket Operasyonel Verileri)
+  grup: Tüketim & Hizmet
   pano:
   - perakende/ebebek-satis-adedi
   - perakende/ebebek-magaza-ziyaretci
@@ -181,6 +200,7 @@
     (sınıflandırma değişikliği, gerçek kapanış değil).
 - slug: petrol-piyasasi
   title: Petrol Piyasası (EPDK)
+  grup: Enerji & Emtia
   pano:
   - petrol-piyasasi/rafineri-uretimi-motorin
   - petrol-piyasasi/yurtici-satis-motorin
@@ -191,6 +211,7 @@
     ürün grubu toplamı yok — seriler bu yüzden 2026'dan başlar. Değerler bin ton.
 - slug: telekom
   title: Telekom (Şirket Operasyonel Verileri)
+  grup: Tüketim & Hizmet
   pano:
   - telekom/tcell-mobil-postpaid-abone
   - telekom/ttkom-mobil-toplam-abone
@@ -203,6 +224,7 @@
     endeksleri EVDS'de yayımlanmıyor (ölçüldü), bu yüzden o iki kart bu ailede yok.
 - slug: su-urunleri
   title: Su Ürünleri İhracatı (EİB)
+  grup: Dış Ticaret
   pano:
   - su-urunleri/toplam-ihracat
   - su-urunleri/levrek
@@ -212,6 +234,7 @@
     USD, hacimler kilogram; katalog milyon USD / bin tona ölçekler.
 - slug: sut-fiyatlari
   title: Çiğ Süt Fiyat & Maliyet (USK)
+  grup: Enerji & Emtia
   pano:
   - sut-fiyatlari/tavsiye-fiyati
   - sut-fiyatlari/uretim-maliyeti
@@ -221,6 +244,7 @@
     metninde karışıyor).'
 - slug: hayvansal
   title: Hayvansal Ürün İhracatı (EİB)
+  grup: Dış Ticaret
   pano:
   - hayvansal/toplam
   - hayvansal/kanatli
@@ -230,6 +254,7 @@
     ölçekler), hacimler kilogramdan bin tona çevrilir.
 - slug: beyaz-esya
   title: Beyaz Eşya Sektörü (TÜRKBESD)
+  grup: Sanayi & İnşaat
   pano:
   - beyaz-esya/ic-satis-buzdolabi
   - beyaz-esya/uretim-buzdolabi
@@ -245,6 +270,7 @@
     salt anlatı, mutlak aylık tablo taşımıyor ve arşivi yalnızca son ~5 ayı kapsıyor).'
 - slug: emtia-tarim
   title: Emtia · Tarım
+  grup: Enerji & Emtia
   pano:
   - emtia-tarim/pamuk
   - emtia-tarim/bugday
@@ -256,6 +282,7 @@
     günlük değil) ve yaklaşık bir ay gecikmeyle yayımlanır.
 - slug: avrupa
   title: Avrupa Ekonomisi
+  grup: Makro & Piyasa
   pano:
   - avrupa/almanya-tufe-hicp
   - avrupa/almanya-issizlik-orani
@@ -266,6 +293,7 @@
     ülke/bölge istatistik kurumlarının yayın takvimine göre 1-2 ay gecikmeli gelir.
 - slug: sigorta
   title: Sigortacılık
+  grup: Finans
   pano:
   - sigorta/hayatdisi-sektor-toplam
   - sigorta/hayatdisi-turkiye-sigorta
@@ -278,6 +306,7 @@
     (IsActiveStatisticReport=false); bu bayrak açılırsa adaptör kırılır.
 - slug: cimento
   title: Çimento Sektörü
+  grup: Sanayi & İnşaat
   pano:
   - cimento/cimento-uretim
   - cimento/cimento-ic-satis
@@ -289,6 +318,7 @@
     kalemleri) — burada gösterilen değer her zaman kaynağın EN GÜNCEL revizyonudur.
 - slug: dogalgaz
   title: Doğal Gaz
+  grup: Enerji & Emtia
   pano:
   - dogalgaz/ahgaz-tuketim
   - dogalgaz/botas-ithalat
@@ -297,6 +327,7 @@
     başlar (bkz. ingest/epdk.py docstring'i).
 - slug: guven-endeksleri
   title: Güven Endeksleri (Finans & Ödeme)
+  grup: Makro & Piyasa
   pano:
   - guven-endeksleri/fhge-genel
   - guven-endeksleri/kartmetre-genel-nominal
@@ -309,6 +340,7 @@
     (Varsayılan/YoY/MoM) elde edilir, ayrı seri gerekmez.
 - slug: milli-gelir
   title: Milli Gelir (GSYİH)
+  grup: Makro & Piyasa
   pano:
   - milli-gelir/gsyih-toplam
   - milli-gelir/sanayi
@@ -326,6 +358,7 @@
     doğru, revizyon farkı veri kalitesi sorunu değildir.'
 - slug: tcmb-swap
   title: TCMB Döviz/Altın-TL Swap Piyasası
+  grup: Makro & Piyasa
   pano:
   - tcmb-swap/toplam-alim-stok
   - tcmb-swap/toplam-satim-stok
@@ -340,6 +373,7 @@
     zaten grubun kendi TOPLAM satırlarıdır, ayrıca toplanmaz.
 - slug: ihracat-ulke-grubu
   title: İhracat (Ülke Grupları)
+  grup: Dış Ticaret
   pano:
   - ihracat-ulke-grubu/ortadogu-ulkeleri
   - ihracat-ulke-grubu/bagimsiz-devletler-toplulugu
@@ -356,6 +390,7 @@
     aksine burada bu satır gerçekten yayımlanıyor.
 - slug: sermaye-piyasalari
   title: Sermaye Piyasaları (TSPB)
+  grup: Finans
   pano:
   - sermaye-piyasalari/pys-aum-yatirim-fonu
   - sermaye-piyasalari/pys-musteri-fon-sayisi
@@ -378,6 +413,7 @@
     (Kredi Hacmi ÷ Kredi Kullanan Yatırımcı Sayısı) ayrı seri değildir.
 - slug: kanatli
   title: Kanatlı Hayvancılık (Fiyat & Üretim)
+  grup: Enerji & Emtia
   pano:
   - kanatli/pilic-eti-kemiksiz
   - kanatli/hindi-eti-kemikli
@@ -391,6 +427,7 @@
     bu kırılımı ayrı yayımlamaz, Eurostat yalnızca dağıtım ucudur.
 - slug: botas-dogalgaz
   title: BOTAŞ Doğal Gaz Tarifesi
+  grup: Enerji & Emtia
   pano:
   - botas-dogalgaz/konut
   - botas-dogalgaz/elektrik-uretimi-amacli
@@ -406,6 +443,7 @@
     yeni nokta eklenerek zamanla gerçek bir tarihçeye dönüşür.
 - slug: restoran
   title: Restoran Zincirleri (Şirket Operasyonel Verileri)
+  grup: Tüketim & Hizmet
   pano:
   - restoran/bigch-sube-sayisi
   - restoran/bigch-net-satislar
@@ -421,6 +459,7 @@
     kuyruğu bu tarihte durabilir.'
 - slug: turizm
   title: Turizm
+  grup: Tüketim & Hizmet
   pano:
   - turizm/yabanci-ziyaretci-sayisi
   - turizm/seyahat-geliri
@@ -439,6 +478,7 @@
     ve Turizm Bakanlığı''nın kendi "Gelen Yabancılar" tablosu kullanılmıştır.'
 - slug: denizcilik
   title: Denizcilik (Liman Yük Elleçleme)
+  grup: Tüketim & Hizmet
   pano:
   - denizcilik/turkiye-toplam-yuk-ellecleme
   - denizcilik/kocaeli-yuk-ellecleme
@@ -452,6 +492,7 @@
     Seri şemasına (tek varlık × zaman ekseni) uymuyor — bkz. görev raporu.'
 - slug: tuketim-nabzi
   title: Tüketim Nabzı (POS)
+  grup: Tüketim & Hizmet
   pano:
   - tuketim-nabzi/pos-toplam-tutar
   - tuketim-nabzi/pos-eticaret-tutar
@@ -461,6 +502,7 @@
     30 günlük hareketli ortalama kartları bu ham serilerden app katmanında türetilebilir.
 - slug: saglik
   title: Sağlık
+  grup: Tüketim & Hizmet
   pano:
   - saglik/hastane-toplam-muracaat
   - saglik/hastane-toplam-fatura
@@ -473,6 +515,7 @@
     payı ve reçete başı ortalama maliyet TÜRETİLMİŞ kartlardır, ayrı seri değildir.
 - slug: avm
   title: AVM (Alışveriş Merkezleri)
+  grup: Tüketim & Hizmet
   pano:
   - avm/ciro-endeksi
   note: Kaynak AYD (Alışveriş Merkezleri ve Yatırımcıları Derneği) & Akademetre Research'ün
@@ -482,6 +525,7 @@
     2025-01'den itibaren güvenilir (öncesi farklı şema).
 - slug: gayrimenkul
   title: Gayrimenkul & İnşaat (Şirket Operasyonel Verileri)
+  grup: Sanayi & İnşaat
   pano:
   - gayrimenkul/orge-backlog
   - gayrimenkul/orge-yeni-is-ytd
@@ -490,6 +534,7 @@
     ve AKFGY (Akfen GYO, kira geliri) için KAP/IR kaynakları BLOKE — bkz. görev raporu.
 - slug: liman
   title: Liman İşletmeciliği (Kruvaziyer)
+  grup: Tüketim & Hizmet
   pano:
   - liman/gph-yolcu-konsolide
   - liman/gph-sefer-konsolide
@@ -501,6 +546,7 @@
     toplamı türetilmiş karttır (Konsolide + Konsolide Edilmeyen), ayrı seri değil.
 - slug: ihracat-pazar-monitoru
   title: Ihracat Pazar Monitoru
+  grup: Dış Ticaret
   pano:
   - ihracat-pazar-monitoru/milli-talep
   - ihracat-pazar-monitoru/milli-dayaniklilik
@@ -510,6 +556,7 @@
     dayanıklılık endeksleri).
 - slug: celik
   title: Çelik Üretimi ve Dış Ticareti
+  grup: Sanayi & İnşaat
   pano:
   - celik/tuketim
   - celik/ihracat-miktar
@@ -525,6 +572,7 @@
     bilinçli olarak kapsam dışı bırakıldı.'
 - slug: makarna
   title: Makarna İhracatı ve Buğday Dış Ticareti
+  grup: Dış Ticaret
   pano:
   - makarna/durum-ihracat
   - makarna/durum-bugday-ithalat
@@ -540,6 +588,7 @@
     sınırlıdır.'
 - slug: tekstil
   title: Tekstil Sektörü İhracatı (Ürün Grupları)
+  grup: Dış Ticaret
   pano:
   - tekstil/iplik
   - tekstil/teknik-tekstil

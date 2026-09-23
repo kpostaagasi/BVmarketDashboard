@@ -1,12 +1,13 @@
 """BV Market Dashboard — giriş noktası.
 
-Sol menü katalogdan üretilir; yeni bir kategori eklemek için
-catalog/categories.yaml'a bir satır eklemek yeterlidir.
+Üst menü katalogdan üretilir; yeni bir kategori eklemek için
+catalog/categories.yaml'a (mevcut bir `grup` ile) bir girdi eklemek yeterlidir.
 """
 
 import streamlit as st
 
-from core.catalog import hisseleri_yukle, kategorileri_yukle
+from core.catalog import KATEGORI_GRUPLARI, hisseleri_yukle, kategorileri_yukle
+from core.components import stil_uygula
 from core.page import (
     arama_sayfasi,
     fon_sayfasi,
@@ -24,6 +25,8 @@ st.set_page_config(
     # genişlikte menüyü içeriğin üzerine bindiriyordu.
     initial_sidebar_state="auto",
 )
+
+stil_uygula()
 
 kategoriler = list(kategorileri_yukle())
 
@@ -73,10 +76,23 @@ hisse_sayfalari = [
     for hisse in hisseleri_yukle()
 ]
 
+# Kategoriler katalogdaki `grup` alanına göre bölümlenir; 49 kategorilik
+# düz liste menüde aranan sayfayı bulmayı zorlaştırıyordu. Bölüm sırası
+# KATEGORI_GRUPLARI'ndan, bölüm içi sıra categories.yaml'dan gelir.
+bolumler = {
+    grup: [
+        sayfa
+        for kategori, sayfa in zip(kategoriler, kategori_sayfalari)
+        if kategori.grup == grup
+    ]
+    for grup in KATEGORI_GRUPLARI
+}
+
 st.navigation(
     {
         "Genel": [ana_sayfa, arama, fonlar_sayfasi, takvim_sayfasi],
+        **bolumler,
         "Hisseler": hisse_sayfalari,
-        "Veri Sayfaları": kategori_sayfalari,
-    }
+    },
+    position="top",
 ).run()

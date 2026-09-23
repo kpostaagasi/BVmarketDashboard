@@ -5,6 +5,9 @@ grafik_karti() tek fonksiyondur; sitedeki tüm kartlar onun bir örneğidir.
 
 from __future__ import annotations
 
+from base64 import b64encode
+from html import escape
+
 import pandas as pd
 import streamlit as st
 
@@ -32,7 +35,12 @@ from core.stats import (
     son_tarih,
     yoy,
 )
-from core.theme import RENKLER
+from core.theme import RENKLER, STIL_CSS
+
+
+def stil_uygula() -> None:
+    """Uygulama geneli CSS'i enjekte eder; her sayfa çalışmasında bir kez."""
+    st.html(f"<style>{STIL_CSS}</style>")
 
 
 def _tr_sayi(deger: float, basamak: int = 2) -> str:
@@ -55,6 +63,99 @@ def yuzde_rozeti(deger: float | None) -> str:
     isaret = "▲" if deger >= 0 else "▼"
     renk = RENKLER["artis"] if deger >= 0 else RENKLER["dusus"]
     return f"<span style='color:{renk}'>{isaret} %{_tr_sayi(abs(deger), 1)}</span>"
+
+
+def kisa_sayi(deger: float | None) -> str:
+    """KPI için: büyük sayıda kuruş gürültüdür, küçük sayıda bilgidir.
+
+    |x| ≥ 1.000 ondalıksız, altı iki basamak. `sayi_bicimle`den ayrı tutulur;
+    grafik kartı ve tablo tam hassasiyeti göstermeye devam eder.
+    """
+    if deger is None:
+        return "—"
+    return _tr_sayi(deger, 0 if abs(deger) >= 1000 else 2).removesuffix(",")
+
+
+def degisim_rozeti(deger: float | None, etiket: str, puan: bool = False) -> str:
+    """Hap biçimli değişim rozeti. Renk yalnızca ▲/▼ ile birlikte gelir.
+
+    `puan=True` birimi zaten yüzde olan seriler içindir (faiz): %45→%40
+    "%11 düştü" değil "5 puan düştü" yazılır; değer burada FARKTIR.
+    """
+    if deger is None:
+        return f"<span class='bv-rozet bv-rozet-notr'><small>{etiket}</small> —</span>"
+    if round(deger, 2) == 0:
+        return f"<span class='bv-rozet bv-rozet-notr'><small>{etiket}</small> 0</span>"
+    sinif = "artis" if deger >= 0 else "dusus"
+    isaret = "▲" if deger >= 0 else "▼"
+    metin = (
+        f"{_tr_sayi(abs(deger), 2)} puan" if puan else f"%{_tr_sayi(abs(deger), 1)}"
+    )
+    return (
+        f"<span class='bv-rozet bv-rozet-{sinif}'><small>{etiket}</small> "
+        f"{isaret} {metin}</span>"
+    )
+
+
+def kivilcim_svg(
+    degerler: list[float], renk: str, en: int = 96, boy: int = 30
+) -> str:
+    """Eksensiz mini çizgi (sparkline) — data-URI'li <img> içinde SVG.
+
+    Plotly figürü değil: bir KPI satırında dört ek iframe/figür sayfayı
+    ağırlaştırırdı, 40 noktalık bir polyline yeterli. Satır içi <svg>
+    değil: `st.html`in temizleyicisi <svg>'yi siliyor, <img> data-URI'sini
+    geçiriyor (ölçüldü, Streamlit 1.62). Sabit seride (min=max) çizgi
+    ortada düz durur; ikiden az nokta boş döner.
+    """
+    temiz = [d for d in degerler if d == d]  # NaN'ları at
+    if len(temiz) < 2:
+        return ""
+    alt, ust = min(temiz), max(temiz)
+    aralik = (ust - alt) or 1.0
+    adim = en / (len(temiz) - 1)
+    noktalar = " ".join(
+        f"{i * adim:.1f},{boy - 2 - (d - alt) / aralik * (boy - 4):.1f}"
+        for i, d in enumerate(temiz)
+    )
+    svg = (
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='{en}' height='{boy}' "
+        f"viewBox='0 0 {en} {boy}'>"
+        f"<polyline points='{noktalar}' fill='none' stroke='{renk}' "
+        f"stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round'/></svg>"
+    )
+    kodlu = b64encode(svg.encode()).decode()
+    return (
+        f"<img class='bv-kivilcim' width='{en}' height='{boy}' alt='' "
+        f"src='data:image/svg+xml;base64,{kodlu}'/>"
+    )
+
+
+def kivilcim_verisi(df: pd.DataFrame, freq: str, adet: int = 40) -> list[float]:
+    """Mini grafiğin noktaları: aylık ve seyrek serilerde son 24 dönem,
+    günlük/haftalık seride son ~1 yılın haftalık kapanışları."""
+    if freq in {"daily", "weekly"}:
+        return list(df["value"].resample("W").last().dropna().tail(52))
+    return list(df["value"].dropna().tail(min(adet, 24)))
+
+
+def kpi_karti_html(
+    baslik: str, deger: str, birim: str, rozetler: list[str],
+    alt_metin: str, kivilcim: str = "",
+) -> str:
+    # Katalog başlıkları kesme işareti taşıyor ("TİM'in") — escape'siz
+    # title='…' özniteliği kırılır.
+    baslik, birim = escape(baslik), escape(birim)
+    return (
+        "<div class='bv-kpi'>"
+        f"<div class='bv-kpi-etiket' title='{baslik}'>{baslik}</div>"
+        "<div class='bv-kpi-govde'><div>"
+        f"<div class='bv-kpi-deger'>{deger}</div>"
+        f"<div class='bv-kpi-birim' title='{birim}'>{birim}</div>"
+        f"</div>{kivilcim}</div>"
+        f"<div class='bv-kpi-alt'>{''.join(rozetler)}<span>{alt_metin}</span></div>"
+        "</div>"
+    )
 
 
 def grafik_agg(seri: Seri, gorunum: str) -> str:
@@ -95,65 +196,135 @@ def kpi_satiri(seriler: list[Seri], sutun_sayisi: int = 4) -> None:
     (hisse sayfaları) kartı tüm satıra yayıyordu — dev sayı, küçük etiket:
     kategori sayfalarındaki ritimden kopan bir "hero metrik" görüntüsü.
     Sabit ızgara kart genişliğini sayfalar arası aynı tutar.
+
+    Kart saf HTML'dir: birim sayının altında ayrı satırda durur. Eski
+    `st.markdown("### 5.781,74 Endeks (2025=100)")` dar sütunda üç satıra
+    kırılıyordu.
     """
     gosterilecek = _kpi_uygun_seriler(seriler)[:sutun_sayisi]
     if not gosterilecek:
         return
     sutunlar = st.columns(sutun_sayisi)
     for sutun, seri in zip(sutunlar, gosterilecek):
-        with sutun, st.container(border=True):
-            st.caption(seri.title)
-            try:
-                df = load_series(seri.id)
-            except VeriYokHatasi:
-                st.markdown("**—**")
-                st.caption("veri yok")
-                continue
-            st.markdown(f"### {sayi_bicimle(son_deger(df), seri.unit)}")
-            st.markdown(
-                f"YoY {yuzde_rozeti(yoy(df, seri.freq))} · "
-                f"{donem_etiketi(son_tarih(df), seri.freq)}",
-                unsafe_allow_html=True,
-            )
+        with sutun:
+            st.html(kpi_html(seri))
 
 
-def _istatistik_satiri(df, seri: Seri) -> None:
+def piyasa_karti_html(seri: Seri) -> str:
+    """Ana sayfa piyasa şeridi: günlük seri, son gözleme göre 1G değişim.
+
+    Birimi yüzde olan seride (politika faizi) değişimler puan farkıdır.
+    """
+    try:
+        df = load_series(seri.id)
+    except VeriYokHatasi:
+        return kpi_karti_html(seri.title, "—", seri.unit, [], "veri yok")
+    if len(df) < 2:
+        return kpi_karti_html(seri.title, "—", seri.unit, [], "veri yetersiz")
+    degerler = df["value"]
+    puan = "%" in seri.unit
+    if puan:
+        gunluk = degerler.iloc[-1] - degerler.iloc[-2]
+        yillik_onceki = degerler[: son_tarih(df) - pd.DateOffset(years=1)]
+        yillik = (
+            degerler.iloc[-1] - yillik_onceki.iloc[-1]
+            if not yillik_onceki.empty else None
+        )
+    else:
+        gunluk = (degerler.iloc[-1] / degerler.iloc[-2] - 1) * 100
+        yillik = yoy(df, seri.freq)
+    renk = RENKLER["artis"] if (yillik or 0) >= 0 else RENKLER["dusus"]
+    return kpi_karti_html(
+        seri.title,
+        kisa_sayi(son_deger(df)),
+        seri.unit,
+        [degisim_rozeti(gunluk, "1G", puan), degisim_rozeti(yillik, "YoY", puan)],
+        f"{son_tarih(df):%d.%m.%Y}",
+        kivilcim_svg(kivilcim_verisi(df, seri.freq), renk),
+    )
+
+
+def kpi_html(seri: Seri) -> str:
+    """Tek serinin KPI kartı. Veri yoksa kart düşmez, "veri yok" der."""
+    try:
+        df = load_series(seri.id)
+    except VeriYokHatasi:
+        return kpi_karti_html(seri.title, "—", seri.unit, [], "veri yok")
+    if df.empty:
+        return kpi_karti_html(seri.title, "—", seri.unit, [], "veri dosyası boş")
+    degisim = qoq(df) if seri.freq == "quarterly" else mom(df)
+    degisim_etiketi = "QoQ" if seri.freq == "quarterly" else "MoM"
+    renk = RENKLER["artis"] if (yoy(df, seri.freq) or 0) >= 0 else RENKLER["dusus"]
+    return kpi_karti_html(
+        seri.title,
+        kisa_sayi(son_deger(df)),
+        seri.unit,
+        [degisim_rozeti(yoy(df, seri.freq), "YoY"),
+         degisim_rozeti(degisim, degisim_etiketi)],
+        donem_etiketi(son_tarih(df), seri.freq),
+        kivilcim_svg(kivilcim_verisi(df, seri.freq), renk),
+    )
+
+
+# `SIKLIK_ETIKETLERI` BÜYÜK harf; `.capitalize()` Türkçe İ'yi "i̇" (birleşik
+# nokta) yapıyor, bu yüzden ayrı ve açık bir tablo.
+SIKLIK_METNI = {
+    "daily": "Günlük", "weekly": "Haftalık", "monthly": "Aylık",
+    "quarterly": "Çeyreklik", "yearly": "Yıllık",
+}
+
+
+def kart_basligi_html(seri: Seri) -> str:
+    return (
+        "<div class='bv-kart-bas'>"
+        f"<span class='bv-kart-baslik'>{escape(seri.title)}</span>"
+        f"<span class='bv-kart-kaynak'><a href='{escape(seri.kaynak.url)}' "
+        f"target='_blank'>{escape(seri.kaynak.name)} ↗</a></span></div>"
+    )
+
+
+def _kart_anahtari(seri: Seri) -> str:
+    """`st-key-kart-*` CSS sınıfının kaynağı (bkz. theme.STIL_CSS)."""
+    return f"kart-{seri.id.replace('/', '-')}"
+
+
+def istatistik_html(df, seri: Seri) -> str:
+    """Değer · YoY · MoM rozetleri, altında dönem ve 12A aralık.
+
+    Eski iki sütunlu markdown düzeni dar kartta dört satıra dağılıyordu;
+    tek esnek satır sığmadığında kendiliğinden kırılır.
+    """
     aralik = aralik_12a(df)
     aralik_metni = (
-        f"{sayi_bicimle(aralik[0])} – {sayi_bicimle(aralik[1])}" if aralik else "—"
+        f"12A aralık {sayi_bicimle(aralik[0])} – {sayi_bicimle(aralik[1])}"
+        if aralik else ""
     )
     degisim_etiketi = "QoQ" if seri.freq == "quarterly" else "MoM"
     degisim = qoq(df) if seri.freq == "quarterly" else mom(df)
-    sol, sag = st.columns(2)
-    with sol:
-        st.markdown(
-            f"**{sayi_bicimle(son_deger(df), seri.unit)}**  \n"
-            f"{degisim_etiketi} {yuzde_rozeti(degisim)}",
-            unsafe_allow_html=True,
-        )
-    with sag:
-        st.markdown(
-            f"YoY {yuzde_rozeti(yoy(df, seri.freq))}  \n"
-            f"<span style='color:{RENKLER['metin_soluk']}'>12A aralık "
-            f"{aralik_metni}</span>",
-            unsafe_allow_html=True,
-        )
+    meta = " · ".join(
+        parca for parca in (
+            f"Son dönem {donem_etiketi(son_tarih(df), seri.freq)}",
+            SIKLIK_METNI[seri.freq],
+            aralik_metni,
+        ) if parca
+    )
+    return (
+        "<div class='bv-kart-ist'>"
+        f"<span class='bv-kart-deger'>{sayi_bicimle(son_deger(df))}"
+        f"<small>{escape(seri.unit)}</small></span>"
+        f"{degisim_rozeti(yoy(df, seri.freq), 'YoY')}"
+        f"{degisim_rozeti(degisim, degisim_etiketi)}"
+        "</div>"
+        f"<div class='bv-kart-meta'>{meta}</div>"
+    )
 
 
 def grafik_karti(seri: Seri, gorunum: str) -> None:
     if "fon" in seri.charts:
         fon_karti(seri)
         return
-    with st.container(border=True):
-        baslik, kaynak = st.columns([4, 1])
-        baslik.markdown(f"**{seri.title}**")
-        kaynak.markdown(
-            f"<div style='text-align:right;color:{RENKLER['metin_soluk']};"
-            f"font-size:0.8em'>"
-            f"<a href='{seri.kaynak.url}' style='color:inherit'>"
-            f"{seri.kaynak.name}</a></div>",
-            unsafe_allow_html=True,
-        )
+    with st.container(key=_kart_anahtari(seri)):
+        st.html(kart_basligi_html(seri))
 
         try:
             df = load_series(seri.id)
@@ -166,9 +337,7 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
             st.warning(f"{seri.title}: veri dosyası boş")
             return
 
-        etiket = SIKLIK_ETIKETLERI[seri.freq]
-        st.caption(f"Son Dönem: {donem_etiketi(son_tarih(df), seri.freq)} · {etiket}")
-        _istatistik_satiri(df, seri)
+        st.html(istatistik_html(df, seri))
 
         hesaplanacak = hareketli_ortalama_uygula(df, seri.hareketli_ortalama_gun)
         gosterilecek = gorunum_uygula(
@@ -220,16 +389,8 @@ def kompozisyon_karti(seri: Seri) -> None:
     kuralı yalnızca GWh'de uygulandığı için farklı son ay gösterebilir —
     bu doğru davranıştır (bkz. I2).
     """
-    with st.container(border=True):
-        baslik, kaynak = st.columns([4, 1])
-        baslik.markdown(f"**{seri.title}**")
-        kaynak.markdown(
-            f"<div style='text-align:right;color:{RENKLER['metin_soluk']};"
-            f"font-size:0.8em'>"
-            f"<a href='{seri.kaynak.url}' style='color:inherit'>"
-            f"{seri.kaynak.name}</a></div>",
-            unsafe_allow_html=True,
-        )
+    with st.container(key=_kart_anahtari(seri)):
+        st.html(kart_basligi_html(seri))
 
         try:
             df = load_wide_series(seri.id)

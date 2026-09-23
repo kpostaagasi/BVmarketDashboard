@@ -97,3 +97,109 @@ TR_AYLAR = [
     "Oca", "Şub", "Mar", "Nis", "May", "Haz",
     "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
 ]
+
+# Uygulama geneli CSS. Streamlit'in kendi teması (.streamlit/config.toml)
+# renkleri verir; bu blok yalnızca tipografi, kart ve boşluk ritmini ekler.
+# Hedefleme Streamlit'in iç sınıf adlarına değil, `data-testid` ve
+# `st.container(key=...)`in ürettiği `st-key-*` sınıflarına yapılır — iç
+# sınıf adları sürüm başına değişiyor, bu ikisi kararlı API.
+# Sayılar `tabular-nums`: KPI ve tabloda basamaklar alt alta hizalanır.
+STIL_CSS = f"""
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body, [data-testid="stApp"], [data-testid="stMarkdownContainer"],
+[data-testid="stCaptionContainer"], button, input {{
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
+}}
+[data-testid="stMainBlockContainer"] {{
+  max-width: 1440px;
+  padding-top: 4.5rem;
+  padding-bottom: 4rem;
+}}
+h1 {{ font-size: 1.9rem !important; font-weight: 700 !important;
+     letter-spacing: -0.02em; padding-bottom: 0.1rem !important; }}
+h2, h3 {{ letter-spacing: -0.01em; }}
+[data-testid="stCaptionContainer"] {{ color: {RENKLER["metin_soluk"]}; }}
+
+/* Kart yüzeyi: grafik kartı ve kategori kutuları aynı dili konuşur. */
+[class*="st-key-kart-"] {{
+  background: {RENKLER["kart_zemini"]};
+  border: 1px solid {RENKLER["izgara"]};
+  border-radius: 14px;
+  padding: 1rem 1.1rem 0.6rem 1.1rem;
+}}
+[class*="st-key-kutu-"] {{
+  background: {RENKLER["kart_zemini"]};
+  border: 1px solid {RENKLER["izgara"]};
+  border-radius: 12px;
+  padding: 0.55rem 0.8rem;
+  transition: border-color .15s ease;
+}}
+[class*="st-key-kutu-"]:hover {{ border-color: {RENKLER["vurgu"]}; }}
+
+/* KPI kartı (saf HTML, bkz. core/components.py::kpi_karti_html) */
+.bv-kpi {{
+  background: {RENKLER["kart_zemini"]};
+  border: 1px solid {RENKLER["izgara"]};
+  border-radius: 14px;
+  padding: 0.85rem 1rem 0.75rem 1rem;
+  height: 100%;
+  display: flex; flex-direction: column; gap: 0.3rem;
+  color: {RENKLER["metin"]};
+}}
+.bv-kpi-etiket {{
+  font-size: 0.78rem; color: {RENKLER["metin_soluk"]};
+  line-height: 1.25; min-height: 2.5em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}}
+.bv-kpi-govde {{ display: flex; align-items: flex-end;
+  justify-content: space-between; gap: 0.5rem; }}
+.bv-kpi-deger {{ font-size: 1.65rem; font-weight: 650; line-height: 1.1;
+  letter-spacing: -0.02em; white-space: nowrap; }}
+.bv-kpi-birim {{ font-size: 0.72rem; color: {RENKLER["metin_soluk"]};
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.bv-kpi-alt {{ display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0.35rem; font-size: 0.74rem; color: {RENKLER["metin_soluk"]}; }}
+.bv-kivilcim {{ flex-shrink: 0; }}
+
+.bv-rozet {{ display: inline-flex; align-items: center; gap: 0.2rem;
+  padding: 0.08rem 0.45rem; border-radius: 999px; font-size: 0.72rem;
+  font-weight: 600; white-space: nowrap; }}
+.bv-rozet-artis {{ color: {RENKLER["artis"]}; background: {RENKLER["artis"]}22; }}
+.bv-rozet-dusus {{ color: {RENKLER["dusus"]}; background: {RENKLER["dusus"]}22; }}
+.bv-rozet-notr {{ color: {RENKLER["metin_soluk"]}; background: {RENKLER["izgara"]}; }}
+.bv-rozet small {{ font-weight: 500; opacity: .8; }}
+
+/* Grafik kartı başlığı */
+.bv-kart-bas {{ display: flex; justify-content: space-between;
+  align-items: baseline; gap: 0.75rem; }}
+.bv-kart-baslik {{ font-weight: 600; font-size: 0.98rem; color: {RENKLER["metin"]}; }}
+.bv-kart-kaynak a {{ font-size: 0.72rem; color: {RENKLER["metin_soluk"]};
+  text-decoration: none; white-space: nowrap; }}
+.bv-kart-kaynak a:hover {{ color: {RENKLER["vurgu"]}; }}
+.bv-kart-ist {{ display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.4rem 0.9rem; margin: 0.35rem 0 0.1rem 0; }}
+.bv-kart-deger {{ font-size: 1.35rem; font-weight: 650; letter-spacing: -0.01em; }}
+.bv-kart-deger small {{ font-size: 0.72rem; font-weight: 500;
+  color: {RENKLER["metin_soluk"]}; margin-left: 0.25rem; }}
+.bv-kart-meta {{ font-size: 0.74rem; color: {RENKLER["metin_soluk"]}; }}
+
+/* Ana sayfa */
+.bv-hero-alt {{ color: {RENKLER["metin_soluk"]}; font-size: 0.95rem;
+  margin-top: -0.4rem; }}
+.bv-sayac {{ display: flex; gap: 2rem; flex-wrap: wrap; margin: 0.6rem 0 0.4rem 0; }}
+.bv-sayac div {{ display: flex; flex-direction: column; }}
+.bv-sayac b {{ font-size: 1.4rem; font-weight: 700; color: {RENKLER["vurgu"]}; }}
+.bv-sayac span {{ font-size: 0.75rem; color: {RENKLER["metin_soluk"]};
+  text-transform: uppercase; letter-spacing: 0.06em; }}
+.bv-bolum {{ font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: {RENKLER["vurgu"]}; margin: 1.4rem 0 0.2rem 0; }}
+.bv-liste {{ width: 100%; border-collapse: collapse; font-size: 0.85rem; }}
+.bv-liste td {{ padding: 0.45rem 0.4rem; border-bottom: 1px solid {RENKLER["izgara"]};
+  color: {RENKLER["metin"]}; }}
+.bv-liste td.soluk {{ color: {RENKLER["metin_soluk"]}; font-size: 0.75rem; }}
+.bv-liste td.sag {{ text-align: right; white-space: nowrap; }}
+.bv-liste tr:last-child td {{ border-bottom: none; }}
+"""

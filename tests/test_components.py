@@ -78,3 +78,43 @@ def test_kpi_uygun_seriler_tekil_serileri_korur():
 
     seriler = [seri_getir("enflasyon/tufe-genel"), seri_getir("elektrik/uretim")]
     assert _kpi_uygun_seriler(seriler) == seriler
+
+
+def test_kisa_sayi_binin_ustunde_ondaliksiz():
+    from core.components import kisa_sayi
+
+    assert kisa_sayi(5781.74) == "5.782"
+    assert kisa_sayi(134.754) == "134,75"
+    assert kisa_sayi(None) == "—"
+
+
+def test_degisim_rozeti_puan_modunda_puan_yazar():
+    from core.components import degisim_rozeti
+
+    assert "5,00 puan" in degisim_rozeti(-5.0, "YoY", puan=True)
+    assert "bv-rozet-dusus" in degisim_rozeti(-5.0, "YoY", puan=True)
+
+
+def test_degisim_rozeti_sifirda_notr():
+    from core.components import degisim_rozeti
+
+    assert "bv-rozet-notr" in degisim_rozeti(0.0, "1G")
+
+
+def test_kivilcim_iki_noktanin_altinda_bos():
+    from core.components import kivilcim_svg
+
+    assert kivilcim_svg([1.0], "#fff") == ""
+
+
+def test_kivilcim_sabit_seride_patlamaz_ve_img_doner():
+    from core.components import kivilcim_svg
+
+    assert kivilcim_svg([2.0, 2.0, 2.0], "#fff").startswith("<img")
+
+
+def test_kpi_karti_basliktaki_kesme_isaretini_kacirir():
+    from core.components import kpi_karti_html
+
+    html = kpi_karti_html("TİM'in toplamı", "1", "USD", [], "2026-08")
+    assert "TİM&#x27;in" in html
