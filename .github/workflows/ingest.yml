@@ -1,9 +1,9 @@
 name: Veri güncelle
 
 on:
-  schedule:
-    # 06:00 UTC = 09:00 TSİ
-    - cron: "0 6 * * *"
+  # Zamanlama cron-job.org'da (GitHub schedule'ı bu hesapta 4-6 saat
+  # gecikiyor): her gün 09:00 TSİ workflow_dispatch. Pzt/Per tam koşu (freq
+  # boş), diğer günler freq=daily,weekly ile tetiklenir.
   workflow_dispatch:
     inputs:
       freq:
