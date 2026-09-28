@@ -9,3 +9,4 @@ venv/
 .env.*
 .firecrawl/
 .tefas_onbellek/
+.claude/launch.json
