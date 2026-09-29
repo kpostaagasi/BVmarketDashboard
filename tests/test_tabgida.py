@@ -1,10 +1,10 @@
 """TAB Gıda çeyreklik "Finansal Bülten" PDF ayrıştırma testleri.
 
 Şebeke: `tabgida.com.tr` TLS/WAF düzeyinde `requests` istemcisini
-reddediyor (bkz. modül docstring'i ve görev raporu) — bu yüzden bu adaptör
-katalogda KAYITLI DEĞİL. Testler yalnızca ayrıştırma mantığının doğruluğunu
-kanıtlıyor (ileride erişim çözülürse ya da farklı bir istemci kullanılırsa
-hazır olsun diye)."""
+reddediyor (ölçüldü 2026-09-29: `ConnectionResetError(54)`) — bu yüzden
+testler AĞA BAĞIMLI DEĞİLDİR, yalnızca ayrıştırma mantığının doğruluğunu
+kanıtlarlar. Adaptör katalogda KAYITLIDIR (`restoran/tabgd-restoran-sayisi`,
+`restoran/tabgd-fis-sayisi`); canlı koşu erişim açılınca veri çekecektir."""
 
 from types import SimpleNamespace
 

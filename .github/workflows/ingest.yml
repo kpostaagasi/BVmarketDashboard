@@ -27,8 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     # Takılan bir kaynak 6 saatlik varsayılan sınırı (360 dk) yakmasın.
     # Repo public: dakika ücretsiz, sınırın işi yalnızca takılmayı kesmek.
-    # 23 Eylül tam koşusu 90 dk'da 2.807/3.706 seride kesildi.
-    timeout-minutes: 150
+    # 23 Eylül tam koşusu 90 dk'da 2.807/3.706 seride kesildi. Katalog o
+    # günden bu yana 4.253 seriye çıktı; ayrıca TİM İlk 1000 (146 seri,
+    # `yearly`) Pzt/Per tam koşusunda ~440 MB kitap PDF'i indirip ayrıştırıyor
+    # (ölçüldü: 146 seri tek paylaşımlı önbellekle 399 sn). 150 dk daralttı.
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
 

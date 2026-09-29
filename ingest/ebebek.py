@@ -238,10 +238,12 @@ def magaza_noktalari(session=None) -> dict[str, dict[str, int]]:
 # URL). "NÇ Türkiye Operasyonlarına Genel Bakış" sayfası kanal bazlı
 # satış büyümesi/payı okur; bir sonraki sayfa fatura/sipariş ortalaması,
 # PL payı ve LFL'yi; "Kategoriler arası..." sayfası kategori kırılımını
-# okur. Üçü de yalnızca YAKIN GEÇMİŞTE (ölçüldü: kanal/fatura/LFL/PL
-# sayfası ilk kez 4Ç 2025'te, kategori sayfası ilk kez 4Ç 2024'te)
-# ortaya çıktı — daha eski sunumlarda sayfa hiç yok, `None`/atlama ile
-# ele alınır (hata değil).
+# okur. Üçü de yalnızca YAKIN GEÇMİŞTE ortaya çıktı (ölçüldü 2026-09-29:
+# fatura/LFL/PL sayfası ilk kez 4Ç 2025'te, kanal ve kategori sayfaları ilk
+# kez 4Ç 2024'te; 2024 1Ç–3Ç'de sayfa hiç yok) — daha eski sunumlarda
+# `None`/atlama ile ele alınır (hata değil). Kanal sayfası 4Ç 2024'te
+# yalnızca 12A kümülatif büyüme taşıdığı (çeyrek/YBİ çifti yok) için o
+# sunum bilinçli atlanır: çeyrek serisine kümülatif değer yazılmaz.
 FINANSAL_SAYFA = "https://kurumsal.ebebek.com/finansal-bilgiler"
 
 _SUNUM_SATIRI = re.compile(
@@ -307,7 +309,10 @@ _KANAL_BUYUME_DESENI = re.compile(r"(%-?\d+,\d+|-%\d+,\d+)")
 def kanal_buyume_ve_payini_ayikla(pdf_baytlari: bytes) -> dict[str, float] | None:
     """"NÇ Türkiye Operasyonlarına Genel Bakış" sunumunun "Satış Kanalı
     Bazında satış adedi kırılımı" bölümünü taşıyan sayfayı bulur. Sayfa
-    yoksa (2025 4Ç'ten önce) None döner.
+    yoksa (2024 4Ç'ten önce) None döner. 2024 4Ç sunumunda sayfa vardır
+    ama altı büyüme değerinin altısı da "2023/2024" (yalnızca 12A kümülatif)
+    etiketlidir — çeyreğe özgü değer olmadığı için RuntimeError verilir ve
+    çağıran bu tek sunumu atlar (diğer sunumlar etkilenmez).
 
     Mağaza/ebebek.com/Pazaryeri satış adedi BÜYÜME YÜZDELERİ ve PASTA
     GRAFİĞİ PAYLARI gerçek metin katmanında var (regex/konumla okunabilir)
@@ -330,7 +335,12 @@ def kanal_buyume_ve_payini_ayikla(pdf_baytlari: bytes) -> dict[str, float] | Non
     sayı da pasta çevresinde serbestçe konumlanmış). Mağaza/ebebek.com/
     Pazaryeri payları HER ölçülen çeyrekte hep BÜYÜKTEN KÜÇÜĞE bu sırada
     olduğundan (Mağaza her zaman baskın, Pazaryeri her zaman en küçük —
-    üç farklı çeyrekte doğrulandı) büyüklüğe göre eşlenir."""
+    beş farklı çeyrekte doğrulandı) büyüklüğe göre eşlenir. Etiket yazımı
+    sunuma göre değişir: 2026 1Ç'te üçü de çıplak sayı + ayrı "%", diğer
+    sunumlarda en az biri tek parça ("%4", "%88") — ikisi de kabul edilir,
+    aksi halde paylar 3 değil 2 bulunur ve sunum sessizce düşerdi (ölçüldü
+    2026-09-29: 2Ç25/3Ç25/4Ç25/2Ç26 sunumlarının hepsi bu yüzden atlanıyordu,
+    kalan tek veri 1Ç 2026'ydı)."""
     with pdfplumber.open(io.BytesIO(pdf_baytlari)) as pdf:
         sayfa = None
         for p in pdf.pages:
@@ -354,10 +364,28 @@ def kanal_buyume_ve_payini_ayikla(pdf_baytlari: bytes) -> dict[str, float] | Non
         magaza_b, web_b, pazar_b = buyume
     elif len(buyume) == 6:
         magaza_b, web_b, pazar_b = buyume[0], buyume[2], buyume[4]
+        # Altı değer = (çeyrek, YBİ kümülatif) İKİ çift. 4Ç 2024 sunumunda altı
+        # etiketin de tamamı "2023/2024" (yalnızca 12A kümülatif) olduğundan
+        # ÇEYREĞE ÖZGÜ değer yoktur — çeyrek serisine kümülatif değer yazmamak
+        # için o sunum atlanır (ölçüldü 2026-09-29).
+        etiketler = re.findall(
+            r"\d[ÇA]['’]\d{2}/\d{2}|\d{4}/\d{4}", tam_metin[idx_panel:idx_legend]
+        )
+        if len(set(etiketler)) < 2:
+            raise RuntimeError(
+                "ebebek kanal büyümesi: sunum çeyrek/YBİ çifti taşımıyor, yalnızca kümülatif"
+            )
     else:
         raise RuntimeError(f"ebebek kanal büyümesi: 3 ya da 6 değer bekleniyordu, {len(buyume)} bulundu")
 
     tek_ve_iki_hane = re.compile(r"^\d{1,2}$")
+    # Pasta etiketleri % işaretiyle BİRLİKTE ("%4", "%88") ya da ayrı bir metin
+    # parçası olarak ("9", "%") yazılır; ölçüldü (2026-09-29) — 2026 1Ç'te
+    # üçü de çıplak sayı, diğer beş sunumda en az biri "%N" biçiminde. Önceki
+    # kalıp yalnızca "N%" kabul ettiği için "%4"/"%88" etiketi düşüyor ve
+    # paylar 3 yerine 2 değer bulunup SUNUM ATLANIYORDU (6 kanal serisi tek
+    # satıra düşmüştü).
+    yuzde_ekli = re.compile(r"^(?:%\d{1,2}%?|\d{1,2}%)$")
     yuzde_kelimesi = [w for w in kelimeler if w["text"] == "%"]
     pay_degerleri = []
     for w in kelimeler:
@@ -365,8 +393,8 @@ def kanal_buyume_ve_payini_ayikla(pdf_baytlari: bytes) -> dict[str, float] | Non
             abs(p["top"] - w["top"]) < 40 and abs(p["x0"] - w["x0"]) < 60 for p in yuzde_kelimesi
         ):
             pay_degerleri.append(float(w["text"]))
-        elif re.match(r"^\d{1,2}%$", w["text"]):
-            pay_degerleri.append(float(w["text"].rstrip("%")))
+        elif yuzde_ekli.match(w["text"]):
+            pay_degerleri.append(float(w["text"].strip("%")))
     if len(pay_degerleri) != 3:
         raise RuntimeError(f"ebebek kanal payı: 3 değer bekleniyordu, {len(pay_degerleri)} bulundu")
     magaza_p, web_p, pazar_p = sorted(pay_degerleri, reverse=True)

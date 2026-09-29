@@ -264,9 +264,21 @@ PDF_TOPLAM_OLCUTLERI = {"ucak-sayisi", "uculan-nokta"}
 # filo/uçulan-hatlar sayfalarının "canlı" (yalnızca bugünü gösteren, geçmişi
 # olmayan) sürümleri yerine, her ay yayımlanan PDF'in kendi TOPLAM tablosu
 # kullanılır — gerçek, tarihli kaynak (bkz. modül sonu).
-_TRAFIK_PDF_BASLIGI = re.compile(r"^([A-ZÇĞİÖŞÜ]+)\s+(\d{4})\s+TRAFİK$", re.M)
-_UCAK_SAYISI_DESENI = re.compile(r"^Uçak Sayısı (\d+) (\d+) %", re.M)
-_UCULAN_NOKTA_DESENI = re.compile(r"^Uçulan Nokta (\d+) (\d+) %", re.M)
+#
+# ÖLÇÜLEN İKİ ŞABLON (2026-09-29):
+# * Yeni şablon (cari yıl, ör. ağustos-2026-trafik.pdf): başlık
+#   "<AY> <YIL> TRAFİK", değişim sütunu boşluklu ("566 %13,0").
+# * Eski şablon (2022/2023 yıl sonu arşivleri, ör.
+#   aralik-2023-trafik_web.pdf): başlık "TRAFİK VERİLERİ – ARALIK 2023"
+#   (uzun tire), değişim sütunu SAYI + boşluksuz yüzde ("394 440 11,7%")
+#   ve uçulan nokta satırı "(Şehir Bazında)" parantezli — yeni şablondaki
+#   yüzde işaretinden önceki boşluk bu şablonda yoktur.
+_TRAFIK_PDF_BASLIKLARI = (
+    re.compile(r"^([A-ZÇĞİÖŞÜ]+)\s+(\d{4})\s+TRAFİK$", re.M),
+    re.compile(r"^TRAFİK VERİLERİ\s*[–—-]\s*([A-ZÇĞİÖŞÜ]+)\s+(\d{4})$", re.M),
+)
+_UCAK_SAYISI_DESENI = re.compile(r"^Uçak Sayısı (\d+) (\d+)(?: ?%| [\d,]+%)", re.M)
+_UCULAN_NOKTA_DESENI = re.compile(r"^Uçulan Nokta(?: \(Şehir Bazında\))? (\d+) (\d+)(?: ?%| [\d,]+%)", re.M)
 _AY_BUYUK_HARF = {ay.upper(): i + 1 for i, ay in enumerate(AYLAR)}
 
 
@@ -276,7 +288,9 @@ def pdf_toplam_noktalari(metin: str) -> tuple[str, float, float]:
     YURT DIŞI/YURT İÇİ bloklarında bu iki ölçüt hiç yok (yalnızca filo
     genelinde ve ağ genelinde anlamlı).
     """
-    baslik = _TRAFIK_PDF_BASLIGI.search(metin)
+    baslik = next(
+        (m for desen in _TRAFIK_PDF_BASLIKLARI if (m := desen.search(metin))), None
+    )
     if not baslik:
         raise RuntimeError("THY trafik PDF'inde '<AY> <YIL> TRAFİK' başlığı bulunamadı")
     ay_adi, yil = baslik.group(1), int(baslik.group(2))
@@ -296,12 +310,15 @@ def pdf_toplam_noktalari(metin: str) -> tuple[str, float, float]:
 
 
 def pdf_toplam_seri_cek(seri, session=None) -> pd.DataFrame:
-    """Trafik sayfasındaki EN GÜNCEL aylık PDF bülteninden "ucak-sayisi" ya
-    da "uculan-nokta" serisini çeker (tek nokta — bülten yalnızca cari ayı
-    ve bir önceki yılın aynı ayını gösterir, geriye dönük arşiv sayfa
-    başına tek dosya değil; bkz. modül docstring'i, dosya_listesi ile aynı
-    kısıt). Ölçüldü (2026-09-20): Ağustos 2026 Uçak Sayısı=566, Uçulan
-    Nokta=358 — marketvisuals.net kart özetiyle birebir eşleşiyor.
+    """Trafik sayfasındaki TÜM aylık PDF bültenlerinden "ucak-sayisi" ya
+    da "uculan-nokta" serisini çeker. Sayfa her bülteni ayrı dosya olarak
+    listeler (cari ay + yıl sonu arşivleri), bültenlerin her biri kendi
+    tarihiyle İKİ sütun (yıl-1, yıl) taşıdığı için birer nokta verir —
+    tarih bültenin kendi başlığından okunur, dosya adından türetilmez
+    (dosya adları bozuk: "aralik-2024-trafk.pdf", "2022trafik(1).pdf").
+    Ölçüldü (2026-09-29): Ağu 2026 566/358, Ara 2025 516/356, Ara 2024
+    492/352, Ara 2023 440/340, Ara 2022 394/337 (uçak sayısı / uçulan
+    nokta) — marketvisuals.net kart özetiyle birebir eşleşiyor.
     """
     http = session or requests
     yanit = http.get(TRAFIK_SAYFASI, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
@@ -310,19 +327,19 @@ def pdf_toplam_seri_cek(seri, session=None) -> pd.DataFrame:
     baglantilar = re.findall(r'href="([^"]+/trafik/[^"]+\.pdf)"', yanit.text)
     if not baglantilar:
         raise RuntimeError("THY trafik sayfasında aylık PDF bağlantısı bulunamadı")
-    pdf_url = baglantilar[0]
-    if not pdf_url.startswith("http"):
-        pdf_url = f"{TABAN}{pdf_url}"
 
-    pdf_yaniti = http.get(pdf_url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if pdf_yaniti.status_code != 200:
-        raise RuntimeError(f"THY trafik PDF'i indirilemedi ({pdf_url}): HTTP {pdf_yaniti.status_code}")
-    with pdfplumber.open(io.BytesIO(pdf_yaniti.content)) as pdf:
-        metin = pdf.pages[0].extract_text() or ""
-    tarih, ucak_sayisi, uculan_nokta = pdf_toplam_noktalari(metin)
+    noktalar: dict[str, float] = {}
+    for baglanti in baglantilar:
+        pdf_url = baglanti if baglanti.startswith("http") else f"{TABAN}{baglanti}"
+        pdf_yaniti = http.get(pdf_url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
+        if pdf_yaniti.status_code != 200:
+            raise RuntimeError(f"THY trafik PDF'i indirilemedi ({pdf_url}): HTTP {pdf_yaniti.status_code}")
+        with pdfplumber.open(io.BytesIO(pdf_yaniti.content)) as pdf:
+            metin = pdf.pages[0].extract_text() or ""
+        tarih, ucak_sayisi, uculan_nokta = pdf_toplam_noktalari(metin)
+        noktalar[tarih] = {"ucak-sayisi": ucak_sayisi, "uculan-nokta": uculan_nokta}[seri.thy_olcut]
 
-    deger = {"ucak-sayisi": ucak_sayisi, "uculan-nokta": uculan_nokta}[seri.thy_olcut]
-    df = pd.DataFrame([(tarih, deger)], columns=["date", "value"])
+    df = pd.DataFrame(sorted(noktalar.items()), columns=["date", "value"])
     if seri.start_date:
         df = df[df["date"] >= seri.start_date]
     return df.reset_index(drop=True)
@@ -360,11 +377,21 @@ def seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
 # ir-presentation-2q26tr.pdf, 35 sayfa):
 #
 # - "Sunumlar" sayfası (`SUNUMLAR_SAYFASI`) en yeni çeyrekten en eskiye
-#   sıralı `ir-presentation-NqYYtr.pdf` bağlantıları listeler (ör.
-#   "2q26", "1q26", "4q25", "3q25", ...); ilk eşleşme kullanılır. Aynı
-#   sayfada "…-basin-sunumu.pdf" (basın sunumu) ve "…infografik…pdf" gibi
+#   sıralı `ir-presentation-NqYYtr.pdf` bağlantıları listeler (ölçüldü
+#   2026-09-29: 4 bağlantı — "2q26", "1q26", "4q25", "3q25"; liste en
+#   uzun geçmişe kısaldıkça çeyrek geçmişi de kısalır). Aynı sayfada
+#   "…-basin-sunumu.pdf" (basın sunumu) ve "…infografik…pdf" gibi
 #   FARKLI belgeler de var — yalnızca `ir-presentation-` önekli olanlar
 #   eşleşir.
+# - Sayfadaki TÜM sunumlar okunur, ama farklı derinlikte: en yeni sunum
+#   `_sunumu_ayristir` ile TAM (30 metrik), eskiler yalnızca
+#   `_ceyrek_tablosu_noktalari` ile (Filo + Bölgesel RASK2 değişimi —
+#   çeyrek başına tek nokta veren iki tablo). Eskilerin "Özet Finansal
+#   Veriler" tablosu AYNI deseni tutmaz: değişim sütunu negatif olduğunda
+#   ("7,79 7,68 -%1,4 RASK2…") işaretsiz desen tutmuyor, CASK/KPI/Bilanço
+#   tablolarının sütun seti çeyrekten çeyreğe değişiyor — bu yüzden
+#   eski sunumlarda o tablolar okunmaz (geçmiş nokta uydurulmaz, ilgili
+#   seri yalnızca en yeni sunumun iki noktasıyla sınırlı kalır).
 # - Çoğu tablo pdfplumber `extract_text()` ile TEMİZ satırlar üretiyor
 #   (tablo çizgileri yok ama hücreler tek satıra akıyor, sütun sırası
 #   sabit). İKİ istisna GRAFİK (bar chart) olarak gömülü, düz metin akışı
@@ -393,12 +420,13 @@ def seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:
 #   O YILIN 4. ÇEYREĞİNE (Ekim) damgalanır (bilanço bir dönem sonu anlık
 #   görüntüsüdür, FY rakamı fiilen Aralık sonudur).
 # - "Filo" tablosunda alt tip satırları (ör. "A350-9") BOŞ hücreleri
-#   (sıfır Finansal Kira/Opr. Kira) atlayarak farklı sütun sayısında
+#   (sıfır Finansal Kiran / Opr. Kirası) atlayarak farklı sütun sayısında
 #   geliyor — bu yüzden alt tip satırları OKUNMAZ, yalnızca her gövde
 #   grubunun ("Geniş Gövde"/"Dar Gövde"/"Kargo") "Toplam" alt toplam satırı
-#   ve "Genel Toplam" satırı okunur (bunlar HER ZAMAN tam sütun sayısında).
-#   Kargo grubunun "Toplam" satırında "Ortalama Filo Yaşı" sütunu BOŞ
-#   (yalnızca 5 sayı, 6 değil) — son sütun bu yüzden OPSİYONEL.
+#   ve "Genel Toplam" satırı okunur. Son iki sütun (Koltuk Kapasitesi,
+#   Ortalama Filo Yaşı) hiç okunmadığı ve Kargo alt toplamında çeyrekten
+#   çeyreğe BOŞ hücreli geldiği (2Ç'26: beş sayı; 1Ç'26: "28 6 16 6 - 12,5")
+#   için desende yalnızca ilk DÖRT tam sayı zorunludur.
 # - Ölçüldü (2026-09-20): RASK2 8,93 / Yield 9,83 / Yakıt Fiyatı 1.480 /
 #   Net Borç-FAVÖK S12A 2,1x / Bilanço Toplam Varlık 50.671 / Filo Genel
 #   Toplam 552 — marketvisuals.net kart özetleriyle birebir eşleşiyor.
@@ -415,19 +443,27 @@ def _ceyrek_tarihi(yil: int, ceyrek: int) -> str:
     return f"{yil}-{_CEYREK_ILK_AY[ceyrek]}-01"
 
 
-def sunum_bilgisi(session=None) -> tuple[str, int, int]:
-    """Sunumlar sayfasından en güncel çeyreklik yatırımcı sunumu PDF'inin
-    `(url, yıl, çeyrek)` bilgisini döner. Sayfa en yeniden en eskiye
-    sıralı; ilk eşleşme kullanılır."""
+def sunum_baglantilari(session=None) -> list[tuple[str, int, int]]:
+    """Sunumlar sayfasındaki TÜM çeyreklik yatırımcı sunumu PDF'lerini
+    sayfadaki sırayla (en yeni çeyrekten en eskiye) `(url, yıl, çeyrek)`
+    üçlüleri olarak döner."""
     http = session or requests
     yanit = http.get(SUNUMLAR_SAYFASI, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
     if yanit.status_code != 200:
         raise RuntimeError(f"THY sunumlar sayfası HTTP {yanit.status_code} döndü")
-    m = _SUNUM_BAGLANTISI.search(yanit.text)
-    if not m:
+    eslesmeler = _SUNUM_BAGLANTISI.findall(yanit.text)
+    if not eslesmeler:
         raise RuntimeError("THY sunumlar sayfasında çeyreklik yatırımcı sunumu bağlantısı bulunamadı")
-    url = m.group(1)
-    return (url if url.startswith("http") else f"{TABAN}{url}"), 2000 + int(m.group(3)), int(m.group(2))
+    return [
+        ((url if url.startswith("http") else f"{TABAN}{url}"), 2000 + int(yy), int(ceyrek))
+        for url, ceyrek, yy in eslesmeler
+    ]
+
+
+def sunum_bilgisi(session=None) -> tuple[str, int, int]:
+    """En güncel çeyreklik yatırımcı sunumu PDF'inin `(url, yıl, çeyrek)`
+    bilgisini döner (`sunum_baglantilari`'nın ilk kaydı)."""
+    return sunum_baglantilari(session)[0]
 
 
 def _sayfa_metni_bul(pdf, icerir: str) -> tuple[int, str]:
@@ -490,21 +526,36 @@ _BILANCO_SATIR_DESENI = re.compile(
 
 # "Filo" sayfası: gövde grubu alt toplamları (Geniş Gövde / Dar Gövde /
 # Kargo sırasıyla — sayfada bu sırayla geçer) + Genel Toplam.
-_FILO_BASLIK_DESENI = re.compile(r"Filo \((\d{2})\.(\d{2})\.(\d{4}) İtibarıyla\)")
-_FILO_TOPLAM_DESENI = re.compile(r"^Toplam (\d+) (\d+) (\d+) (\d+) ([\d,]+)(?: ([\d,]+))?$", re.M)
-_FILO_GENEL_TOPLAM_DESENI = re.compile(r"^Genel Toplam (\d+) (\d+) (\d+) (\d+) ([\d,]+)(?: ([\d,]+))?$", re.M)
+#
+# Satır BAŞLIKLARI çeyrekten çeyreğe yazım değiştiriyor ve 1Ç'26'da
+# pdfplumber'da tamamen kayboluyor: 2Ç'26 "Filo (30.06.2026 İtibarıyla)",
+# 4Ç'25/3Ç'25 "Filo (31.12.2025 itibarıyla)" (küçük i), 1Ç'26 ise
+# "Filo (31.03.2026 itibarıyla)" satırı GÖRÜNMÜYOR. Bu yüzden sayfa başlık
+# metniyle bulunur (`_FILO_SAYFA_İZMASI`).
+#
+# Satırın SON İKİ sütunu (Koltuk Kapasitesi, Ortalama Filo Yaşı) okunmaz ve
+# çeyrekten çeyreğe BOŞ hücreli gelir (2Ç'26 Kargo: 5 sayı, 1Ç'26 Kargo:
+# "28 6 16 6 - 12,5" — boş Opr./Wet Lease); bu yüzden desende yalnızca
+# BAŞLIKTAN SONRAKİ DÖRT tam sayı (uçak sayısı + üç mülkiyet bileşeni)
+# aranır, kalan sütunlar serbest bırakılır.
+_FILO_SAYFA_İZMASI = "Opr./Wet"
+_FILO_TOPLAM_DESENI = re.compile(r"^Toplam ((?:\d+ ){3}\d+)", re.M)
+_FILO_GENEL_TOPLAM_DESENI = re.compile(r"^Genel Toplam ((?:\d+ ){3}\d+)", re.M)
 _FILO_GOVDE_SIRASI = ("filo-genis-govde", "filo-dar-govde", "filo-kargo")
 _FILO_MULKIYET_SIRASI = ("filo-sahip-olunan", "filo-finansal-kira", "filo-operasyonel-kira")
 
 # "Dolar Bazında Bölgesel Birim Gelir Değişimi" sayfası: RASK2 satırı sayfada
-# İKİ kez geçer (üç bölgelik iki grup); her geçişte 3 bölge × (2Ç,6A) çifti.
+# İKİ kez geçer (üç bölgelik iki grup); her grupta 3 bölge. Çeyrek sütunu
+# İLK değerdir; kümülatif (6A/9A/12A) sütunu okunmaz — bazı çeyreklerde o
+# sütun hiç basılmamış (1Ç'26 İç Hat: tek değer "RASK2 %7") olduğundan
+# desende çeyrek sütunu TEK başına eşleştirilir.
 _BOLGE_SIRASI = (
     "rask2-degisim-amerika", "rask2-degisim-avrupa", "rask2-degisim-uzak-dogu",
     "rask2-degisim-afrika", "rask2-degisim-orta-dogu", "rask2-degisim-ic-hat",
 )
 _BOLGE_GRUP1_DESENI = re.compile(r"Amerika Avrupa Uzak Doğu")
 _BOLGE_GRUP2_DESENI = re.compile(r"Afrika Orta Doğu İç Hat")
-_BOLGE_RASK2_DESENI = re.compile(r"RASK2 (-?%[\d,]+) (-?%[\d,]+)")
+_BOLGE_RASK2_DESENI = re.compile(r"RASK2 (-?%[\d,.]+)")
 
 # "Net Borç / EBITDA Oranı" grafiği: sekiz yıl/dönem kategorisi (2019..2025
 # yıl sonu + S12A cari çeyrek). "2Ç'26" gibi ek eksen alt-etiketi kasıtlı
@@ -633,14 +684,15 @@ def _filo_noktalari(metin: str) -> dict[str, float]:
     if not genel:
         raise RuntimeError("THY sunumunda Filo tablosunda 'Genel Toplam' satırı bulunamadı")
 
-    govde_toplamlari = [int(satir[0]) for satir in govde_satirlari]
-    genel_toplam = int(genel.group(1))
+    govde_toplamlari = [int(satir.split()[0]) for satir in govde_satirlari]
+    genel_sayilar = [int(sayi) for sayi in genel.group(1).split()]
+    genel_toplam = genel_sayilar[0]
     if sum(govde_toplamlari) != genel_toplam:
         raise RuntimeError(
             f"THY sunumunda Filo gövde tipi alt toplamları ({sum(govde_toplamlari)}) "
             f"Genel Toplam ({genel_toplam}) ile uyuşmuyor"
         )
-    mulkiyet_degerleri = [int(genel.group(2)), int(genel.group(3)), int(genel.group(4))]
+    mulkiyet_degerleri = genel_sayilar[1:]
     if sum(mulkiyet_degerleri) != genel_toplam:
         raise RuntimeError(
             f"THY sunumunda Filo mülkiyet kırılımı toplamı ({sum(mulkiyet_degerleri)}) "
@@ -652,8 +704,9 @@ def _filo_noktalari(metin: str) -> dict[str, float]:
 
 
 def _bolgesel_noktalari(metin: str) -> dict[str, float]:
-    """Bölgesel RASK2 YoY değişim tablosundan altı bölgenin 2Ç sütununu
-    döner (6A kümülatif sütunu atlanır — bkz. modül docstring'i)."""
+    """Bölgesel RASK2 YoY değişim tablosundan altı bölgenin çeyrek
+    (cari çeyrek) sütununu döner (kümülatif sütun atlanır — bkz. desen
+    yorumu)."""
     if not (_BOLGE_GRUP1_DESENI.search(metin) and _BOLGE_GRUP2_DESENI.search(metin)):
         raise RuntimeError("THY sunumunda Bölgesel Birim Gelir Değişimi bölge başlıkları bulunamadı")
     if _BOLGE_GRUP1_DESENI.search(metin).start() > _BOLGE_GRUP2_DESENI.search(metin).start():
@@ -662,9 +715,9 @@ def _bolgesel_noktalari(metin: str) -> dict[str, float]:
     if len(eslesmeler) != 6:
         raise RuntimeError(
             f"THY sunumunda Bölgesel Birim Gelir Değişimi RASK2 satırında {len(eslesmeler)} "
-            "bölge çifti bulundu (6 bekleniyor)"
+            "bölge değeri bulundu (6 bekleniyor)"
         )
-    return {ad: tr_sayi(ceyrek) for ad, (ceyrek, _altiay) in zip(_BOLGE_SIRASI, eslesmeler)}
+    return {ad: tr_sayi(ceyrek) for ad, ceyrek in zip(_BOLGE_SIRASI, eslesmeler)}
 
 
 def _sunumu_ayristir(pdf, yil: int, ceyrek: int) -> dict[str, dict[str, float]]:
@@ -712,13 +765,7 @@ def _sunumu_ayristir(pdf, yil: int, ceyrek: int) -> dict[str, dict[str, float]]:
     _, metin = _sayfa_metni_bul(pdf, "Varlıklar (mn USD)")
     noktalar.update(_bilanco_noktalari(metin))
 
-    _, metin = _sayfa_metni_bul(pdf, "İtibarıyla)")
-    for metrik, deger in _filo_noktalari(metin).items():
-        noktalar[metrik] = {bu_tarih: deger}
-
-    _, metin = _sayfa_metni_bul(pdf, "Dolar Bazında Bölgesel Birim Gelir Değişimi")
-    for metrik, deger in _bolgesel_noktalari(metin).items():
-        noktalar[metrik] = {bu_tarih: deger}
+    noktalar.update(_ceyrek_tablosu_noktalari(pdf, yil, ceyrek))
 
     idx, _ = _sayfa_metni_bul(pdf, "EBITDA Oranı")
     noktalar["net-borc-favok"] = _net_borc_favok_noktalari(pdf.pages[idx], yil, ceyrek)
@@ -729,19 +776,51 @@ def _sunumu_ayristir(pdf, yil: int, ceyrek: int) -> dict[str, dict[str, float]]:
     return noktalar
 
 
+def _ceyrek_tablosu_noktalari(pdf, yil: int, ceyrek: int) -> dict[str, dict[str, float]]:
+    """Filo ve Bölgesel Birim Gelir Değişimi tablolarından, yalnızca o
+    çeyreğe ait TEK nokta taşıyan metrikleri döner. Bu iki tablo geçmiş
+    çeyrekleri SÜTUN olarak taşımaz (Özet/Bilanço tablolarının aksine), dolayısıyla
+    çeyrek geçmişi yalnızca eski sunumların AYNI çeyreğine bakılarak
+    biriktirilebilir — `_sunum_noktalarini_getir` bunu yapar. Tarih katalog
+    sözleşmesidir: çeyreğin ilk ayı (Filo "31.12.2025 itibarıyla" da 4Ç'25
+    → 2025-10-01'e damgalanır)."""
+    tarih = _ceyrek_tarihi(yil, ceyrek)
+    noktalar: dict[str, dict[str, float]] = {}
+    _, metin = _sayfa_metni_bul(pdf, _FILO_SAYFA_İZMASI)
+    for metrik, deger in _filo_noktalari(metin).items():
+        noktalar[metrik] = {tarih: deger}
+    _, metin = _sayfa_metni_bul(pdf, "Dolar Bazında Bölgesel Birim Gelir Değişimi")
+    for metrik, deger in _bolgesel_noktalari(metin).items():
+        noktalar[metrik] = {tarih: deger}
+    return noktalar
+
+
 def _sunum_noktalarini_getir(onbellek: dict, session=None) -> dict[str, dict[str, float]]:
-    """PDF indirme + ayrıştırmayı önbellekler: 30 seri aynı tek dosyayı
-    okuduğu için yoksa 30 indirme olurdu."""
+    """PDF indirme + ayrıştırmayı önbellekler: 30 seri aynı dosya kümesini
+    okuduğu için yoksa 30 indirme olurdu.
+
+    Sayfadaki sunumlar en yeniden en eskiye işlenir: EN YENİ sunum TÜM
+    metrikleri (30) taşır, eski sunumlardan yalnızca tek noktalık iki tablo
+    (`_ceyrek_tablosu_noktalari`) okunur — böylece "Filo" ve "Bölgesel
+    RASK2 değişimi" metrikleri sunumlar sayfasındaki çeyrek sayısı kadar
+    geçmişe uzanır (ölçüldü 2026-09-29: 4 çeyrek)."""
     if "noktalar" in onbellek:
         return onbellek["noktalar"]
     http = session or requests
-    url, yil, ceyrek = sunum_bilgisi(session)
-    yanit = http.get(url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"THY yatırımcı sunumu indirilemedi ({url}): HTTP {yanit.status_code}")
-    with pdfplumber.open(io.BytesIO(yanit.content)) as pdf:
-        onbellek["noktalar"] = _sunumu_ayristir(pdf, yil, ceyrek)
-    return onbellek["noktalar"]
+    noktalar: dict[str, dict[str, float]] = {}
+    for sira, (url, yil, ceyrek) in enumerate(sunum_baglantilari(session)):
+        yanit = http.get(url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
+        if yanit.status_code != 200:
+            raise RuntimeError(f"THY yatırımcı sunumu indirilemedi ({url}): HTTP {yanit.status_code}")
+        with pdfplumber.open(io.BytesIO(yanit.content)) as pdf:
+            ayristirilmis = (
+                _sunumu_ayristir(pdf, yil, ceyrek) if sira == 0
+                else _ceyrek_tablosu_noktalari(pdf, yil, ceyrek)
+            )
+        for metrik, degerler in ayristirilmis.items():
+            noktalar.setdefault(metrik, {}).update(degerler)
+    onbellek["noktalar"] = noktalar
+    return noktalar
 
 
 def sunum_seri_cek(seri, onbellek: dict | None = None, session=None) -> pd.DataFrame:

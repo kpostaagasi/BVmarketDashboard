@@ -40,8 +40,11 @@ GECERLI_KAYNAK_TIPLERI = {
     "iso_pmi", "tim_pazar_monitoru",
     "bigchefs", "turktraktor", "migros",
     "tepav", "tmsd", "ithib",
+    "tabgida",
     "eurostat_insaat", "taid",
-    "eia", "trabzontb",
+    "eia", "trabzontb", "fintables",
+    "mkk",
+    "tim_ilk1000",
 }
 SIKLIK_ETIKETLERI = {
     "daily": "GÜNLÜK", "weekly": "HAFTALIK", "monthly": "AYLIK",
@@ -355,6 +358,11 @@ GECERLI_BIGCHEFS_METRIKLERI = {
     "net-nakit-pozisyonu", "geri-alinan-paylar",
     "fis-ortalamasi-bigchefs", "fis-ortalamasi-buselik", "fis-ortalamasi-numnum",
 }
+# TAB Gıda (Burger King/Popeyes/Arby's/Sbarro/Usta Dönerci/Usta Pideci/
+# Subway Türkiye ana bayii) çeyreklik "Finansal Bülten" PDF'lerinden çekilen
+# iki ölçüt (çeyreklik restoran sayısı + YILLIK fiş sayısı). Bkz.
+# ingest/tabgida.py docstring'i.
+GECERLI_TABGIDA_METRIKLERI = {"restoran-sayisi", "fis-sayisi"}
 # TürkTraktör (BIST: TTRAK) Yatırımcı İlişkileri'nin aylık "OSD'ye
 # Bildirilen Üretim ve Satış Adetleri" PDF'inden çekilen üç ölçüt (üretim
 # zaten mevcut `osd_firma: TÜRK TRAKTÖR` ile karşılanıyor). Bkz.
@@ -375,6 +383,22 @@ GECERLI_MIGROS_METRIKLERI = {
     "migros-one-gmv", "migros-one-aktif-kullanici",
     "migros-one-siparis-sayisi", "moneypay-kayitli-kullanici",
 }
+# Fintables'ın BIST şirketlerine sunduğu üç çeyreklik KAP tablosunun slug'ı
+# (= URL segmenti = `ingest/fintables.py::GECERLI_TABLOLAR`). SATIR (kalem)
+# adları şirkete göre değiştiği için burada sabit bir liste YOKTUR —
+# `fintables_kalem` ilgili şirketin sayfasından birebir kopyalanır.
+GECERLI_FINTABLES_TABLOLARI = {"bilanco", "gelir-tablosu", "nakit-akim-tablosu"}
+# KTB'nin iki bülteni: alan boşsa/verilmemişse sınır istatistikleri (eski
+# davranış), "konaklama" ise Bakanlık Belgeli Konaklama İstatistikleri.
+# Konaklama bülteninin tek ekseni doluluk ölçütüdür. Bkz. ingest/ktb.py.
+GECERLI_KTB_BULTENLER = {"konaklama"}
+GECERLI_KTB_OLCUTLERI = {"toplam", "yabancı", "yerli"}
+# MKK Aylık Piyasa Bülteni'nin üç sayfa başlığı. `ingest/mkk.py::SERI_ADLARI`
+# bunu assert ile doğrulur; iki liste birlikte değişmelidir.
+GECERLI_MKK_SERILERI = ("kayitli_yatirimci", "bakiyeli_yatirimci", "bakiyeli_hesap")
+# TİM İlk 1000 İhracatçı kitabından çıkan iki ölçüt: ihracat tutarı ve
+# genel sıra. `ingest/tim_ilk1000.py::GECERLI_OLCUTLER` bunu doğruluyor.
+GECERLI_TIM_ILK1000_OLCUTLERI = ("ihracat", "sira")
 
 
 
@@ -578,7 +602,22 @@ KAYNAK_ALANLARI = {
     },
     "ktb": {
         "zorunlu": (),
+        "istege_bagli": ("ktb_bulten", "ktb_olcut", "start_date"),
+    },
+    "fintables": {
+        "zorunlu": ("fintables_sirket", "fintables_tipi", "fintables_kalem"),
+        # fintables_bolum opsiyoneldir ama bilançoda 15 kalem adı iki bölümde
+        # tekrar ettiği için o kalemlerde ZORUNLUDUR (bkz.
+        # ingest/fintables.py::seri_cek).
+        "istege_bagli": ("fintables_bolum", "start_date"),
+    },
+    "mkk": {
+        "zorunlu": ("mkk_seri",),
         "istege_bagli": ("start_date",),
+    },
+    "tim_ilk1000": {
+        "zorunlu": ("tim_firma",),
+        "istege_bagli": ("tim_olcut", "start_date"),
     },
     "eurostat_turizm": {
         "zorunlu": ("eurostat_turizm_resid",),
@@ -602,6 +641,10 @@ KAYNAK_ALANLARI = {
     },
     "migros": {
         "zorunlu": ("migros_metrik",),
+        "istege_bagli": (),
+    },
+    "tabgida": {
+        "zorunlu": ("tabgida_metrik",),
         "istege_bagli": (),
     },
     "tepav": {
@@ -805,6 +848,7 @@ class Seri:
     tim_pm_ulke: str | None = None
     tim_pm_endeks: str | None = None
     bigchefs_metrik: str | None = None
+    tabgida_metrik: str | None = None
     turktraktor_metrik: str | None = None
     migros_metrik: str | None = None
     tepav_seri: str | None = None
@@ -814,6 +858,15 @@ class Seri:
     taid_marka: str | None = None
     eia_series_id: str | None = None
     trabzontb_urun: str | None = None
+    ktb_bulten: str | None = None
+    ktb_olcut: str | None = None
+    fintables_sirket: str | None = None
+    fintables_tipi: str | None = None
+    fintables_kalem: str | None = None
+    fintables_bolum: str | None = None
+    tim_firma: str | None = None
+    tim_olcut: str | None = None
+    mkk_seri: str | None = None
 
 
 def _alan_verilmis(seri: Seri, alan: str) -> bool:
@@ -1074,6 +1127,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             bigchefs_metrik=ham.get("bigchefs_metrik"),
             turktraktor_metrik=ham.get("turktraktor_metrik"),
             migros_metrik=ham.get("migros_metrik"),
+            tabgida_metrik=ham.get("tabgida_metrik"),
             tepav_seri=ham.get("tepav_seri"),
             tmsd_kalem=ham.get("tmsd_kalem"),
             ithib_kalem=ham.get("ithib_kalem"),
@@ -1081,6 +1135,15 @@ def serileri_yukle() -> tuple[Seri, ...]:
             taid_marka=ham.get("taid_marka"),
             eia_series_id=ham.get("eia_series_id"),
             trabzontb_urun=ham.get("trabzontb_urun"),
+            ktb_bulten=ham.get("ktb_bulten"),
+            ktb_olcut=ham.get("ktb_olcut"),
+            fintables_sirket=ham.get("fintables_sirket"),
+            fintables_tipi=ham.get("fintables_tipi"),
+            fintables_kalem=ham.get("fintables_kalem"),
+            fintables_bolum=ham.get("fintables_bolum"),
+            tim_firma=ham.get("tim_firma"),
+            tim_olcut=ham.get("tim_olcut"),
+            mkk_seri=ham.get("mkk_seri"),
         )
         _dogrula(seri, sluglar, gorulen)
         gorulen.add(seri.id)
@@ -1503,6 +1566,46 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
         raise KatalogHatasi(
             f"{seri.id}: geçersiz migros_metrik '{seri.migros_metrik}' "
             f"(geçerli: {', '.join(sorted(GECERLI_MIGROS_METRIKLERI))})"
+        )
+    if seri.kaynak_tipi == "tabgida" and seri.tabgida_metrik not in GECERLI_TABGIDA_METRIKLERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz tabgida_metrik '{seri.tabgida_metrik}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_TABGIDA_METRIKLERI))})"
+        )
+    if seri.kaynak_tipi == "ktb":
+        if seri.ktb_bulten is not None and seri.ktb_bulten not in GECERLI_KTB_BULTENLER:
+            raise KatalogHatasi(
+                f"{seri.id}: geçersiz ktb_bulten '{seri.ktb_bulten}' "
+                f"(geçerli: {', '.join(sorted(GECERLI_KTB_BULTENLER))})"
+            )
+        # Ölçüt yalnızca konaklama bülteninde vardır; sınır bülteninde
+        # verilirse (istemci okumadan sessizce yok sayar) sessiz hata olur.
+        if seri.ktb_bulten == "konaklama" and seri.ktb_olcut not in GECERLI_KTB_OLCUTLERI:
+            raise KatalogHatasi(
+                f"{seri.id}: konaklama bülteni için ktb_olcut zorunlu ve "
+                f"şunlardan biri olmalı: {', '.join(sorted(GECERLI_KTB_OLCUTLERI))} "
+                f"(verilen: '{seri.ktb_olcut}')"
+            )
+    if (
+        seri.kaynak_tipi == "fintables"
+        and seri.fintables_tipi not in GECERLI_FINTABLES_TABLOLARI
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz fintables_tipi '{seri.fintables_tipi}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_FINTABLES_TABLOLARI))})"
+        )
+    if seri.kaynak_tipi == "mkk" and seri.mkk_seri not in GECERLI_MKK_SERILERI:
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz mkk_seri '{seri.mkk_seri}' "
+            f"(geçerli: {', '.join(GECERLI_MKK_SERILERI)})"
+        )
+    if (
+        seri.tim_olcut is not None
+        and seri.tim_olcut not in GECERLI_TIM_ILK1000_OLCUTLERI
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz tim_olcut '{seri.tim_olcut}' "
+            f"(geçerli: {', '.join(GECERLI_TIM_ILK1000_OLCUTLERI)})"
         )
 
 

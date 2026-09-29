@@ -168,7 +168,12 @@ h2, h3 {{ letter-spacing: -0.01em; }}
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
 .bv-kpi-alt {{ display: flex; flex-wrap: wrap; align-items: center;
   gap: 0.35rem; font-size: 0.74rem; color: {RENKLER["metin_soluk"]}; }}
-.bv-kivilcim {{ flex-shrink: 0; }}
+/* Kıvılcım bırakan taraf: sabit 96px + flex-shrink:0 iken geniş bir değer
+   ("12.547 Puan") 89+8+96=193px ister, kartın 169px'lik govde taşar
+   (ölçüldü: BIST 100 ve Brent kartlarında scrollWidth 193 > 169). Değer
+   nowrap olduğu için bizzat esnemez; esneyen kıvılcımdır. min-width taban
+   çizgiyi tamamen yutmaz. */
+.bv-kivilcim {{ min-width: 2rem; }}
 
 .bv-rozet {{ display: inline-flex; align-items: center; gap: 0.2rem;
   padding: 0.08rem 0.45rem; border-radius: 999px; font-size: 0.72rem;

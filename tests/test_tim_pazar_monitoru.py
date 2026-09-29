@@ -78,6 +78,22 @@ def test_pm_satirlari_ayikla_negatif_degisimli_satiri_okur():
     metin = "Gemi, Yat ve Hizmetleri 101,3 -5,1 1,8 4,0"
     sonuc = _pm_satirlari_ayikla(metin, PM_SEKTORLER)
     assert sonuc == {"Gemi, Yat ve Hizmetleri": 101.3}
+ 
+ 
+def test_pm_satirlari_ayikla_ocak_tire_dusen_ytd_hucreyi_okur():
+    """Ocak 2025 Talep tablosu: Yılbaşına sütunu `-` basılı geliyor."""
+    metin = "Çelik 99,4 - -1,4 -0,5"
+    assert _pm_satirlari_ayikla(metin, PM_SEKTORLER) == {"Çelik": 99.4}
+
+
+def test_pm_satirlari_ayikla_ocak_sarmalanmis_ytd_satirini_okur():
+    """Ocak 2025 Dayanıklılık tablosunda o `-` hücresi satırdan ayrılıp
+    kendi satırına düşüyor; satırda yalnızca üç sayı kalıyor."""
+    metin = "Çelik 99,7 - 0,5 0,3\n-\nÇimento, Cam, Ser. Topr. Ür. 98,9 0,7 0,6\n-"
+    assert _pm_satirlari_ayikla(metin, PM_SEKTORLER) == {
+        "Çelik": 99.7,
+        "Çimento, Cam, Ser. Topr. Ür.": 98.9,
+    }
 
 
 def test_pm_satirlari_ayikla_bilinmeyen_adi_atlar():

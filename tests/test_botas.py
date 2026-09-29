@@ -9,6 +9,8 @@ from ingest.botas import (
     _kategori_belirle,
     guncel_tarife_url,
     kategori_fiyatlarini_cikar,
+    pdf_kategori_fiyatlari,
+    pdf_yururluk_tarihi,
     seri_cek,
     yururluk_tarihi,
 )
@@ -115,6 +117,9 @@ def test_kategori_fiyatlarini_cikar_osb_bolumundeki_tekrari_almaz():
 
 
 class SahteOturum:
+    """HTML sayfaları + PDF arşivi. PDF'ler gerçek bayt ister; arşiv testleri
+    önbelleğe (`onbellek["arsiv"]`) elle yazılır, ağdan PDF ÇEKİLMEZ."""
+
     def __init__(self, indeks_html, detay_html):
         self.indeks_html = indeks_html
         self.detay_html = detay_html
@@ -123,23 +128,120 @@ class SahteOturum:
     def get(self, url, timeout=None):
         self.cagrilar.append(url)
         html = self.indeks_html if "satis-fiyat-tarifesi/439" in url else self.detay_html
-        return SimpleNamespace(status_code=200, text=html)
+        return SimpleNamespace(status_code=200, text=html, content=b"")
+
+
+_BOS_ARSIV = {}
+
+
+def _pdf_metni(baslik, *satirlar):
+    return baslik + "\n" + "\n".join(satirlar)
 
 
 def _indeks_html():
     return '<a href="https://www.botas.gov.tr/Sayfa/4-nisan-2026-tarihinden-itibaren-gecerli-botas-dogal-gaz-toptan-satis-fiyat-tarifesi/812">Detay</a>'
 
 
-def test_seri_cek_dogru_kategoriyi_ve_tarihi_dondurur():
+def _arsiv(**noktalar):
+    """`onbellek["arsiv"]` için hazır geçmiş: {tarih: {kategori: fiyat}}."""
+    return {"arsiv": noktalar}
+
+
+# --- PDF arşivi: yürürlük tarihi ---
+
+
+def test_pdf_yururluk_tarihi_gercek_gunu_alir():
+    assert pdf_yururluk_tarihi("5 Nisan 2025 Tarihinden İtibaren Geçerli BOTAŞ ...") == "2025-04-05"
+
+
+def test_pdf_yururluk_tarihi_yil_ay_biciminde_ayin_birine_duser():
+    assert pdf_yururluk_tarihi("2022 Yılı Şubat Ayı BOTAŞ Doğal Gaz Toptan Satış Fiyat Tarifesi") == "2022-02-01"
+
+
+def test_pdf_yururluk_tarihi_baslik_yoksa_hata():
+    with pytest.raises(RuntimeError, match="yürürlük tarihi"):
+        pdf_yururluk_tarihi("Alakasız metin")
+
+
+# --- PDF arşivi: kategori çıkarımı (üç tablo düzeni) ---
+
+
+def test_pdf_kategorileri_2025_uzun_etiketli_duzeni():
+    metin = _pdf_metni(
+        "5 Nisan 2025 Tarihinden İtibaren Geçerli BOTAŞ ...",
+        "Konut Tüketicileri (Evsel Tüketiciler) 5,631275",
+        "Ekmek Üreticileri 10,395938 0,97706184",
+        "Elektrik Üretim Amacı Dışındaki Kullanım 13,838052 1,30056880",
+        "Elektrik Üretimi Amaçlı Kullanım 15,000000 1,40977444",
+    )
+    assert pdf_kategori_fiyatlari(metin) == {
+        "konut": pytest.approx(5.631275),
+        "ekmek-ureticileri": pytest.approx(10.395938),
+        "elektrik-uretimi-disi": pytest.approx(13.838052),
+        "elektrik-uretimi-amacli": pytest.approx(15.0),
+    }
+
+
+def test_pdf_kategorileri_2020_abone_duzeninde_konut_yok_yerine_abone_okunur():
+    metin = _pdf_metni(
+        "2020 Yılı Ekim Ayı BOTAŞ Doğal Gaz Toptan Satış Fiyat Tarifesi",
+        "Serbest Olmayan Tüketici",
+        "1,251652",
+        "(Abone)",
+        "Kademe 1 1,251652 0,11763647 1,400000 0,13157895",
+    )
+    sonuc = pdf_kategori_fiyatlari(metin)
+    assert sonuc["konut"] == pytest.approx(1.251652)
+    assert sonuc["elektrik-uretimi-disi"] == pytest.approx(1.251652)
+    assert sonuc["elektrik-uretimi-amacli"] == pytest.approx(1.4)
+    # 2020-2024'te ekmek ve şehit tarifesi YAYIMLANMADI — uydurulmamalı.
+    assert "ekmek-ureticileri" not in sonuc
+    assert "sehit-ailesi" not in sonuc
+
+
+def test_pdf_kategorileri_kirik_konut_etiketini_duzlestirilmis_metinten_alir():
+    metin = _pdf_metni(
+        "2022 Yılı Şubat Ayı BOTAŞ Doğal Gaz Toptan Satış Fiyat Tarifesi",
+        "Konut Tüketicileri (Evsel",
+        "1,860118",
+        "Tüketiciler)",
+    )
+    assert pdf_kategori_fiyatlari(metin)["konut"] == pytest.approx(1.860118)
+
+
+# --- seri_cek: ağ kabuğu ---
+
+
+def test_seri_cek_arsiv_ve_guncel_birlestirilir():
     oturum = SahteOturum(_indeks_html(), _detay_tablosu())
-    df = seri_cek(botas_seri(), onbellek={}, session=oturum)
-    assert list(df["date"]) == ["2026-04-04"]
-    assert df["value"].iloc[0] == pytest.approx(10.625)
+    onbellek = _arsiv(
+        **{
+            "2024-02-01": {"konut": 4.080634, "ekmek-ureticileri": 8.549994},
+            "2025-03-01": {"konut": 5.631275, "ekmek-ureticileri": 8.549994},
+        }
+    )
+    df = seri_cek(botas_seri(), onbellek=onbellek, session=oturum)
+    assert list(df["date"]) == ["2024-02-01", "2025-03-01", "2026-04-04"]
+    assert df["value"].tolist() == pytest.approx([4.080634, 5.631275, 10.625])
+
+
+def test_seri_cek_arsivde_kategori_olmayan_tarihleri_atlar():
+    """2020-2021'de ekmek/şehit tarifesi yok — O TARİHLER ATLANIR, sıfır
+    yazılmaz."""
+    oturum = SahteOturum(_indeks_html(), _detay_tablosu())
+    onbellek = _arsiv(
+        **{
+            "2024-02-01": {"konut": 4.080634},
+            "2025-03-01": {"ekmek-ureticileri": 8.549994},
+        }
+    )
+    df = seri_cek(botas_seri(botas_kategori="ekmek-ureticileri"), onbellek=onbellek, session=oturum)
+    assert list(df["date"]) == ["2025-03-01", "2026-04-04"]
 
 
 def test_seri_cek_onbellegi_paylasir():
     oturum = SahteOturum(_indeks_html(), _detay_tablosu())
-    onbellek = {}
+    onbellek = _arsiv(**{"2025-03-01": {"konut": 5.631275}})
     seri_cek(botas_seri(), onbellek=onbellek, session=oturum)
     cagri_sayisi = len(oturum.cagrilar)
     seri_cek(botas_seri(botas_kategori="ekmek-ureticileri"), onbellek=onbellek, session=oturum)
@@ -149,13 +251,13 @@ def test_seri_cek_onbellegi_paylasir():
 def test_seri_cek_bilinmeyen_kategoride_hata():
     oturum = SahteOturum(_indeks_html(), _detay_tablosu())
     with pytest.raises(RuntimeError, match="tarife sayfasında bulunamadı"):
-        seri_cek(botas_seri(botas_kategori="yok-olan-kategori"), onbellek={}, session=oturum)
+        seri_cek(botas_seri(botas_kategori="yok-olan-kategori"), onbellek=dict(_BOS_ARSIV), session=oturum)
 
 
 def test_seri_cek_indeks_http_hatasi_yukselir():
     class HataliOturum:
         def get(self, url, timeout=None):
-            return SimpleNamespace(status_code=500, text="")
+            return SimpleNamespace(status_code=500, text="", content=b"")
 
     with pytest.raises(RuntimeError, match="HTTP 500"):
-        seri_cek(botas_seri(), onbellek={}, session=HataliOturum())
+        seri_cek(botas_seri(), onbellek=dict(_BOS_ARSIV), session=HataliOturum())

@@ -10,17 +10,41 @@ URL'i /439 sabit kalır); adaptör bu yüzden ÖNCE /439'u çekip güncel tarihl
 bağlantıyı bulur, SONRA o sayfadaki tabloyu okur — böylece kod değişmeden
 her yeni tarifeyi otomatik takip eder.
 
-**Tarihsel arşiv YOK (ölçüldü 2026-09-18).** BOTAŞ'ın "Duyurular" kategorisi
-(`/Kategori/duyurular/2`, 10 sayfa `?sira=N` ile paylandırılmış) taranan
-TÜM sayfalarında tek bir tarife duyurusu bile yok (yalnızca personel/basın
-açıklamaları); "Tarifeler" alt menüsünde ve /439 sayfasının kendisinde
-GEÇMİŞ tarife sürümlerine bağlantı yok (yalnızca güncel olana); site içi
-arama ucu (`/Arama/?key=...`) istek zaman aşımına uğruyor (>300 sn, iki
-farklı sorguyla denendi). Bu yüzden `seri_cek` yalnızca ŞU AN yürürlükteki
-tek noktayı döner — sahte geçmiş nokta ÜRETİLMEZ. BOTAŞ her tarife
-değiştirdiğinde bu adaptör bir sonraki ingest koşusunda otomatik yeni
-değeri yakalar; seri zamanla gerçek (uydurma olmayan) çok noktalı bir
-tarihçeye dönüşür.
+**Tarihsel arşiv: HTML'de YOK, PDF'lerde VAR (ölçüldü 2026-09-29).** BOTAŞ'ın
+"Tarifeler" alt menüsünde ve /439'da GEÇMİŞ tarife HTML'lerine bağlantı yok;
+eski duyuru sayfaları (`/Sayfa/<tarihli-slug>/<id>`, ör. 2024-02 → /600) içeriği
+SİLİNMİŞ — HTTP 200 dönüyor ama gövde boş ("4/5" breadcrumb), yani soft-404.
+Ancak her tarifenin PDF'i BOTAŞ'ın KENDİ dosya deposunda
+(`/uploads/dosyaYoneticisi/<id>-<slug>.pdf`) kalıcı duruyor ve HTTP 200 veriyor.
+Depo dizin listelemesi 403 döndürüyor, site içi arama ucu zaman aşımına uğruyor
+ve HİÇBİR BOTAŞ sayfası bu PDF'leri listelemiyor — bu yüzden dosya adları
+`TARIFE_PDFLERI`'ne elle yazıldı (21 dosya, tek tek doğrulandı). 2021-03 ve
+2021-11 PDF'leri görüntü taraması (metin katmanı 0 karakter) — listede yoklar.
+
+`seri_cek` bu yüzden İKİ kaynağı birleştirir: (a) /439 → güncel tarihli duyuru
+HTML'i, kod değişmeden YENİ tarifeleri otomatik takip eder; (b) dondurulmuş PDF
+arşivi, geçmişi verir. Örtüştükleri 4 Nisan 2026 tarifesinde ikisi BEŞİ DE
+aynı: konut 10,625 · şehit 5,3125 · ekmek 10,395938 · el-amaclı 18 · el-dışı 18.
+
+PDF arşivi üç farklı tablo düzeni taşıyor (hepsi pdfplumber `extract_text()`):
+- **2020-2021** "Konut" satırı YOK; karşılığı "Serbest Olmayan Tüketici /
+  (Abone)" — `Serbest Olmayan Tüketici <fiyat> (Abone)`. Elektrik fiyatları
+  "Kademe 1 <dışı> <dışı_kwh> <amaçlı> <amaçlı_kwh>" satırında. Ekmek/şehit
+  bu dönemde yok.
+- **2022-2024** konut etiketi satır KIRILMIŞ ("Konut Tüketicileri (Evsel" /
+  "Tüketiciler) 4,080634"); düzleştirilmiş metinde `Tüketiciler) <fiyat>`
+  yakalanır. Elektrik yine `Kademe 1` satırında. Ekmek/şehit yok.
+- **2025+** konut tek satırda; elektrik ve ekmek AÇIK etiketli ("Elektrik
+  Üretim Amacı Dışındaki Kullanım <fiyat> ..."). Şehit 2025-07'de belirdi
+  ve etiketi YINE kırık ("Şehit Ailesi ... Olan Konut" / "3,885895" /
+  "Tüketicileri (Evsel Tüketiciler)") — düzleştirmede `Gazi Olan Konut <fiyat>`
+  olarak yakalanır. 2026'da konut ayrıca "Kademe-1"/"Kademe-2" ayrımına
+  geçti; katalogdaki `konut` = Kademe-1 (HTML referansıyla doğrulandı).
+
+`Kademe 1` satırının 1. ve 3. sütunu, 2025+ etiketlerinin verdiği iki elektrik
+fiyatıyla ÇAPRAZ doğrulandı (2025-03: etiket 11,380913/12,000000 = Kademe 1'in
+o satırları), bu yüzden eski düzenler de aynı iki kategoriye yazılır.
+
 
 Dated sayfa iki ayrı tarife tablosu taşıyor: "Dağıtım Şirketleri İçin..."
 ve "...Organize Sanayi Bölgeleri ve Serbest Tüketiciler İçin...". Referans
@@ -36,14 +60,45 @@ from __future__ import annotations
 
 import html as html_modul
 import re
+from io import BytesIO
 
 import pandas as pd
+import pdfplumber
 import requests
 
 from core.catalog import GECERLI_BOTAS_KATEGORILERI, Seri
 
 INDEKS_URL = "https://www.botas.gov.tr/Sayfa/satis-fiyat-tarifesi/439"
+DOSYA_TABANI = "https://www.botas.gov.tr/uploads/dosyaYoneticisi"
 ZAMAN_ASIMI = 60
+
+# Geçmiş tarife PDF'leri. BOTAŞ bunları hiçbir sayfada listelemiyor (depo dizin
+# listelemesi 403, arama ucu zaman aşımı) ve eski duyuru sayfaları soft-404 —
+# dosya adları bu yüzden ölçülmüş, elle sabitlenmiştir. 2021-03 ve 2021-11
+# PDF'leri görüntü taraması (metin katmanı boş) bilinçli olarak yok.
+TARIFE_PDFLERI = (
+    "958090-mayis_2020_tarifesi_29042020.pdf",
+    "551538-temmuz_2020_tarifesi_29062020.pdf",
+    "2285-ekim_2020_tarifesi_28092020.pdf",
+    "597667-ocak_2021_tarifesi_31122020.pdf",
+    "10212-ubat_2022_tarifesi.pdf",
+    "333970-mart_2022_tarifesi.pdf",
+    "666177-nisan_2022_tarifesi.pdf",
+    "435696-mayis_2022_tarifesi_v2.pdf",
+    "265942-haziran_2022_tarifesi.pdf",
+    "551551-temmuz_2022_tarifesi.pdf",
+    "949372-agustos_2022_tarifesi.pdf",
+    "134057-ekim_2022_tarifesi.pdf",
+    "791347-kasim_2022_tarifesi.pdf",
+    "161300-aralik_2022_tarifesi.pdf",
+    "572108-mart_2023_tarifesi.pdf",
+    "768642-ubat_2023_tarifesi.pdf",
+    "410797-ubat_2024_tarifesi.pdf",
+    "611215-mart_2025_tarifesi.pdf",
+    "169807-5-nisan_2025_tarifesi.pdf",
+    "128513-2_temmuz_2025_tarifesi.pdf",
+    "139364-4-nisan_2026_tarife.pdf",
+)
 
 TAM_AY_ADLARI = {
     "Ocak": 1, "Şubat": 2, "Mart": 3, "Nisan": 4, "Mayıs": 5, "Haziran": 6,
@@ -63,6 +118,34 @@ _GUNCEL_LINK_RE = re.compile(
     r'href="(https://www\.botas\.gov\.tr/Sayfa/[a-z0-9\-]*tarihinden-itibaren-gecerli[a-z0-9\-]*/\d+)"',
     re.I,
 )
+
+# --- PDF arşivi (2020-2026) desenleri -------------------------------------
+# PDF başlığı iki biçimde geliyor: "2022 Yılı Şubat Ayı ..." (ayın 1'i) ve
+# "5 Nisan 2025 Tarihinden İtibaren Geçerli ..." (gerçek yürürlük günü).
+_PDF_YIL_AY_RE = re.compile(
+    r"(\d{4})\s+Yılı\s+(" + "|".join(TAM_AY_ADLARI) + r")\s+Ayı"
+)
+_PDF_KONUT_RE = re.compile(
+    r"Konut Tüketicileri \(Evsel Tüketiciler\)(?: Kademe-1)?\s+([\d,]+)"
+)
+# 2022-2024: etiket iki biçimde kırılıyor — "(Evsel 1,860118 Tüketiciler)"
+# (2022-02..04) ve "2,511159 (Evsel Tüketiciler)" (2022-05..08) ve
+# "Tüketiciler) 4,080634" (2022-10+).
+_PDF_KONUT_KIRIK_RE = re.compile(
+    r"Konut Tüketicileri (?:\(Evsel ([\d,]+) Tüketiciler\)|([\d,]+) \(Evsel Tüketiciler\)|\(Evsel Tüketiciler\) ([\d,]+))"
+)
+_PDF_ABONE_RE = re.compile(r"Serbest Olmayan Tüketici\s+([\d,]+)")  # 2020-2021
+_PDF_KONUT_DESENLERI = (_PDF_KONUT_RE, _PDF_KONUT_KIRIK_RE, _PDF_ABONE_RE)
+_PDF_SEHIT_RE = re.compile(r"Gazi Olan Konut\s+([\d,]+)")
+_PDF_EKMEK_RE = re.compile(r"Ekmek Üreticileri\s+([\d,]+)")
+_PDF_ELEKTRIK_RE = re.compile(
+    r"Elektrik Üretim Amacı Dışındaki Kullanım\s+([\d,]+).*?"
+    r"Elektrik Üretimi Amaçlı Kullanım\s+([\d,]+)",
+    re.S,
+)
+# 2020-2024'te elektrik fiyatları etiketsiz "Kademe 1" satırında:
+# <dışı> <dışı_kwh> <amaçlı> <amaçlı_kwh>. 2025+ etiketleriyle çapraz doğrulandı.
+_PDF_KADEME_RE = re.compile(r"Kademe 1\s+([\d,]+)\s+[\d,]+\s+([\d,]+)")
 
 
 def guncel_tarife_url(indeks_html: str) -> str:
@@ -132,9 +215,92 @@ def tarifeyi_cek(session=None) -> dict:
     return {"tarih": yururluk_tarihi(html), "kategoriler": kategori_fiyatlarini_cikar(html)}
 
 
+def _sayi(ham: str) -> float:
+    return float(ham.replace(".", "").replace(",", "."))
+
+
+def pdf_yururluk_tarihi(metin: str) -> str:
+    """PDF'in ilk satırından yürürlük tarihini `YYYY-MM-DD` olarak çıkarır.
+
+    "5 Nisan 2025 Tarihinden İtibaren Geçerli" → gerçek gün (05-04-2025);
+    "2022 Yılı Şubat Ayı" → ayın 1'i (2022-02-01), çünkü PDF günü yazmıyor.
+    """
+    duz = re.sub(r"\s+", " ", metin)
+    eslesme = _BASLIK_RE.search(duz)
+    if eslesme is not None:
+        gun, ay_adi, yil = eslesme.groups()
+        return f"{yil}-{TAM_AY_ADLARI[ay_adi]:02d}-{int(gun):02d}"
+    eslesme = _PDF_YIL_AY_RE.search(duz)
+    if eslesme is None:
+        raise RuntimeError("BOTAŞ: tarife PDF'inden yürürlük tarihi okunamadı")
+    yil, ay_adi = eslesme.groups()
+    return f"{yil}-{TAM_AY_ADLARI[ay_adi]:02d}-01"
+
+
+def pdf_kategori_fiyatlari(metin: str) -> dict[str, float]:
+    """PDF metninden `{botas_kategori: TL/Sm3}` (bkz. modül docstring'i).
+
+    PDF'ler 2020-2026 arasında üç farklı tablo düzeni taşıyor; her düzen için
+    ayrı regex var ve döneminde VAR OLMAYAN kategoriler (2020-2024'te ekmek ve
+    şehit) sonuçta YOKTUR — uydurulmaz.
+    """
+    duz = re.sub(r"\s+", " ", metin)
+    sonuc: dict[str, float] = {}
+
+    for desen in _PDF_KONUT_DESENLERI:
+        eslesme = desen.search(duz)
+        if eslesme is None:
+            continue
+        ham = next((g for g in eslesme.groups() if g), None)
+        if ham is not None:
+            sonuc["konut"] = _sayi(ham)
+        break
+
+    eslesme = _PDF_SEHIT_RE.search(duz)
+    if eslesme is not None:
+        sonuc["sehit-ailesi"] = _sayi(eslesme.group(1))
+
+    eslesme = _PDF_EKMEK_RE.search(duz)
+    if eslesme is not None:
+        sonuc["ekmek-ureticileri"] = _sayi(eslesme.group(1))
+
+    eslesme = _PDF_ELEKTRIK_RE.search(duz)
+    if eslesme is not None:
+        sonuc["elektrik-uretimi-disi"] = _sayi(eslesme.group(1))
+        sonuc["elektrik-uretimi-amacli"] = _sayi(eslesme.group(2))
+    else:
+        eslesme = _PDF_KADEME_RE.search(duz)
+        if eslesme is not None:
+            sonuc["elektrik-uretimi-disi"] = _sayi(eslesme.group(1))
+            sonuc["elektrik-uretimi-amacli"] = _sayi(eslesme.group(2))
+    return sonuc
+
+
+def arsiv_tarifeleri_cek(onbellek: dict, session=None) -> dict[str, dict[str, float]]:
+    """`{YYYY-MM-DD: {botas_kategori: TL/Sm3}}` — `TARIFE_PDFLERI` arşivinden."""
+    http = session or requests
+    if "arsiv" not in onbellek:
+        noktalar: dict[str, dict[str, float]] = {}
+        for dosya_adi in TARIFE_PDFLERI:
+            url = f"{DOSYA_TABANI}/{dosya_adi}"
+            yanit = http.get(url, timeout=ZAMAN_ASIMI)
+            if yanit.status_code != 200:
+                raise RuntimeError(f"BOTAŞ tarife PDF'i HTTP {yanit.status_code} ({url})")
+            with pdfplumber.open(BytesIO(yanit.content)) as pdf:
+                metin = "\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages)
+            noktalar[pdf_yururluk_tarihi(metin)] = pdf_kategori_fiyatlari(metin)
+        onbellek["arsiv"] = noktalar
+    return onbellek["arsiv"]
+
+
 def seri_cek(seri: Seri, onbellek: dict | None = None, session: requests.Session | None = None) -> pd.DataFrame:
-    """Tek nokta döner: şu an yürürlükteki tarife (bkz. modül docstring'i —
-    kaynakta erişilebilir bir tarihsel arşiv yok)."""
+    """Yürürlükteki tarife + PDF arşivindeki geçmiş tarifeler birleşik döner.
+
+    PDF arşivinde o kategorinin o dönemde karşılığı yoksa (ör. 2020-2021'de
+    ekmek/şehit tarifesi yayımlanmadı) o tarih ATLANIR — sahte nokta üretilmez.
+    Güncel HTML noktası aynı PDF'de de varsa HTML kazanır (ikisi 4 Nisan 2026
+    için birebir aynı; bkz. modül docstring'i).
+    """
     if onbellek is None:
         onbellek = {}
     if "tarife" not in onbellek:
@@ -147,4 +313,11 @@ def seri_cek(seri: Seri, onbellek: dict | None = None, session: requests.Session
             f"BOTAŞ: '{seri.botas_kategori}' kategorisi tarife sayfasında bulunamadı "
             f"(bulunanlar: {sorted(tarife['kategoriler'])})"
         )
-    return pd.DataFrame([(tarife["tarih"], deger)], columns=["date", "value"])
+
+    noktalar = {
+        tarih: degerler[seri.botas_kategori]
+        for tarih, degerler in arsiv_tarifeleri_cek(onbellek, session=session).items()
+        if seri.botas_kategori in degerler
+    }
+    noktalar[tarife["tarih"]] = deger
+    return pd.DataFrame(sorted(noktalar.items()), columns=["date", "value"])

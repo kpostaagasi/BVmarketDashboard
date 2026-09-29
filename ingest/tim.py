@@ -1009,7 +1009,18 @@ PAZAR_MONITORU_INDEKS_URL = f"{TABAN}/tr/raporlar-yayinlar-tim-ihracat-pazar-mon
 _PM_YIL_BAGLANTISI = re.compile(r'href="([^"]*ihracat-pazar-monitoru-(20\d\d)[^"]*)"')
 _PM_PDF_BAGLANTISI = re.compile(r'href="([^"]*azarmonitoru[^"]*\.pdf)"', re.I)
 _PM_DOSYA_TARIHI = re.compile(r"(\d{4})(\d{2})\.pdf$", re.I)
-_PM_SATIR = re.compile(r"^(.+?)\s+(-?\d+,\d+)\s+(-?\d+,\d+)\s+(-?\d+,\d+)\s+(-?\d+,\d+)\s*$")
+# Satır biçimi: `<Ad> <Endeks> <Yılbaşına Göre Değişim %> <Yıllık %> <Aylık %>`.
+# OCAK bültenlerinde YTD hücresi sayı değil `-` basılıyor (Ocak endeki zaten
+# yılbaşı tabanı 100 olduğu için değişim tanımsız) ve 2025-01'de o `-`
+# hücresi satırdan ayrılıp TEK BAŞINA bir satıra düşüyor — yani satır ya
+# "Ad endeks - yıllık aylık" ya da "Ad endeks yıllık aylık" biçiminde
+# geliyor. Bu yüzden YTD sütunu hem `-` hem de HİÇ YOK sayılıyor.
+# Ölçüldü (canlı, 2026-09-29): 2025-01/2026-01 sayfa metinleri pdfplumber
+# ile 1167/1181 karakter geliyor — sorun metin katmanı DEĞİL, regex'ti.
+# Yalnızca 1. grup (ad) ve 2. grup (endeks) kullanılıyor; YTD atılıyor.
+_PM_SATIR = re.compile(
+    r"^(.+?)\s+(-?\d+,\d+)\s+(?:(-|-?\d+,\d+)\s+)?(-?\d+,\d+)\s+(-?\d+,\d+)\s*$"
+)
 
 # TİM'in Temmuz 2026 bülteninde (TIMIhracatPazarMonitoru202607.pdf)
 # alfabetik sırayla ölçülen 26 sektör ve 19 ülke — şablon kayması bu
@@ -1154,16 +1165,25 @@ def _pazar_monitoru_onbellegi_getir(onbellek: dict, session=None) -> dict[str, d
     ekseninde — bkz. modül üstü not) aynı aylık PDF kümesini paylaşır;
     önbelleksiz her seri kendi ayını yeniden indirip ayrıştırırdı.
 
-    Ölçüldü (2026-09-19): bazı ayların (2024 Temmuz–Kasım, 2025'in çoğu,
-    2026 Ocak) PDF'lerinde tablo/grafik sayfaları METİN OLARAK
-    ÇIKARILAMIYOR (görsel/vektör olarak gömülmüş — `extract_text()` boş
-    döner); TİM'in rapor üretim aracı görünüşe göre 2026 Şubat'tan
-    itibaren gerçek metinli PDF'e geçti (Şubat–Temmuz 2026 hepsi sağlam).
-    Bu, gerçek bir şablon kayması DEĞİL — o ayın kaynağı programatik
-    okumaya kapalı; ay atlanır (diğer TİM adaptörlerindeki "0 = henüz
-    yayımlanmamış" hoşgörüsüyle aynı ilke), pencere sessizce daralır ama
-    yanlış değer üretilmez. Hiçbir ay ayrıştırılamazsa `pazar_monitoru_
-    seri_cek` zaten "veri noktası bulunamadı" ile yükselir."""
+    Ölçüldü (canlı, 2026-09-29 — kök neden burada): arşivdeki 24 aylık
+    PDF'in **12'sinin** (2024-07…09, 2024-11, 2025-04, 05, 07…12)
+    tablo sayfalarında HİÇBİR METİN KATMANI YOK — sayfa görsel/vektör
+    olarak gömülü. Çapraz doğrulama: `pdfplumber.extract_text()` bu
+    sayfalarda 0 karakter döndürüyor ve bağımsız çıkarıcı `pdftotext
+    -layout` de yalnızca kapak + madde işaretleri buluyor. Bu bir şablon
+    kayması DEĞİL; o ayların kaynağı programatik okumaya kapalıdır
+    (tek yol OCR — yeni ağır bağımlılık, bu adaptörün işi değil). Ay
+    atlanır (diğer TİM adaptörlerindeki "0 = henüz yayımlanmamış"
+    hoşgörüsüyle aynı ilke), yanlış değer üretilmez.
+
+    ESKİ not ("metin 2026 Şubat'tan itibaren geliyor", "2026 Ocak da
+    metinsiz") YANLIŞTI ve düzeltildi: 2024-12, 2025-02, 2025-03 ve
+    2026-01 de tam metinli. 2025-01/2026-01'in düşmesi metin değil
+    regex'ti (Ocak'ta YTD hücresi `-`), `_PM_SATIR` bunu kabul ediyor.
+
+    2024-10 ve 2025-06 bültenleri TİM arşivinde YOK (yıl alt sayfaları
+    doğrulandı) — boşluk değil, yayımlanmamış. Hiçbir ay ayrıştırılamazsa
+    `pazar_monitoru_seri_cek` zaten "veri noktası bulunamadı" ile yükselir."""
     if "pm_veri" in onbellek:
         return onbellek["pm_veri"]
     http = session or requests

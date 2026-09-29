@@ -24,7 +24,7 @@ introduce English names into existing modules.
 graph LR
   Y[catalog/*.yaml] --> C[core/catalog.py]
   C --> R[ingest/run.py]
-  R -->|kaynak_tipi| A[evds / yahoo / epias / osd]
+  R -->|kaynak_tipi| A[52 ingest modülü / 60 kaynak tipi]
   A --> D[data/kategori/seri.csv]
   D --> DL[core/data.py]
   C --> P[core/page.py]
@@ -54,12 +54,32 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 
 | Path | Purpose |
 |---|---|
-| `core/` | App layer: catalog, data I/O, stats, charts, theme, components, page, takvim |
-| `ingest/` | `run.py` orchestrator + one adapter per source (`evds`, `yahoo`, `epias`, `osd`) |
-| `catalog/` | `series.yaml` (40 series), `categories.yaml` (8 categories) |
-| `data/<kategori>/<seri>.csv` | 40 committed CSV artifacts, one per series |
-| `tests/` | 15 flat pytest files, no `conftest.py`, no fixture data files |
-| `docs/superpowers/{specs,plans}/` | Per-phase design specs and execution plans (Turkish) |
+| `core/` | App layer: catalog, data I/O, stats, charts, theme, components, page, takvim, ozet |
+| `ingest/` | `run.py` orchestrator + 55 adapter modülü (65 `kaynak_tipi` değerini karşılar) |
+| `catalog/` | `series.yaml` (4.253 seri), `categories.yaml` (51 kategori / 6 grup), `hisseler.yaml` (8 hisse) |
+| `data/<kategori>/<seri>.csv` | committed CSV artifact (~55 MB), one per series |
+| `tests/` | 83 flat pytest files (1.310 test), no `conftest.py`, no fixture data files |
+| `docs/superpowers/{specs,plans}/` | Per-phase design specs ve execution planları (Turkish) — **koddan geride kalıyor**, aşağıdaki "Docs Drift" gotchasına bak |
+
+## Project Scale (2026-09-29 itibarıyla)
+
+| | |
+| Seri | 4.253 |
+| Kategori | 51 (6 `grup` altında) |
+| Hisse sayfası | 8 (`catalog/hisseler.yaml`) |
+| `kaynak_tipi` değeri | 65 |
+| Test | 1.309 passed + 10 network (deselect) |
+| `core/` + `ingest/` + `app.py` | ~21.000 satır Python |
+
+`marketvisuals.net` referansının **kendi arama indeksi**
+(`assets/search-chart-titles.js`: 118 sayfa, 4.585 başlık) ile başlık bazlı
+eşleştirme yapıldı: seri-benzeri 3.812 kalemin **%92,1'i** karşılanıyor (3.512).
+Kalanın dağılımı ve kapatılan boşluklar için `docs/kapsam-bosluklari.md`
+(yöntem, payda ve kanıt dahil) — orası bu ölçümün tek kaynağıdır.
+
+Ölçümü tekrarlarken: sitede "3.500+ grafik" iddiası **4.584** çıkıyor, ancak
+başlık indeksi tablo sütun başlıkları ve UI metinlerini de içeriyor; 3.812'ye
+düşülüyor. Yüzdeyi "grafik" değil bu kalem üzerinden ver.
 
 ## Development Commands
 
@@ -120,9 +140,11 @@ fields each type requires and `_dogrula` rejects fields owned by another type.
   title: Görünen Ad
   category: <kategori>         # must exist in categories.yaml
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds            # evds | yahoo | epias | osd
+  kaynak_tipi: evds            # 60 değerden biri; tamamı ingest/run.py'de
+                              # if/elif zinciriyle eşleşir (KAYNAK_ALANLARI
+                              # zorunlu/isteğe bağlı alanları tanımlar)
   unit: "Birim"
-  freq: monthly                # daily | weekly | monthly
+  freq: monthly                # daily | weekly | monthly | quarterly | yearly
   evds_code: TP.XXX.YYY
   evds_frequency: "5"          # "1" günlük | "2" haftalık | "5" aylık
   monthly_agg: mean            # mean | last | sum
@@ -188,11 +210,11 @@ testpaths = ["tests"]
 addopts = "-m 'not network'"
 markers = [
     "network: gerçek kaynağa istek atar; kimlik bilgisi ve internet ister",
-]
 ```
 
 - **No coverage config** (`--cov`, `.coveragerc`, `[tool.coverage]` all absent).
-  Don't claim coverage numbers.
+  Don't claim coverage numbers. Suite is currently 1.300 test (81 dosya,
+  ~3.5 dk); network testleri `-m 'not network'` ile elenir.
 - Assertions target observable behavior. Plotly internals
   (`fig.data[0].line.color`) are asserted only because they *are* the contract
   of a chart factory.
@@ -218,10 +240,16 @@ markers = [
   column (tolerance 0.5) and requires ≥13 firms, raising on template drift.
 - `evds.py`/`yahoo.py` docstrings record reverse-engineered upstream behavior and
   say explicitly not to rediscover it from scratch. Read them before editing.
-- **`README.md` is partly stale**: its architecture tree lists only
-  `evds.py + yahoo.py + run.py` (EPİAŞ and OSD adapters also exist) and its
-  roadmap marks Faz 3 as "Planlandı" though `faz3a`–`faz3e` are implemented.
-  Trust the code and `docs/superpowers/specs/` over the README.
+- **Docs drift: `docs/superpowers/` kodun gerisinde.** Son plan
+  `2026-09-08-faz3g-tim-ihracat.md`, ama katalog 60 `kaynak_tipi` taşıyor —
+  yani faz 3h+ ve sonrası kod olarak var, spec/plan dosyası yok. Yeni bir
+  kaynak adaptörü eklerken faz etiketi uydurma; dosya yoksa belgelerin
+  kapsamadığını bil ve kodu doğrulamak için kataloğa/`ingest/run.py`'ye bak.
+- **`README.md` güncel** (2026-09-29 doğrulandı): 3.706 seri / 49 kategori /
+  8 ticker / 52 adaptör sayıları doğru, yol haritası "Faz 3 Planlandı"
+  demiyor. Tek eksik: `kaynak_tipi` satırı 8 örnek listeliyor (gerçekte 60
+  değer var) — salt örnek, yanlış değil. Doğrulama kaynağı yine de kod +
+  `docs/superpowers/specs/`.
 - `docs/superpowers/` convention: `specs/YYYY-MM-DD-faz<N><letter>-<slug>-design.md`
   paired with `plans/YYYY-MM-DD-faz<N><letter>-<slug>.md`. Specs carry
   `Durum: Onaylandı` and back-references; the original Next.js/TS spec

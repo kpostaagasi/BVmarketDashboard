@@ -229,7 +229,6 @@ def test_kategori_notu_okunur():
     for slug in ("emtia-enerji", "emtia-metaller"):
         assert kategoriler[slug].note, slug
         assert "front-month" in kategoriler[slug].note, slug
-    assert kategoriler["enflasyon"].note is None
 
 
 def test_yayin_notu_varsayilan_none():

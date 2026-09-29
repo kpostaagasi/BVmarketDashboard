@@ -21,7 +21,9 @@ from urllib3.util.retry import Retry
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import ayd, bddk, bigchefs, botas, dhmi, ebebek, eia, eib, ecb, epdk, epias, eurocontrol, eurostat, eurostat_insaat, eurostat_turizm, evds, fred, gph, ifo, iso_pmi, istib, ithib, ktb, migros, odmd, orge, osd, pgsus, sgk, taid, tav, tcud, tefas, tepav, thy, tim, tmsd, trabzontb, tsb, tspb, ttkom, tuik, turkbesd, turkcell, turkcimento, turktraktor, uab, usk, worldbank, yahoo
+from ingest import ayd, bddk, bigchefs, botas, dhmi, ebebek, eia, eib, ecb, epdk, epias, eurocontrol, eurostat, eurostat_insaat, eurostat_turizm, evds, fintables, fred, gph, ifo, iso_pmi, istib, ithib, ktb, migros, odmd, orge, osd, pgsus, sgk, tabgida, taid, tav, tcud, tefas, tepav, thy, tim, tmsd, trabzontb, tsb, tspb, ttkom, tuik, turkbesd, turkcell, turkcimento, turktraktor, uab, usk, worldbank, yahoo
+from ingest import mkk
+from ingest import tim_ilk1000
 
 # Koşu başına tek oturum tüm adaptörlere geçiyor; retry politikası bu yüzden
 # tek yerde tanımlanabiliyor (devredilen iş #1). Ölçüm: 111 serilik bir tam
@@ -159,7 +161,11 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
          taid_onbellek: dict | None = None,
          thy_ir_onbellek: dict | None = None,
          pgsus_ir_onbellek: dict | None = None,
-         tefas_gun_onbellek: dict | None = None):
+         tabgida_onbellek: dict | None = None,
+         mkk_onbellek: dict | None = None,
+         tefas_gun_onbellek: dict | None = None,
+         fintables_onbellek: dict | None = None,
+         tim_ilk1000_onbellek: dict | None = None):
     """Seriyi kaynak tipine göre doğru istemciye yönlendirir ve ölçekler."""
     if seri.kaynak_tipi == "evds":
         df = evds.seri_cek(seri, api_key, session=oturum)
@@ -271,6 +277,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = migros.seri_cek(seri, onbellek=migros_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tepav":
         df = tepav.seri_cek(seri, onbellek=tepav_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "tabgida":
+        df = tabgida.seri_cek(seri, onbellek=tabgida_onbellek, session=oturum)
     elif seri.kaynak_tipi == "istib":
         df = istib.seri_cek(seri, onbellek=istib_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tuik_kanatli":
@@ -291,6 +299,12 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = eurostat_insaat.seri_cek(seri, onbellek=eurostat_insaat_onbellek, session=oturum)
     elif seri.kaynak_tipi == "taid":
         df = taid.seri_cek(seri, onbellek=taid_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "fintables":
+        df = fintables.seri_cek(seri, onbellek=fintables_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "mkk":
+        df = mkk.seri_cek(seri, onbellek=mkk_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "tim_ilk1000":
+        df = tim_ilk1000.seri_cek(seri, onbellek=tim_ilk1000_onbellek, session=oturum)
     else:
         raise ValueError(f"Bilinmeyen kaynak tipi: {seri.kaynak_tipi}")
     return olcekle(df, seri.olcek)
@@ -549,6 +563,20 @@ def main() -> int:
     # TAİD 1 seri (FROTO perakende kamyon) kendi bülten listesini ve marka
     # tablosu ayrıştırmasını önbellekler (bkz. `ingest.taid.seri_cek`).
     taid_onbellek: dict = {}
+    # MKK 3 serisi (kayıtlı/bakiyeli yatırımcı, bakiyeli hesap) aynı 20 bülten
+    # PDF'ini bir kez indirip paylaşır (bkz. `ingest.mkk.seri_cek`).
+    mkk_onbellek: dict = {}
+    # TİM İlk 1000 kitapları (~440 MB PDF) + KAP üye listesi 146 seri
+    # arasında paylaşılır; önbelleksiz her seri için yeniden inerdi.
+    tim_ilk1000_onbellek: dict = {}
+    # TAB Gıda 2 seri (çeyreklik restoran sayısı + yıllık fiş sayısı) aynı
+    # bülten listesi taramasını ve belge metinlerini paylaşır (bkz.
+    # `ingest.tabgida.seri_cek`).
+    tabgida_onbellek: dict = {}
+    # Fintables'ta N seri (şirket × tablo × satır) aynı 3 sayfayı paylaşır:
+    # bir şirket için 3 indirme yeter, önbelleksiz N indirme olurdu (bkz.
+    # `ingest.fintables.seri_cek`).
+    fintables_onbellek: dict = {}
 
     with requests.Session() as oturum:
         oturum.mount("https://", HTTPAdapter(max_retries=RETRY))
@@ -621,7 +649,11 @@ def main() -> int:
                     taid_onbellek=taid_onbellek,
                     thy_ir_onbellek=thy_ir_onbellek,
                     pgsus_ir_onbellek=pgsus_ir_onbellek,
+                    tabgida_onbellek=tabgida_onbellek,
                     tefas_gun_onbellek=tefas_gun_onbellek,
+                    fintables_onbellek=fintables_onbellek,
+                    mkk_onbellek=mkk_onbellek,
+                    tim_ilk1000_onbellek=tim_ilk1000_onbellek,
                 )
                 adet = seriyi_yaz(seri, df)
                 ardisik_hata[seri.kaynak_tipi] = 0
