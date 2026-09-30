@@ -7,6 +7,8 @@ import pytest
 from ingest.botas import (
     _dagitim_bolumu,
     _kategori_belirle,
+    TARIFE_PDFLERI,
+    arsiv_tarifeleri_cek,
     guncel_tarife_url,
     kategori_fiyatlarini_cikar,
     pdf_kategori_fiyatlari,
@@ -261,3 +263,52 @@ def test_seri_cek_indeks_http_hatasi_yukselir():
 
     with pytest.raises(RuntimeError, match="HTTP 500"):
         seri_cek(botas_seri(), onbellek=dict(_BOS_ARSIV), session=HataliOturum())
+
+# --- arsiv_tarifeleri_cek: soft-404 tuzağı --------------------------------
+
+
+class Soft404Oturum:
+    """Her isteğe HTTP 200 + `text/html` ana sayfa döner — BOTAŞ'ın yanlış
+    dosya adında verdiği soft-404 yanıtı (ölçüldü 2026-09-30).
+    `status_code` GEÇER; bu yüzden yalnızca HTTP koduna bakan kod sessizce
+    boş arşiv üretip CSV'ye sadece güncel noktayı yazıyordu (n=1)."""
+
+    def __init__(self):
+        self.cagrilar = []
+
+    def get(self, url, timeout=None):
+        self.cagrilar.append(url)
+        return SimpleNamespace(
+            status_code=200,
+            headers={"Content-Type": "text/html; charset=UTF-8"},
+            content=b" \n \n <html><body>BOTA\xc5\x9e ana sayfa</body></html>",
+        )
+
+
+def test_arsiv_tarifeleri_soft_404_rejected():
+    """HTTP 200 olsa da PDF DEĞİLSE arşiv üretilmez — sessiz boş küme yasak."""
+    with pytest.raises(RuntimeError, match="soft-404"):
+        arsiv_tarifeleri_cek({}, session=Soft404Oturum())
+
+
+def test_soft_404_hata_mesaji_hatali_dosya_adini_soyler():
+    """Hata mesajı sessiz kalmaz; reddedilen dosyanın adını açıkça yazar —
+    soft-404'un tek teşhisi yanlış dosya adıdır."""
+    with pytest.raises(RuntimeError) as hata:
+        arsiv_tarifeleri_cek({}, session=Soft404Oturum())
+    assert TARIFE_PDFLERI[0] in str(hata.value)
+
+
+def test_arsiv_ilk_dosyada_durse_digerleri_indirilmez():
+    """Yalnızca 1 dosya indirilir — hata anında tüm arşiv taranmaz."""
+    oturum = Soft404Oturum()
+    with pytest.raises(RuntimeError):
+        arsiv_tarifeleri_cek({}, session=oturum)
+    assert len(oturum.cagrilar) == 1
+
+
+def test_2026_nisan_pdf_dosya_adinda_tire_var():
+    """Regresyon: `nisan-2026` (alt çizgi) soft-404 döndürür, `nisan_2026`
+    (tire) PDF'dir. Ad elle sabitlendi — duyuru sayfasından okundu."""
+    assert "139364-4-nisan_2026_tarife.pdf" in TARIFE_PDFLERI
+    assert "139364-4-nisan-2026_tarife.pdf" not in TARIFE_PDFLERI

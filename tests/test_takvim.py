@@ -5,6 +5,7 @@ import pandas as pd
 
 from core.catalog import seri_getir
 from core.takvim import (
+    ESIKLER,
     BEKLENIYOR,
     GECIKMIS,
     GUNCEL,
@@ -24,55 +25,52 @@ def seri(freq="monthly"):
     return dataclasses.replace(seri_getir("enflasyon/tufe-genel"), freq=freq)
 
 
-def test_gunluk_esik_icinde_guncel():
-    assert durum_hesapla("daily", 0) == GUNCEL
-    assert durum_hesapla("daily", 5) == GUNCEL
+def test_esik_kurallari_her_siklikta_ayni():
+    """Eşik → güncel, eşik+1 → bekleniyor, iki katı → hâlâ bekleniyor.
+
+    Sınırlar `ESIKLER`'den okunur: eşik yeniden ayarlanırsa test kırılmaz,
+    ama bandın kendisi bozulursa (bir eşiğin iki katına düşmesi gibi) kırılır.
+    """
+    for freq, esik in ESIKLER.items():
+        assert durum_hesapla(freq, esik) == GUNCEL
+        assert durum_hesapla(freq, esik + 1) == BEKLENIYOR
+        assert durum_hesapla(freq, esik * 2) == BEKLENIYOR
+        assert durum_hesapla(freq, esik * 2 + 1) == GECIKMIS
 
 
-def test_gunluk_esigin_bir_ustu_bekleniyor():
-    assert durum_hesapla("daily", 6) == BEKLENIYOR
-    assert durum_hesapla("daily", 10) == BEKLENIYOR
+def test_aylik_esik_normal_yayin_gecikmesini_kapsar():
+    """Türkiye'de aylık resmi istatistik dönem sonundan ~2 ay sonra yayımlanır.
 
-
-def test_gunluk_iki_kat_esigin_ustu_gecikmis():
-    assert durum_hesapla("daily", 11) == GECIKMIS
-
-
-def test_haftalik_esikleri():
-    assert durum_hesapla("weekly", 14) == GUNCEL
-    assert durum_hesapla("weekly", 15) == BEKLENIYOR
-    assert durum_hesapla("weekly", 29) == GECIKMIS
-
-
-def test_aylik_esikleri():
-    assert durum_hesapla("monthly", 50) == GUNCEL
-    assert durum_hesapla("monthly", 51) == BEKLENIYOR
-    assert durum_hesapla("monthly", 101) == GECIKMIS
+    Bu seriler sağlamdır — veri commit'i güncel, CSV'ler boşluksuz. Eşik
+    normal gecikmeyi karşılamazsa Veri Takvimi kalıcı sahte alarm üretir
+    (2026-09-30'da 326 uyarının 235'i buydu).
+    """
+    assert durum_hesapla("monthly", 61) == GUNCEL
+    assert durum_hesapla("monthly", ESIKLER["monthly"] * 2) == BEKLENIYOR
+    assert durum_hesapla("monthly", ESIKLER["monthly"] * 2 + 1) == GECIKMIS
 
 
 def test_gecikme_gunu_esigi_genisletir():
-    """Kaynağın normal yayın gecikmesi sahte alarm üretmemeli.
-
-    TÜİK sanayi üretim endeksi dönem sonundan ~42 gün sonra yayımlıyor;
-    bir sonraki dönem gelene kadar 69 gün geçiyor. `gecikme_gunu: 25`
-    olmadan bu seri kalıcı olarak "bekleniyor" bandındaydı.
-    """
-    assert durum_hesapla("monthly", 69) == BEKLENIYOR
-    assert durum_hesapla("monthly", 69, 25) == GUNCEL
-    assert durum_hesapla("monthly", 76, 25) == BEKLENIYOR
+    """Kaynağın normal yayın gecikmesi sahte alarm üretmemeli."""
+    esik = ESIKLER["monthly"]
+    assert durum_hesapla("monthly", esik + 1) == BEKLENIYOR
+    assert durum_hesapla("monthly", esik + 1, 25) == GUNCEL
+    assert durum_hesapla("monthly", esik + 26, 25) == BEKLENIYOR
 
 
 def test_gecikme_gunu_gercek_gecikmeyi_gizlemez():
     """Sabır sınırsız değil: iki katın üstü hâlâ gecikmiş."""
-    assert durum_hesapla("monthly", 151, 25) == GECIKMIS
+    esik = ESIKLER["monthly"] + 25
+    assert durum_hesapla("monthly", esik * 2 + 1, 25) == GECIKMIS
 
 
 def test_satir_uret_serinin_gecikme_gunune_uyar():
+    """80 gündür yeni veri yok: sabırlı seri güncel, sabırsızı bekleniyor."""
     gecikmeli = dataclasses.replace(seri("monthly"), gecikme_gunu=25)
-    satir = satir_uret(gecikmeli, date(2026, 6, 1), date(2026, 9, 7))
-    assert satir.bekleme_gunu == 69
+    satir = satir_uret(gecikmeli, date(2026, 5, 1), date(2026, 8, 19))
+    assert satir.bekleme_gunu == 80
     assert satir.durum == GUNCEL
-    assert satir_uret(seri("monthly"), date(2026, 6, 1), date(2026, 9, 7)).durum == (
+    assert satir_uret(seri("monthly"), date(2026, 5, 1), date(2026, 8, 19)).durum == (
         BEKLENIYOR
     )
 
@@ -97,9 +95,9 @@ def test_satir_uret_bitmemis_donemde_beklemeyi_sifira_kirpar():
 
 
 def test_satir_uret_gercekten_gecikeni_isaretlemeye_devam_eder():
-    """Haziran verisi 27 Ağustos'ta iki dönem geride — bu gerçek gecikme."""
-    satir = satir_uret(seri("monthly"), date(2026, 6, 1), date(2026, 8, 27))
-    assert satir.bekleme_gunu == 58
+    """Nisan verisi temmuz başında en güncelse üç dönem geridedir."""
+    satir = satir_uret(seri("monthly"), date(2026, 4, 1), date(2026, 7, 5))
+    assert satir.bekleme_gunu == 66
     assert satir.durum == BEKLENIYOR
 
 

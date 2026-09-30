@@ -29,6 +29,7 @@ garanti değil).
 
 from __future__ import annotations
 
+import calendar
 import io
 import re
 
@@ -250,7 +251,13 @@ def _sunum_listesi(session=None) -> list[dict]:
     """finansal-bilgiler sayfasının "Yatırımcı Sunumları" tablosundan
     (yıl, çeyrek, url) satırlarını okur. Başlık ya "NÇ YYYY Yatırımcı
     Sunumu" (2026'dan itibaren) ya da "NÇ YYYY Migros Yatırımcı Sunumu"
-    (daha eski) biçiminde — "Migros" sözcüğü opsiyonel eşleşir."""
+    (daha eski) biçiminde — "Migros" sözcüğü opsiyonel eşleşir.
+
+    DİL: tabloda her çeyrek için TAM OLARAK BİR satır var ve başlık
+    TÜRKÇE (ölçüldü 2026-09-30: 1Ç 2011'den 2Ç 2026'ya kadar tek satır
+    / çeyrek). Aynı çeyreğin hem Türkçe hem İngilizce varyantı
+    sunulmadığı için dedupe/çok-dilli öncelik sorunu YOK; eklendiği gün
+    çift görülürse ilk bulunan (tablo sırası) kazanır."""
     http = session or requests
     yanit = http.get(TABAN, headers=_BASLIKLAR, timeout=ZAMAN_ASIMI)
     yanit.raise_for_status()
@@ -326,6 +333,10 @@ _EKOSISTEM_ANAHTARLARI = (
     "migros-one-aktif-kullanici", "migros-one-siparis-sayisi", "migros-one-gmv",
     "moneypay-kayitli-kullanici", "moneypay-islem-sayisi", "moneypay-tpv",
 )
+# Izgaranın kaç çeyrek geriye baktığı (x ekseni vektör olduğu için
+# sayfa metninden okunamıyor, sunumun kendi çeyreğinden geriye doğru
+# hesaplanıyor). Ölçüldü: 4Ç24/3Ç25/4Ç25/1Ç25 sunumlarında hep 5.
+_IZGARA_CEYREK_SAYISI = 5
 
 
 def ekosistem_izgarasini_ayikla(
@@ -367,20 +378,28 @@ def ekosistem_izgarasini_ayikla(
         (k for k in kelimeler if sayi_deseni.match(k["text"]) and k["top"] > baslik_topu + 20),
         key=lambda k: k["x0"],
     )
-    if len(degerler) != 30:
-        raise RuntimeError(f"ekosistem ızgarası: 30 değer bekleniyordu, {len(degerler)} bulundu")
+    beklenen = len(_EKOSISTEM_ANAHTARLARI) * _IZGARA_CEYREK_SAYISI
+    if len(degerler) != beklenen:
+        # Sunum şablonu değişti (ölçüldü: 2Ç 2026'da bu sayfa TAMAMEN
+        # kaldırıldı, yerine "Online Operasyonlar" geldi — bkz. aşağıdaki
+        # bölüm). Bu sayfa kullanılamaz; tüm dijital taramayı patlatmak
+        # yerine None dönülür, çağıran taraf bu dalı yok sayıp daha eski
+        # sunumların değerlerini korur. Daha önceki davranış RuntimeError
+        # idi ve tek sayfa değişikliği ÜÇ dijital seriyi de düşürüyordu.
+        return None
 
     # Sabit boyutlu dilimleme: 6 grup x 5 çeyrek her zaman x0'a göre
     # sıralandığında ARDIŞIK bloklar halinde gelir (gruplar arası boşluk
     # bazen bir grubun KENDİ içindeki iki çeyrek kümesi arasındaki
     # boşluktan küçük olabiliyor — ölçüldü, 2Ç2024 sunumu — bu yüzden en
     # büyük N boşluğu ayıraç seçen bir yöntem YANLIŞ gruplar üretebilir).
-    # Toplam tam 30 doğrulandığı için basit 5'li dilimleme güvenlidir.
-    gruplar = [degerler[i:i + 5] for i in range(0, 30, 5)]
+    # Toplam tam sayı doğrulandığı için basit 5'li dilimleme güvenlidir.
+    dilim = _IZGARA_CEYREK_SAYISI
+    gruplar = [degerler[i:i + dilim] for i in range(0, beklenen, dilim)]
 
     ceyrekler = []
     yil, ceyrek = sunum_yili, sunum_ceyregi
-    for _ in range(5):
+    for _ in range(_IZGARA_CEYREK_SAYISI):
         ceyrekler.append((yil, ceyrek))
         yil, ceyrek = (yil - 1, 4) if ceyrek == 1 else (yil, ceyrek - 1)
     ceyrekler.reverse()
@@ -395,9 +414,192 @@ def ekosistem_izgarasini_ayikla(
     return sonuc
 
 
+# --- 2Ç 2026'dan itibaren "Online Operasyonlar" sayfası ---
+#
+# 2Ç 2026 sunumu (s.24) "Migros Dijital Ekosistemi Performans
+# Göstergeleri" ızgarasını KALDIRDI; yerine aynı çeyreğin dört
+# tekil mini-grafiğini taşıyan "Online Operasyonlar" sayfası geldi.
+# Ölçülen değerler (x-konumlarıyla eşleştirilerek, s.24):
+#   grup 1 "Migros One GMV (milyar TL)"   18,6 | 23,5 | 28,5  (2Ç24|25|26)
+#           (+ altında ikinci seri: Migros Yemek GMV 1,9 | 2,9 | 5,0)
+#   grup 2 "Günlük Sipariş"               226k | 263k | 327k
+#           (+ altında ikinci seri: 45k | 57k | 91k)
+#   grup 3 "Migros'ta e-ticaret payı (%)(1)" 18,5 | 20,7 | 23,1
+#   grup 4 "Aktif kullanıcı sayısı(2) (milyon)" 5,1 | 5,8 | 6,6
+# (2) dipnotu "Yıllıklandırılmış (Son 12 ay)" — ESKİ ızgaranın "Son 12
+# aylık aktif kullanıcı sayısı" tanımıyla AYNI.
+#
+# ÇAPRAZ KONTROL (s.5 özeti): "28,5 milyar TL GMV", "6,6 milyon tekil
+# online müşteri (2Ç 2025: 5,8 milyon)" ve "günlük siparişlerde %24
+# artışla 327 bine ulaşıldı" — 327k/263k = 1,244 ✓. Yani sütun
+# eşleştirmesi doğru ve üç değer de sunumun KENDİ çeyreğine ait.
+#
+# BİRİM TUZAĞI: "Günlük Sipariş" GÜNLÜK ORTALAMA. `migros-one-
+# siparis-sayisi` ise ÇEYREKLİK TOPLAM tutuyor. Doğrulama: eski
+# ızgaranın 2Ç25 çeyreklik sipariş değeri 23,9 mn; 263k × 91 gün =
+# 23,93 mn ✓ birebir. Bu yüzden günlük değer, EKSEN ETİKETİNDEN
+# türetilen çeyreğin gerçek gün sayısıyla çarpılır — sabit 90/91
+# hardcode edilmez (1Ç 2026 = 90 gün, 2Ç 2026 = 30+31+30 = 91 gün).
+#
+# GEÇMİŞ ÇEYREKLERİ ALMIYORUZ: yeni sayfadaki 2Ç24/2Ç25 sütunları eski
+# ızgarayla AYNI DEĞİL (GMV 2Ç25: yeni 23,5, eski 17,5; 2Ç24: 18,6 vs
+# 11,5) ve farkın nedeni belgelenemedi. Sessiz bir seviye sıçraması
+# yaratmamak için yalnızca sunumun KENDİ çeyreği alınır, geçmiş eski
+# ızgaradan gelmeye devam eder.
+
+_ONLINE_SAYFA_BASLIGI = re.compile(r"Online\s+Operasyonlar|Online\s+Operations")
+# DİL: 2026-09-30 itibarıyla sunumlar YALNIZCA TÜRKÇE; "Online
+# Operasyonlar" başlığı ölçüldü (2Ç26 s.24), İngilizce "Online
+# Operations" varyantı DOĞRULANMADI — şablon başlığını eşleştiren tek
+# kalem, İngilizce eklendiği halde Türkçe olan sunumda çalışır durumda.
+
+
+# Grafik başlığındaki tek sözcük -> seri. Anahtar sözcüklerin hepsi
+# AYNI başlık bandında (ölçüldü 2Ç26 s.24: "Aktif" top=243,7, "GMV"
+# top=248,2, "Sipariş" top=248,5 — en büyük fark 4,8pt); sayfanın
+# üstündeki "Çeyreksel Öne Çıkanlar" şeridindeki GMV ise 97,95pt
+# yukarıda (top=145,6). O yüzden "anahtarı en çok geçen bant" seçilir.
+_ONLINE_BASLIK_ANAHTARLARI = {
+    "GMV": "migros-one-gmv",
+    "Sipariş": "migros-one-siparis-sayisi",
+    "Aktif": "migros-one-aktif-kullanici",
+}
+
+_CEYREK_AYLARI = {1: (1, 2, 3), 2: (4, 5, 6), 3: (7, 8, 9), 4: (10, 11, 12)}
+
+_CEYREK_ETIKETI = re.compile(r"^(\d)Ç$")
+
+
+def _ceyrek_gun_sayisi(yil: int, ceyrek: int) -> int:
+    """Verilen çeyreğin GERÇEK gün sayısı (2Ç 2026 = 30+31+30 = 91,
+    1Ç 2026 = 31+28+31 = 90). Sabit 90/91 hardcode edilmez."""
+    return sum(calendar.monthrange(yil, ay)[1] for ay in _CEYREK_AYLARI[ceyrek])
+
+
+def online_operasyonlarini_ayikla(
+    pdf_baytlari: bytes, sunum_yili: int, sunum_ceyregi: int
+) -> dict[str, float] | None:
+    """'Online Operasyonlar' sayfasından Migros One'ın ÜÇ ölçütünü
+    (GMV milyar TL, aktif kullanıcı milyon, sipariş milon ÇEYREKLİK
+    TOPLAM) yalnızca SUNUMUN KENDİ ÇEYREĞİ için okur; sayfa yoksa
+    (2Ç 2026 öncesi tüm sunumlar) None döner.
+
+    Ayrıştırma x-konumuna dayanır: sayfadaki "NÇ YYYY" eksen
+    etiketleri dört grafiği aynı sayıda sütuna böler (ölçülen: 4 grup
+    × 3 sütun = 12 etiket), her grafiğin başlığı x-merkeziyle hangi
+    gruba ait olduğunu belirler, değerler kendi eksen etiketine EN
+    YAKIN olan sütundan ve o sütunda EN ÜSTTEKİ kutudan okunur
+    (sütunda ikinci, daha küçük bir seri varsa — Migros Yemek GMV gibi —
+    üstteki kutu asıl seridir: 2Ç26'da 28,5 / 5,0 ve 327k / 91k).
+
+    Birim dönüşümü: günlük sipariş -> çeyreklik toplam (gün sayısı
+    EKSEN ETİKETİNDEN türetilir); GMV ve aktif kullanıcı zaten
+    çeyreklik/milyon birimindedir."""
+    with pdfplumber.open(io.BytesIO(pdf_baytlari)) as pdf:
+        for p in pdf.pages:
+            if _ONLINE_SAYFA_BASLIGI.search(p.extract_text() or ""):
+                kelimeler = p.extract_words()
+                break
+        else:
+            return None
+
+    # Eksen etiketleri sayfanın EN ALTINDA (ölçüldü 2Ç26 s.24: eksen
+    # top≈418-420, değerler top≈277-338). Çeyrek etiketi ("NÇ") ayrıca
+    # sağdaki dipnot şeridinde de geçiyor ("677 bin yeni müşteri 2Ç
+    # 2026'da katıldı", top=262) — bu yüzden en ALTTAKİ çeyrek
+    # etiketi satırı seçilir.
+    eksen_topu = max((k["top"] for k in kelimeler if _CEYREK_ETIKETI.fullmatch(k["text"])), default=None)
+    if eksen_topu is None:
+        return None
+
+    eksenler = []
+    for k in kelimeler:
+        ceyrek = _CEYREK_ETIKETI.fullmatch(k["text"])
+        if not ceyrek or abs(k["top"] - eksen_topu) > 3:
+            continue
+        yil = min(
+            (
+                w for w in kelimeler
+                if re.fullmatch(r"\d{4}", w["text"])
+                and abs(w["top"] - k["top"]) < 3
+                and w["x0"] > k["x1"]
+            ),
+            key=lambda w: w["x0"],
+            default=None,
+        )
+        if yil is not None:
+            eksenler.append(((k["x0"] + k["x1"]) / 2, int(yil["text"]), int(ceyrek.group(1))))
+    eksenler.sort()
+    if not eksenler:
+        return None
+
+    # Her grafik aynı çeyrek kümesini gösterir -> sütun sayısı eksen
+    # etiketlerinin benzersiz çeyrek sayısıdır, grup sayısı bölümden
+    # gelir. Sabit bir boşluk eşiği kullanılmıyor: ölçülen 2Ç26'da
+    # grup-içi merkez farkı en fazla 40,0pt, grup-arası en az 85,2pt
+    # olduğu için her eşik keyfi olurdu.
+    periyotlar = {(y, c) for _, y, c in eksenler}
+    if len(eksenler) % len(periyotlar):
+        return None
+    sutun = len(periyotlar)
+    gruplar = [eksenler[i * sutun:(i + 1) * sutun] for i in range(len(eksenler) // sutun)]
+
+    # Başlık bandı: en çok anahtar sözcük içeren bant.
+    adaylar = sorted(
+        (k for k in kelimeler if k["text"] in _ONLINE_BASLIK_ANAHTARLARI), key=lambda k: k["top"]
+    )
+    bantlar: list[list] = []
+    for k in adaylar:
+        if bantlar and k["top"] - bantlar[-1][0]["top"] < 20:
+            bantlar[-1].append(k)
+        else:
+            bantlar.append([k])
+    basliklari = max(bantlar, key=len) if bantlar else []
+    baslik_sonu = max((k["top"] for k in basliklari), default=None)
+    if baslik_sonu is None:
+        return None
+
+    sayi_deseni = re.compile(r"^\d+(?:[.,]\d+)?k?$")
+    sonuc: dict[str, float] = {}
+    for k in basliklari:
+        metrik = _ONLINE_BASLIK_ANAHTARLARI[k["text"]]
+        merkez = (k["x0"] + k["x1"]) / 2
+        # Başlık sözcüğünün kendisi eksen etiketinin TAM ortasında
+        # değildir (ölçüldü 2Ç26 s.24: grup1 başlığı "GMV" merkezi
+        # 167,7; en sağdaki etiket merkezi 164,0), bu yüzden ARAYA
+        # DÜŞMÜYOR — başlığı en yakın eksen etiketine bağlanır.
+        grup = min(
+            gruplar, key=lambda g: min(abs(merkez - t[0]) for t in g), default=None
+        )
+        if grup is None:
+            continue
+        eksen_merkezi, yil, ceyrek = grup[-1]  # sağdaki sütun = sunumun kendi çeyreği
+        if (yil, ceyrek) != (sunum_yili, sunum_ceyregi):
+            continue
+        kutu = min(
+            (
+                w for w in kelimeler
+                if sayi_deseni.fullmatch(w["text"])
+                and baslik_sonu + 20 < w["top"] < eksen_topu - 5
+                and abs((w["x0"] + w["x1"]) / 2 - eksen_merkezi) <= 20
+            ),
+            key=lambda w: w["top"],
+            default=None,
+        )
+        if kutu is None:
+            continue
+        bin_kat = 1000 if kutu["text"].endswith("k") else 1  # "327k" -> bin adet/gün
+        deger = float(kutu["text"].rstrip("k").replace(",", ".")) * bin_kat
+        if metrik == "migros-one-siparis-sayisi":
+            deger = deger * _ceyrek_gun_sayisi(yil, ceyrek) / 1e6  # adet/gün -> milyon/çeyrek
+        sonuc[metrik] = deger
+    return sonuc or None
+
+
 def _dijital_metrikleri_getir(onbellek: dict, session=None) -> dict[str, dict[str, float]]:
-    """Tüm sunumları TARA (ekosistem ızgarası + Moneypay başlığı), dört
-    metriği birleştirip {metrik: {tarih: değer}} döner. Çakışan
+    """Tüm sunumları TARA (ekosistem ızgarası + Moneypay başlığı +
+    2Ç 2026'dan itibaren "Online Operasyonlar" sayfası), dört metriği
+    birleştirip {metrik: {tarih: değer}} döner. Çakışan
     çeyreklerde SONRAKİ (kronolojik olarak daha yeni yayımlanan) sunum
     kazanır — şirket geçmiş çeyrekleri revize edebiliyor (ölçüldü:
     4Ç2024 sunumunun kendi '4Ç23' aktif kullanıcı rakamı [2,7 milyon]
@@ -424,6 +626,13 @@ def _dijital_metrikleri_getir(onbellek: dict, session=None) -> dict[str, dict[st
         moneypay = _moneypay_kayitli_kullanici_ayikla(baytlar)
         if moneypay is not None:
             birlesik["moneypay-kayitli-kullanici"][tarih] = moneypay
+        # 2Ç 2026'dan itibaren dijital sayfa değişti: Migros One'ın üç
+        # ölçütü artık eski ızgaradan değil "Online Operasyonlar"
+        # sayfasından geliyor (yalnızca sunumun KENDİ çeyreği için).
+        online = online_operasyonlarini_ayikla(baytlar, s["yil"], s["ceyrek"])
+        if online:
+            for metrik, deger in online.items():
+                birlesik[metrik][tarih] = deger
     onbellek["dijital"] = birlesik
     return birlesik
 

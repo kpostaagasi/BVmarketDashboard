@@ -31,13 +31,23 @@ https://json-stat.org/full/#dimensionobject. `_noktalari_coz` bu geometriyi
 yanıtın KENDİ `id`/`size` alanlarından okur (sabit sütun sırası varsaymaz),
 bu yüzden Eurostat boyut sırasını değiştirse bile kırılmaz.
 
-Yarıyıllık (S1/S2) veri: `time` ekseni "YYYY-S1"/"YYYY-S2" biçiminde gelir.
-Katalogda ayrı bir "yarıyıllık" freq YOK; en yakın "quarterly" (yalnızca
-level grafiği destekleyen, catalog._dogrula'nın zorunlu kıldığı) kovasına
-konur — S1 o yılın 1 Ocak'ına, S2 o yılın 1 Temmuz'una (yarıyılın İLK ayı)
-damgalanır. `core.takvim`in "quarterly" tazelik eşiği (120 gün) yarıyıllık
-veri için biraz iyimser kalır (asıl yayın aralığı ~180 gün) ama YANLIŞ
-sayılmaz, yalnızca daha SIK "eski" uyarısı verebilir.
+Yarıyıllık (S1/S2) veri: `time` ekseni "YYYY-S1"/"YYYY-S2" biçiminde gelir
+(dataset etiketi: "bi-annual data (from 2007 onwards)"). Katalogda ayrı bir
+"yarıyıllık" freq YOK; en yakın "quarterly" (yalnızca level grafiği
+destekleyen, catalog._dogrula'nın zorunlu kıldığı) kovasına konur.
+
+DÖNEM SONU damgası: yarıyıl, yarıyılı KAPATAN çeyreğin İLK gününe
+damgalanır — S1 -> o yılın 1 Nisan'ı (1Ç+2Ç), S2 -> o yılın 1 Ekim'i
+(3Ç+4Ç). Damga yarıyılın ilk ayına (S1->1 Ocak, S2->1 Temmuz) konulsaydı
+`core.takvim.donem_sonu` "quarterly" kovasında S2'yi 3. çeyrek sanıp
+2025-09-30'a çekerdi (yarım yılı çeyrek sayardı); doğrusu 2025-12-31'dir.
+Ölçüt: `donem_sonu` dönemin BİTİŞ gününden tazelik eşiğini ölçer, ilk aya
+damgalamak bu ölçümü 3 ay kaydırıyordu.
+
+Bu, "quarterly" tazelik eşiğini (120 gün) yarıyıllık veri için biraz
+iyimser bırakır (S2 verisi ancak 2026 başında yayımlanır). Tek yan etkisi
+erken bir "gecikmiş" uyarısıdır; katalog tarafında `gecikme_gunu` ile
+esnetilir, yanlış veri üretmez.
 
 Değerler EUR/NAC HAM (EUR/kWh ya da TRY/kWh) gelir; "cent EUR/kWh" gösterimi
 katalog `olcek: 100` ile (yalnızca `currency: EUR` serilerinde) EUR->cent
@@ -59,8 +69,9 @@ ZAMAN_ASIMI = 60
 NRG_CONS_SABIT = "TOT_KWH"
 TAX_SABIT = "I_TAX"
 
-# Yarıyılın İLK ayı (S1 -> Ocak, S2 -> Temmuz), bkz. modül docstring'i.
-YARIYIL_AY = {"S1": "01", "S2": "07"}
+# Yarıyılı kapatan çeyreğin İLK günü (S1 -> 1 Nisan, S2 -> 1 Ekim), bkz.
+# modül docstring'i.
+YARIYIL_AY = {"S1": "04", "S2": "10"}
 
 
 def _noktalari_coz(govde: dict) -> list[dict]:
@@ -120,8 +131,8 @@ def _veri_getir(dataset: str, onbellek: dict, session=None) -> list[dict]:
 
 
 def _donem_tarihi(zaman: str) -> str:
-    """'YYYY-S1'/'YYYY-S2' -> 'YYYY-01-01'/'YYYY-07-01' (bkz. modül
-    docstring'i, yarıyılın ilk ayı)."""
+    """'YYYY-S1'/'YYYY-S2' -> 'YYYY-04-01'/'YYYY-10-01' (yarıyılı kapatan
+    çeyreğin ilk günü, bkz. modül docstring'i)."""
     yil, yariyil = zaman.split("-")
     return f"{yil}-{YARIYIL_AY[yariyil]}-01"
 

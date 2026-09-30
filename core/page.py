@@ -18,7 +18,6 @@ from core.catalog import (
     Hisse,
     Kategori,
     KatalogHatasi,
-    SIKLIK_ETIKETLERI,
     Seri,
     hisseleri_yukle,
     kategorileri_yukle,
@@ -29,6 +28,7 @@ from core.components import (
     degisim_rozeti,
     donem_etiketi,
     fon_karti,
+    SIKLIK_METNI,
     grafik_karti,
     kisa_sayi,
     kompozisyon_karti,
@@ -484,7 +484,7 @@ def veri_takvimi_sayfasi() -> None:
                     sure = f"{s.bekleme_gunu} gündür yeni veri yok"
                 st.markdown(
                     f"- **{s.seri.title}** — {sure} "
-                    f"({SIKLIK_ETIKETLERI[s.seri.freq].lower()})"
+                    f"({SIKLIK_METNI[s.seri.freq]})"
                 )
         st.divider()
 

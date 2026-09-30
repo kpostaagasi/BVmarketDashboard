@@ -6,13 +6,17 @@ core/page.py'dedir.
 Tazelik, dönem etiketinden değil DÖNEM SONUNDAN ölçülür (bkz. `donem_sonu`).
 
 Eşikler SEZGİSELDİR: bir periyot artı tipik yayın gecikmesi. Tek yerde
-tutulurlar ki gürültü görüldüğünde ayarlanabilsinler. Faz 3f'te seri bazında
-geçersiz kılma eklendi (`Seri.gecikme_gunu`): hangi serinin gürültü çıkardığı
-artık biliniyor. TÜİK sanayi üretim endeksi ve TCMB ödemeler dengesi dönem
-sonundan ~42 gün sonra yayımlanıyor, yani aylık eşiğin (50) altında hiç
-kalmıyorlar ve kalıcı sahte alarm üretiyorlardı — kalıcı alarm, "kırmızı satır
-bir şeyin bozulduğu anlamına gelir" sözleşmesini yok eder. `gecikme_gunu` o
-serinin eşiğine eklenir; kaynağın normal takvimi kadar sabır tanınır.
+tutulurlar ki gürültü görüldüğünde ayarlanabilsinler. Seri bazında geçersiz
+kılma da var (`Seri.gecikme_gunu`) ama katalogda %5'in altında tutuluyor:
+gecikme bir seriye özgü değil, kaynak çapında bir özellik — bu yüzden
+taşıyıcı eşik olmalı.
+
+Kalıcı alarm, "kırmızı satır bir şeyin bozulduğu anlamına gelir" sözleşmesini
+yok eder. Faz 3f'te (69 seri) iki serinin ~42 günlük gecikmesi `gecikme_gunu`
+ile karşılanmıştı. 2026-09-30 ölçümünde aylık eşiğin (50) altında kaldığı
+yer popülasyonun kendisiydi: 2.676 aylık serinin bekleme dağılımı 30 günde
+(zamanında yayımlayanlar) ve 61 günde (TÜİK/TCMB'nin iki aylık normal
+gecikmesi) kümeleniyor, p90 = 61. Yani 326 uyarının 235'i sağlam veriydi.
 
 Bu sayfanın asıl işi ileriye bakan bir yayın takvimi değil, geriye bakan bir
 tazelik monitörü olmaktır: bir seri geciktiğinde ya kaynak geç kalmıştır ya da
@@ -30,7 +34,10 @@ import pandas as pd
 from core.catalog import SIKLIK_ETIKETLERI, Seri, seri_listele
 from core.data import VeriYokHatasi, genis_csv_oku, seri_csv_oku, seri_yolu
 
-ESIKLER = {"daily": 5, "weekly": 14, "monthly": 50, "quarterly": 120, "yearly": 430}
+# 2026-09-30 dağılımı (bekleme günü): daily p99 5 · weekly p99 10 ·
+# monthly p50 30 / p90 61 · quarterly p50 92 · yearly p50 273.
+# Aylık 65 = p90'ın üstü; iki katı (130) hâlâ kırık veriyi yakalar.
+ESIKLER = {"daily": 5, "weekly": 14, "monthly": 65, "quarterly": 120, "yearly": 430}
 
 GUNCEL = "güncel"
 BEKLENIYOR = "bekleniyor"

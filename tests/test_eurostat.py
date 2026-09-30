@@ -3,16 +3,20 @@
 Gerçek kaynaktan canlı ölçülen JSON-stat 2.0 zarf yapısı pinlenir: `value`
 sözlüğünün SATIR-ESAS düz indeksten çözülmesi, `geo`/`currency` eksenlerinin
 tek istekte birden çok değer taşıması, ve "YYYY-S1"/"YYYY-S2" yarıyıl
-etiketinin yarıyılın İLK ayına damgalanması. TR/EUR ve TR/NAC değerleri
+etiketinin yarıyılı KAPATAN çeyreğin ilk gününe (S1->1 Nisan, S2->1 Ekim)
+damgalanması. TR/EUR ve TR/NAC değerleri
 2025-S2 için CANLI ölçülen gerçek rakamlarla (6,79 cent EUR/kWh hane, 3,2857
 TL/kWh hane, 9,17 cent EUR/kWh sanayi, 4,4411 TL/kWh sanayi) BİREBİR eşleşti
 — MarketVisuals'ın eurostat_electricity_prices.html kartlarına bkz. modül
 docstring'i.
 """
 
+from datetime import date
 from types import SimpleNamespace
 
 import pytest
+
+from core.takvim import donem_sonu
 
 from ingest.eurostat import _donem_tarihi, _noktalari_coz, _veri_getir, seri_cek
 
@@ -76,15 +80,27 @@ def test_noktalari_coz_seyrek_eksik_kombinasyonu_atlar():
     )
 
 
-# --- _donem_tarihi: yarıyıl -> yarıyılın ilk ayı ---
+# --- _donem_tarihi: yarıyıl -> yarıyılı kapatan çeyreğin ilk günü ---
 
 
-def test_donem_tarihi_s1_ocaka_damgalanir():
-    assert _donem_tarihi("2025-S1") == "2025-01-01"
+def test_donem_tarihi_s1_nisana_damgalanir():
+    assert _donem_tarihi("2025-S1") == "2025-04-01"
 
 
-def test_donem_tarihi_s2_temmuza_damgalanir():
-    assert _donem_tarihi("2025-S2") == "2025-07-01"
+def test_donem_tarihi_s2_ekime_damgalanir():
+    assert _donem_tarihi("2025-S2") == "2025-10-01"
+
+
+@pytest.mark.parametrize(
+    ("zaman", "beklenen"),
+    [("2025-S1", "2025-06-30"), ("2025-S2", "2025-12-31")],
+)
+def test_donem_sonu_yariyili_tam_kapatir(zaman, beklenen):
+    """Damga, `core.takvim.donem_sonu("quarterly")` ile birleşince yarıyılın
+    GERÇEK bitiş gününü vermeli: ilk aya damgalansaydı S2 2025-09-30'a
+    (3. çeyrek sonu) düşerdi."""
+    damga = date.fromisoformat(_donem_tarihi(zaman))
+    assert donem_sonu(damga, "quarterly").isoformat() == beklenen
 
 
 # --- _veri_getir: onbellek dataset başına tek istek paylaşır ---
@@ -137,7 +153,7 @@ def test_veri_getir_farkli_dataset_ayri_istek_atar():
 def test_seri_cek_geo_ve_currencye_gore_filtreler_tarihe_gore_siralar():
     oturum = SahteOturum(SahteYanit(200, _json_stat_govdesi()))
     df = seri_cek(eurostat_seri(), onbellek={}, session=oturum)
-    assert list(df["date"]) == ["2025-01-01", "2025-07-01"]
+    assert list(df["date"]) == ["2025-04-01", "2025-10-01"]
     assert list(df["value"]) == pytest.approx([0.0657, 0.0679])
 
 
@@ -152,7 +168,7 @@ def test_seri_cek_eu27_seyrek_veride_yalnizca_mevcut_donemi_doner():
     df = seri_cek(
         eurostat_seri(eurostat_geo="EU27_2020"), onbellek={}, session=oturum
     )
-    assert list(df["date"]) == ["2025-07-01"]
+    assert list(df["date"]) == ["2025-10-01"]
 
 
 def test_seri_cek_eslesme_yoksa_hata():
@@ -166,7 +182,7 @@ def test_seri_cek_start_date_filtreler():
     df = seri_cek(
         eurostat_seri(start_date="2025-06-01"), onbellek={}, session=oturum
     )
-    assert list(df["date"]) == ["2025-07-01"]
+    assert list(df["date"]) == ["2025-10-01"]
 
 
 def test_seri_cek_onbellek_paylasilirsa_ayni_dataset_tekrar_cekilmez():

@@ -21,6 +21,21 @@ ve HİÇBİR BOTAŞ sayfası bu PDF'leri listelemiyor — bu yüzden dosya adlar
 `TARIFE_PDFLERI`'ne elle yazıldı (21 dosya, tek tek doğrulandı). 2021-03 ve
 2021-11 PDF'leri görüntü taraması (metin katmanı 0 karakter) — listede yoklar.
 
+Ad teşhisi canlı yapıldı: güncel duyuru sayfası (/Sayfa/.../812) tarife PDF'ini
+`/uploads/dosyaYoneticisi/139364-4-nisan_2026_tarife.pdf` olarak bağlantılar —
+`nisan` ile `2026` arasında TİRE var. Bu dosya adı listenin en sonunda TİRE
+yazılmamış haliyle duruyordu ve soft-404 üretiyordu (bkz. aşağıdaki tuzak).
+
+**Soft-404 tuzağı (ölçüldü 2026-09-30) — PDF okuyan her kaynakta geçerli.**
+BOTAŞ'ın dosya deposu yanlış/eksik dosya adında **HTTP 200 + `text/html` ana
+sayfa** gövdesi döndürüyor. Yalnızca `status_code` kontrol eden kod bunu
+GEÇERİR; `pdfplumber` 65 KB HTML'de ya patlar ya dakikalarca asılı kalır ve
+arşiv sessizce boş küme üretir — CSV'ye yalnızca güncel tarife noktası yazılır
+(n=1). `_pdf_icerigi` bu yüzden `Content-Type: application/pdf` + `%PDF` gövde
+başı olmadan PDF saymaz ve dosya adını hatırlatan bir hata yükseltir. Aynı
+"200 = PDF" varsayımı `osd`/`mkk` gibi PDF kullanan diğer kaynaklarda da
+susuz çalışıyorsa aynı düzeltme gerekir.
+
 `seri_cek` bu yüzden İKİ kaynağı birleştirir: (a) /439 → güncel tarihli duyuru
 HTML'i, kod değişmeden YENİ tarifeleri otomatik takip eder; (b) dondurulmuş PDF
 arşivi, geçmişi verir. Örtüştükleri 4 Nisan 2026 tarifesinde ikisi BEŞİ DE
@@ -76,6 +91,19 @@ ZAMAN_ASIMI = 60
 # listelemesi 403, arama ucu zaman aşımı) ve eski duyuru sayfaları soft-404 —
 # dosya adları bu yüzden ölçülmüş, elle sabitlenmiştir. 2021-03 ve 2021-11
 # PDF'leri görüntü taraması (metin katmanı boş) bilinçli olarak yok.
+#
+# **TÜZEL TUZAK — soft-404 (ölçüldü 2026-09-30).** Dosya deposu yanlış/eksik
+# adda HTTP 200 + `text/html` ANA SAYFA gövdesi döndürüyor; PDF değil. Tek
+# yanlışlı örnek: `139364-4-nisan-2026_tarife.pdf` (tire yerine alt çizgi) →
+# 65852 bayt HTML. Yalnızca `status_code` kontrol eden kod bunu GEÇER ve
+# pdfplumber 65 KB HTML'de ya patlar ya dakikalarca asılı kalır — arşiv
+# sessizce boş küme üretip CSV'ye yalnızca güncel noktayı yazar. `_pdf_icerigi`
+# bu yüzden PDF olmayan gövdeyi İŞARETİYLE reddeder. Aynı tuzak `osd`/`mkk`
+# gibi PDF okuyan diğer kaynaklarda da geçerli.
+#
+# Doğru ad DİKKAT: 2026-04 PDF'i duyuru sayfasından (/Sayfa/.../812) bağlantı
+# olarak okundu — `nisan` ve `2026` arasında TİRE vardir. 2026-09-30'da 21
+# dosyanın 21'i de `application/pdf` + `%PDF-` ile doğrulandı.
 TARIFE_PDFLERI = (
     "958090-mayis_2020_tarifesi_29042020.pdf",
     "551538-temmuz_2020_tarifesi_29062020.pdf",
@@ -276,6 +304,24 @@ def pdf_kategori_fiyatlari(metin: str) -> dict[str, float]:
     return sonuc
 
 
+def _pdf_icerigi(yanit, url: str) -> bytes:
+    """Soft-404'u reddedip PDF baytlarını döner (bkz. `TARIFE_PDFLERI` notu).
+
+    BOTAŞ dosya deposu yanlış dosya adında HTTP 200 + `text/html` ana sayfa
+    döndürür. Yalnızca `status_code` kontrolü bu tuzağı kaçırır; iki sinyal
+    birlikte aranır: `Content-Type: application/pdf` VE gövdenin `%PDF` ile
+    başlaması.
+    """
+    icerik_tip = (yanit.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+    if icerik_tip != "application/pdf" or not yanit.content.startswith(b"%PDF"):
+        raise RuntimeError(
+            f"BOTAŞ tarife PDF'i değil (Content-Type: {icerik_tip or 'yok'}, "
+            f"gövde başı: {yanit.content[:5]!r}) — dosya adı büyük olasılıkla "
+            f"yanlış, soft-404 sayfası geldi: {url}"
+        )
+    return yanit.content
+
+
 def arsiv_tarifeleri_cek(onbellek: dict, session=None) -> dict[str, dict[str, float]]:
     """`{YYYY-MM-DD: {botas_kategori: TL/Sm3}}` — `TARIFE_PDFLERI` arşivinden."""
     http = session or requests
@@ -286,7 +332,7 @@ def arsiv_tarifeleri_cek(onbellek: dict, session=None) -> dict[str, dict[str, fl
             yanit = http.get(url, timeout=ZAMAN_ASIMI)
             if yanit.status_code != 200:
                 raise RuntimeError(f"BOTAŞ tarife PDF'i HTTP {yanit.status_code} ({url})")
-            with pdfplumber.open(BytesIO(yanit.content)) as pdf:
+            with pdfplumber.open(BytesIO(_pdf_icerigi(yanit, url))) as pdf:
                 metin = "\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages)
             noktalar[pdf_yururluk_tarihi(metin)] = pdf_kategori_fiyatlari(metin)
         onbellek["arsiv"] = noktalar

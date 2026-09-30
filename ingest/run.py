@@ -310,6 +310,33 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
     return olcekle(df, seri.olcek)
 
 
+def erisilemez_mi(hata: BaseException) -> bool:
+    """Hata bir kaynağa ulaşamamaktan mı geliyor, yoksa bizim kodumuzdan mı?
+
+    `requests` bağlantı hatalarını `ConnectionError` aileye koyar
+    (`ConnectTimeout` onun alt sınıfıdır). Adaptörler bu hatayı
+    `RuntimeError("... bağlantı hatası ...")` ile sarmalayıp `raise ... from`
+    dediği için zincirin dibine inmek gerekir.
+
+    Ayrım neden şart: 30 Eylül 2026'da TEFAS ve EPİAŞ GitHub runner'ından
+    bağlantı zaman aşımına düştü (aynı istek yerelde 200 / 2.039 satır /
+    0,31 sn). Depoda tek satır değişikliği yok, düzeltilecek kod yok —
+    yalnızca üçüncü taraf erişilemez. Bu koşuyu her gün kırmızı yapmak
+    "kırmızı = bizim hatamız" sözleşmesini öldürür; ses çıkarmaya devam
+    ederken çıkış kodunu temiz tutmak doğru olan.
+    """
+    zincir: list[BaseException] = []
+    gorulen: set[int] = set()
+    adim = hata
+    while adim is not None and id(adim) not in gorulen:
+        gorulen.add(id(adim))
+        zincir.append(adim)
+        adim = adim.__cause__ or adim.__context__
+    return any(
+        isinstance(adim, requests.exceptions.ConnectionError) for adim in zincir
+    )
+
+
 def seriyi_yaz(seri: Seri, df) -> int:
     """Tam üzerine yazar; yalnızca anlık-görüntü kaynakları BİRİKTİRİR.
 
@@ -389,6 +416,9 @@ def main() -> int:
 
     basarili: list[str] = []
     hatalar: list[tuple[str, str]] = []
+    # Kod hatası olan seri id'leri. Bağlantı hatası olanlar burada olmaz;
+    # çıkış kodu farkı buradan çıkıyor (bkz. `erisilemez_mi`).
+    kod_hatalari: set[str] = set()
     # Kaynak tipi başına toplam süre: yavaş kaynağı loglardan bulabilmek için.
     sureler: dict[str, float] = defaultdict(float)
     # Aynı EPİAŞ ucunu paylaşan seriler (uretim + uretim-kompozisyon) yanıtı
@@ -584,88 +614,114 @@ def main() -> int:
         # Oturum katmanı da denerse süreler çarpılıyor: 3 × 3 deneme ×
         # zaman aşımı, tek gün için ~20 dk.
         oturum.mount("https://www.tefas.gov.tr", HTTPAdapter(max_retries=0))
-        epias_seriler = [s for s in seriler if s.kaynak_tipi == "epias"]
-        if epias_seriler:
-            try:
-                tgt = epias.tgt_al(kullanici, parola, session=oturum)
-            except Exception as hata:  # noqa: BLE001 — modül bazlı izolasyon
-                # EPİAŞ girişi başarısızsa (parola süresi dolar, giriş
-                # sunucusu 503 verir) yalnızca epias serileri düşer;
-                # EVDS/Yahoo serileri koşmaya devam etmeli (docstring:
-                # "bir serinin başarısızlığı diğerlerini düşürmez").
-                for seri in epias_seriler:
-                    hatalar.append((seri.id, f"EPİAŞ girişi başarısız: {hata}"))
-                    print(
-                        f"  ✗ {seri.id} — EPİAŞ girişi başarısız: {hata}",
-                        file=sys.stderr,
-                    )
-
         ardisik_hata: dict[str, int] = defaultdict(int)
-        for seri in seriler:
-            if seri.kaynak_tipi == "epias" and tgt is None:
-                continue  # giriş başarısız — hatalar listesine zaten eklendi
-            if ardisik_hata[seri.kaynak_tipi] >= ARDISIK_HATA_TAVANI:
-                mesaj = (f"{seri.kaynak_tipi} kaynağı {ARDISIK_HATA_TAVANI} "
-                         "ardışık hatadan sonra geçildi")
-                hatalar.append((seri.id, mesaj))
-                print(f"  ✗ {seri.id} — {mesaj}", file=sys.stderr)
-                continue
-            baslangic = time.monotonic()
-            try:
-                df = _cek(
-                    seri, api_key, tgt, oturum,
-                    epias_onbellek, osd_onbellek, tim_onbellek, bddk_onbellek,
-                    tefas_onbellek, ec_onbellek, tim_il_onbellek, tim_ulke_onbellek,
-                    thy_onbellek, pgsus_onbellek, tav_onbellek, ebebek_onbellek,
-                    epdk_onbellek, turkcell_onbellek, ttkom_onbellek,
-                    eib_onbellek, usk_onbellek, odmd_onbellek, turkbesd_onbellek,
-                    wb_onbellek, ifo_onbellek, tsb_onbellek,
-                    epdk_dogalgaz_onbellek, eurostat_onbellek,
-                    turkcimento_onbellek=turkcimento_onbellek,
-                    tim_ulke_grubu_onbellek=tim_ulke_grubu_onbellek,
-                    tspb_onbellek=tspb_onbellek,
-                    sgk_onbellek=sgk_onbellek,
-                    ayd_onbellek=ayd_onbellek,
-                    gph_onbellek=gph_onbellek,
-                    orge_onbellek=orge_onbellek,
-                    tcud_onbellek=tcud_onbellek,
-                    dhmi_onbellek=dhmi_onbellek,
-                    uab_onbellek=uab_onbellek,
-                    ktb_onbellek=ktb_onbellek,
-                    eurostat_turizm_onbellek=eurostat_turizm_onbellek,
-                    iso_pmi_onbellek=iso_pmi_onbellek,
-                    tim_pazar_monitoru_onbellek=tim_pazar_monitoru_onbellek,
-                    bigchefs_onbellek=bigchefs_onbellek,
-                    turktraktor_onbellek=turktraktor_onbellek,
-                    migros_onbellek=migros_onbellek,
-                    tepav_onbellek=tepav_onbellek,
-                    tmsd_onbellek=tmsd_onbellek,
-                    istib_onbellek=istib_onbellek,
-                    tuik_kanatli_onbellek=tuik_kanatli_onbellek,
-                    botas_onbellek=botas_onbellek,
-                    ithib_onbellek=ithib_onbellek,
-                    trabzontb_onbellek=trabzontb_onbellek,
-                    eurostat_insaat_onbellek=eurostat_insaat_onbellek,
-                    taid_onbellek=taid_onbellek,
-                    thy_ir_onbellek=thy_ir_onbellek,
-                    pgsus_ir_onbellek=pgsus_ir_onbellek,
-                    tabgida_onbellek=tabgida_onbellek,
-                    tefas_gun_onbellek=tefas_gun_onbellek,
-                    fintables_onbellek=fintables_onbellek,
-                    mkk_onbellek=mkk_onbellek,
-                    tim_ilk1000_onbellek=tim_ilk1000_onbellek,
-                )
-                adet = seriyi_yaz(seri, df)
-                ardisik_hata[seri.kaynak_tipi] = 0
-                basarili.append(f"{seri.id} ({adet} nokta)")
-                print(f"  ✓ {seri.id} — {adet} nokta "
-                      f"({time.monotonic() - baslangic:.1f} sn)")
-            except Exception as hata:  # noqa: BLE001 — modül bazlı izolasyon
-                ardisik_hata[seri.kaynak_tipi] += 1
-                hatalar.append((seri.id, str(hata)))
-                print(f"  ✗ {seri.id} — {hata} "
-                      f"({time.monotonic() - baslangic:.1f} sn)", file=sys.stderr)
-            sureler[seri.kaynak_tipi] += time.monotonic() - baslangic
+        # 30 Eylül 2026 koşusu: TEFAS ve EPİAŞ GitHub runner'ından bağlantı
+        # zaman aşımına düştü (aynı istek bu makineden 200 / 2.039 satır /
+        # 0,31 sn). Devre kesici 5 hatada açtı, kalan 934 TEFAS serisi hiç
+        # denenmedi ve `data/fonlar` 25 Eylül'de dondu. Düşen seriler bir kez
+        # daha denenir: kesinti kısaysa veri kurtulur; kalıcıysa `hatalar`
+        # yeniden dolar ve çıkış kodu 1'de kalır (sözleşme değişmiyor).
+        for tur in (1, 2):
+            kalan = seriler
+            if tur == 2:
+                basarili_kume = set(basarili)
+                kalan = [s for s in seriler if s.id not in basarili_kume]
+                if not kalan:
+                    break
+                print(f"\n2. tur: {len(kalan)} seri yeniden denenecek",
+                      file=sys.stderr)
+                ardisik_hata.clear()
+                kalan_kume = {s.id for s in kalan}
+                # İlk turdaki kayıtları düş: seri bu turda da düşerse
+                # `hatalar`'a bir kez daha yazılır, geçerse kayıt kalmaz.
+                hatalar = [(i, m) for i, m in hatalar if i not in kalan_kume]
+                kod_hatalari -= kalan_kume
+
+            tgt = None
+            if any(s.kaynak_tipi == "epias" for s in kalan):
+                try:
+                    tgt = epias.tgt_al(kullanici, parola, session=oturum)
+                except Exception as hata:  # noqa: BLE001 — modül bazlı izolasyon
+                    # EPİAŞ girişi başarısızsa (parola süresi dolar, giriş
+                    # sunucusu 503 verir) yalnızca epias serileri düşer;
+                    # EVDS/Yahoo serileri koşmaya devam etmeli (docstring:
+                    # "bir serinin başarısızlığı diğerlerini düşürmez").
+                    for seri in [s for s in kalan if s.kaynak_tipi == "epias"]:
+                        hatalar.append((seri.id, f"EPİAŞ girişi başarısız: {hata}"))
+                        if not erisilemez_mi(hata):
+                            kod_hatalari.add(seri.id)
+                        print(
+                            f"  ✗ {seri.id} — EPİAŞ girişi başarısız: {hata}",
+                            file=sys.stderr,
+                        )
+
+            for seri in kalan:
+                if seri.kaynak_tipi == "epias" and tgt is None:
+                    continue  # giriş başarısız — hatalar listesine zaten eklendi
+                if ardisik_hata[seri.kaynak_tipi] >= ARDISIK_HATA_TAVANI:
+                    mesaj = (f"{seri.kaynak_tipi} kaynağı {ARDISIK_HATA_TAVANI} "
+                             "ardışık hatadan sonra geçildi")
+                    hatalar.append((seri.id, mesaj))
+                    print(f"  ✗ {seri.id} — {mesaj}", file=sys.stderr)
+                    continue
+                baslangic = time.monotonic()
+                try:
+                    df = _cek(
+                        seri, api_key, tgt, oturum,
+                        epias_onbellek, osd_onbellek, tim_onbellek, bddk_onbellek,
+                        tefas_onbellek, ec_onbellek, tim_il_onbellek, tim_ulke_onbellek,
+                        thy_onbellek, pgsus_onbellek, tav_onbellek, ebebek_onbellek,
+                        epdk_onbellek, turkcell_onbellek, ttkom_onbellek,
+                        eib_onbellek, usk_onbellek, odmd_onbellek, turkbesd_onbellek,
+                        wb_onbellek, ifo_onbellek, tsb_onbellek,
+                        epdk_dogalgaz_onbellek, eurostat_onbellek,
+                        turkcimento_onbellek=turkcimento_onbellek,
+                        tim_ulke_grubu_onbellek=tim_ulke_grubu_onbellek,
+                        tspb_onbellek=tspb_onbellek,
+                        sgk_onbellek=sgk_onbellek,
+                        ayd_onbellek=ayd_onbellek,
+                        gph_onbellek=gph_onbellek,
+                        orge_onbellek=orge_onbellek,
+                        tcud_onbellek=tcud_onbellek,
+                        dhmi_onbellek=dhmi_onbellek,
+                        uab_onbellek=uab_onbellek,
+                        ktb_onbellek=ktb_onbellek,
+                        eurostat_turizm_onbellek=eurostat_turizm_onbellek,
+                        iso_pmi_onbellek=iso_pmi_onbellek,
+                        tim_pazar_monitoru_onbellek=tim_pazar_monitoru_onbellek,
+                        bigchefs_onbellek=bigchefs_onbellek,
+                        turktraktor_onbellek=turktraktor_onbellek,
+                        migros_onbellek=migros_onbellek,
+                        tepav_onbellek=tepav_onbellek,
+                        tmsd_onbellek=tmsd_onbellek,
+                        istib_onbellek=istib_onbellek,
+                        tuik_kanatli_onbellek=tuik_kanatli_onbellek,
+                        botas_onbellek=botas_onbellek,
+                        ithib_onbellek=ithib_onbellek,
+                        trabzontb_onbellek=trabzontb_onbellek,
+                        eurostat_insaat_onbellek=eurostat_insaat_onbellek,
+                        taid_onbellek=taid_onbellek,
+                        thy_ir_onbellek=thy_ir_onbellek,
+                        pgsus_ir_onbellek=pgsus_ir_onbellek,
+                        tabgida_onbellek=tabgida_onbellek,
+                        tefas_gun_onbellek=tefas_gun_onbellek,
+                        fintables_onbellek=fintables_onbellek,
+                        mkk_onbellek=mkk_onbellek,
+                        tim_ilk1000_onbellek=tim_ilk1000_onbellek,
+                    )
+                    adet = seriyi_yaz(seri, df)
+                    ardisik_hata[seri.kaynak_tipi] = 0
+                    basarili.append(seri.id)
+                    print(f"  ✓ {seri.id} — {adet} nokta "
+                          f"({time.monotonic() - baslangic:.1f} sn)")
+                except Exception as hata:  # noqa: BLE001 — modül bazlı izolasyon
+                    ardisik_hata[seri.kaynak_tipi] += 1
+                    hatalar.append((seri.id, str(hata)))
+                    if not erisilemez_mi(hata):
+                        kod_hatalari.add(seri.id)
+                    print(f"  ✗ {seri.id} — {hata} "
+                          f"({time.monotonic() - baslangic:.1f} sn)", file=sys.stderr)
+                sureler[seri.kaynak_tipi] += time.monotonic() - baslangic
 
     print("\nKaynak tipi başına süre (en yavaş 15):")
     for tip, sure in sorted(sureler.items(), key=lambda x: -x[1])[:15]:
@@ -675,7 +731,19 @@ def main() -> int:
         print(f"{len(hatalar)} seri başarısız:", file=sys.stderr)
         for seri_id, mesaj in hatalar:
             print(f"  - {seri_id}: {mesaj}", file=sys.stderr)
-        return 1
+        # Yalnızca bağlantı hatası varsa koşu sağlamdır: veri eskiye düştü
+        # ama bizim hiçbir şeyimiz kırık değil. Veri Takvimi eskiyen seriyi
+        # gösterir; kırmızı build yalnızca bizim hatamızı gösterir.
+        if kod_hatalari:
+            return 1
+        kaynaklar = sorted({i for i, _ in hatalar})
+        print(
+            f"\n⚠️  {len(hatalar)} seri, {len(kaynaklar)} kaynak erişilemediği "
+            f"için güncellenemedi. Bu bir kod hatası DEĞİL — kaynaklar "
+            f"erişilemediği için Veri Takvimi'nde eskiye düşüyorlar:\n"
+            f"   {', '.join(kaynaklar)}",
+            file=sys.stderr,
+        )
     return 0
 
 

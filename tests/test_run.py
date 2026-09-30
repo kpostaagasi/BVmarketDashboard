@@ -430,7 +430,8 @@ def test_main_ardisik_hatada_kaynagi_gecer(monkeypatch):
     monkeypatch.setattr(run.tim, "il_seri_cek", patlayan)
     assert run.main() == 1
     # 741 tim_il serisi var; tavana gelince kalanlar denenmeden geçilir.
-    assert len(denemeler) == run.ARDISIK_HATA_TAVANI
+    # Düşenler 2. turda bir kez daha denendiği için çaba tavanın iki katıdır.
+    assert len(denemeler) == run.ARDISIK_HATA_TAVANI * 2
 
 
 def test_main_arada_basari_ardisik_sayaci_sifirlar(monkeypatch):
@@ -451,7 +452,101 @@ def test_main_arada_basari_ardisik_sayaci_sifirlar(monkeypatch):
     monkeypatch.setattr(run.turkbesd, "seri_cek", bir_atla)
     assert run.main() == 1
     # 24 yıllık turkbesd serisi: hatalar ardışık olmadığı için hiçbiri geçilmez.
-    assert sira["n"] == 24
+    # 12'si düşüyor; 2. turda yalnızca onlar yeniden deneniyor: 24 + 12.
+    assert sira["n"] == 36
+
+
+def test_main_dusen_seriyi_bir_kez_daha_dener(monkeypatch):
+    """30 Eylül 2026 koşusu: TEFAS ve EPİAŞ GitHub runner'ından bağlantı
+    zaman aşımına düştü, devre kesicinin ardından 934 TEFAS serisi hiç
+    denenmedi ve `data/fonlar` 25 Eylül'de dondu. Kısa kesintide veri
+    kurtarılmalı; kalıcıda çıkış kodu yine 1 kalmalı."""
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+    tum_adaptorleri_stubla(monkeypatch)
+    yazilan = []
+    monkeypatch.setattr(
+        run, "seriyi_yaz", lambda seri, df: (yazilan.append(seri.id), len(df))[1]
+    )
+    denemeler = {"n": 0}
+
+    def once_kirilir(*a, **k):
+        denemeler["n"] += 1
+        if denemeler["n"] == 1:
+            raise ConnectionError("bağlantı zaman aşımı")
+        return sahte_df()
+
+    monkeypatch.setattr(run.evds, "seri_cek", once_kirilir)
+    # Düşen seri 2. turda düzeldi: hata listesinden de silinmeli, çıkış 0.
+    assert run.main() == 0
+    assert denemeler["n"] == 2
+    assert yazilan == ["enflasyon/tufe-genel"]
+
+
+def test_main_erisilemeyen_kaynakta_kirmizi_yapmaz(monkeypatch):
+    """TEFAS kalıcı olarak engellenirse koşu her gün kırmızı olmamalı.
+
+    30 Eylül 2026: GitHub runner'ı TEFAS ve EPİAŞ'a bağlantı zaman aşımı
+    alıyor (aynı istek yerelde 200 / 2.039 satır / 0,31 sn). Depoda
+    düzeltilecek tek satır yok; kırmızı build yalnızca "kaynak kapalı"yi
+    tekrarlar ve "kırmızı = bizim hatamız" sözleşmesini öldürür. Veri
+    eskiye düşer — Veri Takvimi bunu gösterir.
+    """
+    import requests
+
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+    tum_adaptorleri_stubla(monkeypatch)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    def erisilemiyor(*a, **k):
+        raise requests.exceptions.ConnectTimeout("Connection timed out.")
+
+    monkeypatch.setattr(run.evds, "seri_cek", erisilemiyor)
+    assert run.main() == 0
+
+
+def test_main_erisilemeyen_kaynak_sarmalansa_da_yesil_kalir(monkeypatch):
+    """Adaptörler bağlantı hatasını `RuntimeError(...) from hata` ile
+    sarmalıyor; sınıflandırma zincirin dibine inmeli."""
+    import requests
+
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+    tum_adaptorleri_stubla(monkeypatch)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    def sarmalanmis(*a, **k):
+        try:
+            raise requests.exceptions.ConnectionError("kapali")
+        except requests.exceptions.ConnectionError as hata:
+            raise RuntimeError("bağlantı hatası: ...") from hata
+
+    monkeypatch.setattr(run.evds, "seri_cek", sarmalanmis)
+    assert run.main() == 0
+
+
+def test_main_kod_hatasinda_kirmizi_kalir(monkeypatch):
+    """Sarmalanmayan hata bizim kodumuzdan: parse hatası, şema değişimi,
+    dogrulama hatası. Bunlar düzeltilebilir, kırmızı olmalı."""
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+    tum_adaptorleri_stubla(monkeypatch)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    def kirik(*a, **k):
+        raise KeyError("beklenmeyen sütun: evds_son_deger")
+
+    monkeypatch.setattr(run.evds, "seri_cek", kirik)
+    assert run.main() == 1
 
 
 def test_cek_tefas_sektor_csv_varsa_son_aylari_ister(monkeypatch, tmp_path):
