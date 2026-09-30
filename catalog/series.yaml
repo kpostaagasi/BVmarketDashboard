@@ -512,7 +512,9 @@
   freq: monthly
   evds_code: TP.TSANAYMT2021.Y1
   evds_frequency: "5"
-  gecikme_gunu: 25   # TÜİK endeksi dönem sonundan ~42 gün sonra yayımlar
+  gecikme_gunu: 35   # TÜİK sanayi üretimini M+2'nin 10'unda yayımlıyor;
+    # EVDS aynası TÜİK'ten ~1 ay geride, dönem sonundan ölçülen bekleme
+    # kararlı olarak 92 güne çıkıyor. 35 -> esik 100, iki katı 200.
   charts: [seasonality, level]
 
 - id: sanayi/kapasite-kullanim
@@ -24247,17 +24249,6 @@
   freq: monthly
   charts: [seasonality, level]
 
-- id: sanayi/kko-kok-ve-rafine-petrol
-  title: "KKO · Kok ve Rafine Petrol"
-  category: sanayi
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.KKO2.IS.19
-  evds_frequency: "5"
-  unit: "%"
-  freq: monthly
-  charts: [seasonality, level]
-
 - id: sanayi/kko-kimyasal-urunler
   title: "KKO · Kimyasal Ürünler"
   category: sanayi
@@ -37526,6 +37517,8 @@
   unit: adet
   freq: monthly
   monthly_agg: sum
+  yayin_notu: "Kaynak dalgalı: TOFAŞ binek otomobil dış satışı bazı aylarda boş.
+    OSD hücresi - olduğunda seri o ay boşluk bırakıyor."
   charts:
   - seasonality
   - level
@@ -37953,6 +37946,8 @@
   unit: adet
   freq: monthly
   monthly_agg: sum
+  yayin_notu: "A.I.O.S. üretimi 2026da K.Kamyon sütununa kaydı; hafif kamyon (Kamyonet)
+    üretimi Temmuz 2026dan beri boş geliyor."
   charts:
   - seasonality
   - level
@@ -38013,6 +38008,9 @@
   unit: adet
   freq: monthly
   monthly_agg: sum
+  yayin_notu: "OSD Değerlendirme Raporunda A.I.O.S. Kamyon-Truck dış satış hücresi
+    2023-06dan beri boş (son ihracat 48 adet). Kaynak bölümü yayımlıyor, veri yok;
+    şirket hafif kamyonu ürün grubu değiştirdi."
   charts:
   - seasonality
   - level
@@ -38184,6 +38182,8 @@
   unit: adet
   freq: monthly
   monthly_agg: sum
+  yayin_notu: "Kaynak dalgalı: OTOKAR kamyonet dış satışı bazı aylarda boş. OSD hücresi
+    - olduğunda seri o ay boşluk bırakıyor."
   charts:
   - seasonality
   - level
@@ -38292,6 +38292,8 @@
   unit: adet
   freq: monthly
   monthly_agg: sum
+  yayin_notu: "Kaynak dalgalı: KARSAN midibüs dış satışı bazı aylarda boş. OSD hücresi
+    - olduğunda seri o ay boşluk bırakıyor."
   charts:
   - seasonality
   - level
@@ -41115,6 +41117,7 @@
   unit: "Bin Ton"
   freq: monthly
   monthly_agg: sum
+  gecikme_gunu: 40   # TürkÇimento yıllık .xls dosyasını ~3 ay gecikmeyle revize eder
   charts: [seasonality, level]
 
 - id: cimento/cimento-ic-satis
@@ -41126,6 +41129,7 @@
   unit: "Bin Ton"
   freq: monthly
   monthly_agg: sum
+  gecikme_gunu: 40   # TürkÇimento yıllık .xls dosyasını ~3 ay gecikmeyle revize eder
   charts: [seasonality, level]
 
 - id: cimento/cimento-ihracat
@@ -41137,6 +41141,7 @@
   unit: "Bin Ton"
   freq: monthly
   monthly_agg: sum
+  gecikme_gunu: 40   # TürkÇimento yıllık .xls dosyasını ~3 ay gecikmeyle revize eder
   charts: [seasonality, level]
 
 - id: cimento/cimento-toplam-satis
@@ -41148,6 +41153,7 @@
   unit: "Bin Ton"
   freq: monthly
   monthly_agg: sum
+  gecikme_gunu: 40   # TürkÇimento yıllık .xls dosyasını ~3 ay gecikmeyle revize eder
   charts: [seasonality, level]
 
 - id: cimento/cimento-stok
@@ -41158,6 +41164,7 @@
   turkcimento_metrik: cimento-stok
   unit: "Bin Ton"
   freq: monthly
+  gecikme_gunu: 40   # TürkÇimento yıllık .xls dosyasını ~3 ay gecikmeyle revize eder
   charts: [level]
 
 - id: cimento/klinker-uretim
@@ -41169,6 +41176,7 @@
   unit: "Bin Ton"
   freq: monthly
   monthly_agg: sum
+  gecikme_gunu: 40   # TürkÇimento yıllık .xls dosyasını ~3 ay gecikmeyle revize eder
   charts: [seasonality, level]
 
 - id: cimento/klinker-ihracat
@@ -41180,6 +41188,7 @@
   unit: "Bin Ton"
   freq: monthly
   monthly_agg: sum
+  gecikme_gunu: 40   # TürkÇimento yıllık .xls dosyasını ~3 ay gecikmeyle revize eder
   charts: [seasonality, level]
 
 - id: cimento/klinker-stok
@@ -41190,6 +41199,7 @@
   turkcimento_metrik: klinker-stok
   unit: "Bin Ton"
   freq: monthly
+  gecikme_gunu: 40   # TürkÇimento yıllık .xls dosyasını ~3 ay gecikmeyle revize eder
   charts: [level]
 
 - id: elektrik/uretim-hidroelektrik
@@ -41422,6 +41432,7 @@
   unit: "cent EUR/kWh"
   freq: quarterly
   olcek: 100
+  gecikme_gunu: 160   # Eurostat nrg_pc_204/205 yarıyıllık yayın yapıyor (freq=S); en son dönem 2025-S2
   charts: [level]
 
 - id: avrupa/elektrik-hane-tr-tl
@@ -41434,6 +41445,7 @@
   eurostat_currency: NAC
   unit: "TL/kWh"
   freq: quarterly
+  gecikme_gunu: 160   # Eurostat nrg_pc_204/205 yarıyıllık yayın yapıyor (freq=S); en son dönem 2025-S2
   charts: [level]
 
 - id: avrupa/elektrik-hane-eu27-cent
@@ -41447,6 +41459,7 @@
   unit: "cent EUR/kWh"
   freq: quarterly
   olcek: 100
+  gecikme_gunu: 160   # Eurostat nrg_pc_204/205 yarıyıllık yayın yapıyor (freq=S); en son dönem 2025-S2
   charts: [level]
 
 - id: avrupa/elektrik-sanayi-tr-cent
@@ -41460,6 +41473,7 @@
   unit: "cent EUR/kWh"
   freq: quarterly
   olcek: 100
+  gecikme_gunu: 160   # Eurostat nrg_pc_204/205 yarıyıllık yayın yapıyor (freq=S); en son dönem 2025-S2
   charts: [level]
 
 - id: avrupa/elektrik-sanayi-tr-tl
@@ -41472,6 +41486,7 @@
   eurostat_currency: NAC
   unit: "TL/kWh"
   freq: quarterly
+  gecikme_gunu: 160   # Eurostat nrg_pc_204/205 yarıyıllık yayın yapıyor (freq=S); en son dönem 2025-S2
   charts: [level]
 
 - id: avrupa/elektrik-sanayi-eu27-cent
@@ -41485,6 +41500,7 @@
   unit: "cent EUR/kWh"
   freq: quarterly
   olcek: 100
+  gecikme_gunu: 160   # Eurostat nrg_pc_204/205 yarıyıllık yayın yapıyor (freq=S); en son dönem 2025-S2
   charts: [level]
 
 - id: sanayi/reel-kesim-guven-ham
@@ -43734,7 +43750,10 @@
   kaynak_tipi: botas
   botas_kategori: "konut"
   unit: "TL/Sm3"
-  freq: daily
+  freq: quarterly   # BOTAŞ tarife bir basamak fonksiyonu: 2020'den
+    # beri 21 tarife değişti, aralıklar 2-13 ay. 'daily' yanlıştı;
+    # quarterly en az yanlış olanı ve dişleri koruyor (120 gün eşiği
+    # 2026-10-28'de sarıya, 2027-02-25'te kırmızıya döner).
   monthly_agg: last
   charts: [level]
 
@@ -43745,7 +43764,10 @@
   kaynak_tipi: botas
   botas_kategori: "sehit-ailesi"
   unit: "TL/Sm3"
-  freq: daily
+  freq: quarterly   # BOTAŞ tarife bir basamak fonksiyonu: 2020'den
+    # beri 21 tarife değişti, aralıklar 2-13 ay. 'daily' yanlıştı;
+    # quarterly en az yanlış olanı ve dişleri koruyor (120 gün eşiği
+    # 2026-10-28'de sarıya, 2027-02-25'te kırmızıya döner).
   monthly_agg: last
   charts: [level]
 
@@ -43756,7 +43778,10 @@
   kaynak_tipi: botas
   botas_kategori: "ekmek-ureticileri"
   unit: "TL/Sm3"
-  freq: daily
+  freq: quarterly   # BOTAŞ tarife bir basamak fonksiyonu: 2020'den
+    # beri 21 tarife değişti, aralıklar 2-13 ay. 'daily' yanlıştı;
+    # quarterly en az yanlış olanı ve dişleri koruyor (120 gün eşiği
+    # 2026-10-28'de sarıya, 2027-02-25'te kırmızıya döner).
   monthly_agg: last
   charts: [level]
 
@@ -43767,7 +43792,10 @@
   kaynak_tipi: botas
   botas_kategori: "elektrik-uretimi-amacli"
   unit: "TL/Sm3"
-  freq: daily
+  freq: quarterly   # BOTAŞ tarife bir basamak fonksiyonu: 2020'den
+    # beri 21 tarife değişti, aralıklar 2-13 ay. 'daily' yanlıştı;
+    # quarterly en az yanlış olanı ve dişleri koruyor (120 gün eşiği
+    # 2026-10-28'de sarıya, 2027-02-25'te kırmızıya döner).
   monthly_agg: last
   charts: [level]
 
@@ -43778,7 +43806,10 @@
   kaynak_tipi: botas
   botas_kategori: "elektrik-uretimi-disi"
   unit: "TL/Sm3"
-  freq: daily
+  freq: quarterly   # BOTAŞ tarife bir basamak fonksiyonu: 2020'den
+    # beri 21 tarife değişti, aralıklar 2-13 ay. 'daily' yanlıştı;
+    # quarterly en az yanlış olanı ve dişleri koruyor (120 gün eşiği
+    # 2026-10-28'de sarıya, 2027-02-25'te kırmızıya döner).
   monthly_agg: last
   charts: [level]
 
@@ -44010,9 +44041,13 @@
   kaynak: { name: BigChefs Yatırımcı İlişkileri, url: "https://bigchefs.com.tr/duyurular/" }
   kaynak_tipi: bigchefs
   unit: "Adet"
-  freq: monthly
+  freq: quarterly   # Mart 2026'dan sonra aylık şube bildirimi
+    # yayımlanmıyor; şirket aynı büyüklükleri artık çeyreklik
+    # notun 'Grup Hakkında' paragrafında veriyor. Seri düzensiz aralıklı
+    # (aylık + çeyreklik harmanı) kalıyor: eski aylık noktalar ezilmiyor,
+    # yalnızca sonrasına çeyreklik noktalar ekleniyor.
   bigchefs_metrik: sube-sayisi
-  charts: [level, seasonality]
+  charts: [level]   # çeyreklik seri mevsimsellik desteklemiyor
 
 - id: restoran/bigch-sehir-sayisi
   title: BigChefs Faaliyet Gösterilen Şehir Sayısı (Türkiye)
@@ -44020,9 +44055,13 @@
   kaynak: { name: BigChefs Yatırımcı İlişkileri, url: "https://bigchefs.com.tr/duyurular/" }
   kaynak_tipi: bigchefs
   unit: "Adet"
-  freq: monthly
+  freq: quarterly   # Mart 2026'dan sonra aylık şube bildirimi
+    # yayımlanmıyor; şirket aynı büyüklükleri artık çeyreklik
+    # notun 'Grup Hakkında' paragrafında veriyor. Seri düzensiz aralıklı
+    # (aylık + çeyreklik harmanı) kalıyor: eski aylık noktalar ezilmiyor,
+    # yalnızca sonrasına çeyreklik noktalar ekleniyor.
   bigchefs_metrik: sehir-sayisi
-  charts: [level]
+  charts: [level]   # çeyreklik seri mevsimsellik desteklemiyor
 
 - id: restoran/bigch-ulke-sayisi
   title: BigChefs Faaliyet Gösterilen Ülke Sayısı (Yurt Dışı)
@@ -44030,9 +44069,13 @@
   kaynak: { name: BigChefs Yatırımcı İlişkileri, url: "https://bigchefs.com.tr/duyurular/" }
   kaynak_tipi: bigchefs
   unit: "Adet"
-  freq: monthly
+  freq: quarterly   # Mart 2026'dan sonra aylık şube bildirimi
+    # yayımlanmıyor; şirket aynı büyüklükleri artık çeyreklik
+    # notun 'Grup Hakkında' paragrafında veriyor. Seri düzensiz aralıklı
+    # (aylık + çeyreklik harmanı) kalıyor: eski aylık noktalar ezilmiyor,
+    # yalnızca sonrasına çeyreklik noktalar ekleniyor.
   bigchefs_metrik: ulke-sayisi
-  charts: [level]
+  charts: [level]   # çeyreklik seri mevsimsellik desteklemiyor
 
 - id: restoran/bigch-calisan-sayisi
   title: BigChefs Çalışan Sayısı
@@ -44423,6 +44466,7 @@
   unit: "Milyon USD"
   freq: monthly
   monthly_agg: last
+  gecikme_gunu: 30   # TCMB ödemeler dengesini dönem sonundan ~2 ay sonra yayımlar
   charts: [seasonality, level]
 
 - id: turizm/seyahat-gideri
@@ -44435,6 +44479,7 @@
   unit: "Milyon USD"
   freq: monthly
   monthly_agg: last
+  gecikme_gunu: 30   # TCMB ödemeler dengesini dönem sonundan ~2 ay sonra yayımlar
   charts: [seasonality, level]
 
 - id: turizm/kisi-basi-ortalama-harcama
@@ -44451,6 +44496,7 @@
   unit: "USD"
   freq: monthly
   monthly_agg: last
+  gecikme_gunu: 30   # TCMB ödemeler dengesini dönem sonundan ~2 ay sonra yayımlar
   charts: [level]
 
 - id: turizm/geceleme-toplam
@@ -44462,6 +44508,8 @@
   unit: "Adet"
   freq: monthly
   monthly_agg: last
+  yayin_notu: "Eurostat ulusal iletimi TÜİKin gerisinde: aynı ayı TÜİK 2026-07de
+    yayımladı, Eurostat TR 2025-12de duruyor. Kaynak eskiye düşüyor, adaptör değil."
   charts: [seasonality, level]
 
 - id: turizm/geceleme-yerli
@@ -44473,6 +44521,8 @@
   unit: "Adet"
   freq: monthly
   monthly_agg: last
+  yayin_notu: "Eurostat ulusal iletimi TÜİKin gerisinde: aynı ayı TÜİK 2026-07de
+    yayımladı, Eurostat TR 2025-12de duruyor. Kaynak eskiye düşüyor, adaptör değil."
   charts: [seasonality, level]
 
 - id: turizm/geceleme-yabanci
@@ -44484,6 +44534,8 @@
   unit: "Adet"
   freq: monthly
   monthly_agg: last
+  yayin_notu: "Eurostat ulusal iletimi TÜİKin gerisinde: aynı ayı TÜİK 2026-07de
+    yayımladı, Eurostat TR 2025-12de duruyor. Kaynak eskiye düşüyor, adaptör değil."
   charts: [seasonality, level]
 
 # KTB "Bakanlık Belgeli Konaklama İstatistikleri" bülteni (aylık, % doluluk
@@ -45501,6 +45553,7 @@
   unit: "Milyon adet"
   freq: monthly
   olcek: 0.001
+  gecikme_gunu: 60   # SGK sağlık istatistikleri ~4 ay gecikmeyle yayımlar
   charts: [level, seasonality]
 
 - id: saglik/hastane-ozel-fatura
@@ -45512,6 +45565,7 @@
   unit: "Milyar TL"
   freq: monthly
   olcek: 0.000001
+  gecikme_gunu: 60   # SGK sağlık istatistikleri ~4 ay gecikmeyle yayımlar
   charts: [level, seasonality]
 
 - id: saglik/hastane-toplam-muracaat
@@ -45523,6 +45577,7 @@
   unit: "Milyon adet"
   freq: monthly
   olcek: 0.001
+  gecikme_gunu: 60   # SGK sağlık istatistikleri ~4 ay gecikmeyle yayımlar
   charts: [level, seasonality]
 
 - id: saglik/hastane-toplam-fatura
@@ -45534,6 +45589,7 @@
   unit: "Milyar TL"
   freq: monthly
   olcek: 0.000001
+  gecikme_gunu: 60   # SGK sağlık istatistikleri ~4 ay gecikmeyle yayımlar
   charts: [level, seasonality]
   yayin_notu: >-
     "Özel Hastane Müracaat Payı (Özel/Toplam, %)" referans sitede AYRI bir
@@ -45549,6 +45605,7 @@
   unit: "Milyon adet"
   freq: monthly
   olcek: 0.001
+  gecikme_gunu: 60   # SGK sağlık istatistikleri ~4 ay gecikmeyle yayımlar
   charts: [level, seasonality]
 
 - id: saglik/eczane-fatura-tutari
@@ -45560,6 +45617,7 @@
   unit: "Milyar TL"
   freq: monthly
   olcek: 0.000001
+  gecikme_gunu: 60   # SGK sağlık istatistikleri ~4 ay gecikmeyle yayımlar
   charts: [level, seasonality]
   yayin_notu: >-
     "Reçete Başı Ortalama Maliyet" referans sitede AYRI bir karttır ama
@@ -47966,29 +48024,6 @@
   freq: yearly
   charts: [level]
 
-- id: ihracat-ilk1000/balsu-ihracat
-  title: "BALSU İhracatı (TİM İlk 1000)"
-  category: ihracat-ilk1000
-  kaynak: { name: "TİM İlk 1000 İhracatçı", url: "https://tim.org.tr/tr/turkiyenin-ilk-1000-ihracatci-arastirmasi" }
-  kaynak_tipi: tim_ilk1000
-  tim_firma: "BALSU GIDA SAN. VE TİC. A.Ş"
-  tim_olcut: ihracat
-  unit: "Milyon USD"
-  olcek: 1.0e-06
-  freq: yearly
-  charts: [level]
-
-- id: ihracat-ilk1000/balsu-sira
-  title: "BALSU TİM İlk 1000 Genel Sırası"
-  category: ihracat-ilk1000
-  kaynak: { name: "TİM İlk 1000 İhracatçı", url: "https://tim.org.tr/tr/turkiyenin-ilk-1000-ihracatci-arastirmasi" }
-  kaynak_tipi: tim_ilk1000
-  tim_firma: "BALSU GIDA SAN. VE TİC. A.Ş"
-  tim_olcut: sira
-  unit: "sıra"
-  freq: yearly
-  charts: [level]
-
 - id: ihracat-ilk1000/banvt-ihracat
   title: "BANVT İhracatı (TİM İlk 1000)"
   category: ihracat-ilk1000
@@ -48237,52 +48272,6 @@
   kaynak: { name: "TİM İlk 1000 İhracatçı", url: "https://tim.org.tr/tr/turkiyenin-ilk-1000-ihracatci-arastirmasi" }
   kaynak_tipi: tim_ilk1000
   tim_firma: "EGE ENDÜSTRİ VE TİC. A.Ş."
-  tim_olcut: sira
-  unit: "sıra"
-  freq: yearly
-  charts: [level]
-
-- id: ihracat-ilk1000/egpro-ihracat
-  title: "EGPRO İhracatı (TİM İlk 1000)"
-  category: ihracat-ilk1000
-  kaynak: { name: "TİM İlk 1000 İhracatçı", url: "https://tim.org.tr/tr/turkiyenin-ilk-1000-ihracatci-arastirmasi" }
-  kaynak_tipi: tim_ilk1000
-  tim_firma: "EGE PROFİL TİC. VE SAN. A.Ş."
-  tim_olcut: ihracat
-  unit: "Milyon USD"
-  olcek: 1.0e-06
-  freq: yearly
-  charts: [level]
-
-- id: ihracat-ilk1000/egpro-sira
-  title: "EGPRO TİM İlk 1000 Genel Sırası"
-  category: ihracat-ilk1000
-  kaynak: { name: "TİM İlk 1000 İhracatçı", url: "https://tim.org.tr/tr/turkiyenin-ilk-1000-ihracatci-arastirmasi" }
-  kaynak_tipi: tim_ilk1000
-  tim_firma: "EGE PROFİL TİC. VE SAN. A.Ş."
-  tim_olcut: sira
-  unit: "sıra"
-  freq: yearly
-  charts: [level]
-
-- id: ihracat-ilk1000/egser-ihracat
-  title: "EGSER İhracatı (TİM İlk 1000)"
-  category: ihracat-ilk1000
-  kaynak: { name: "TİM İlk 1000 İhracatçı", url: "https://tim.org.tr/tr/turkiyenin-ilk-1000-ihracatci-arastirmasi" }
-  kaynak_tipi: tim_ilk1000
-  tim_firma: "EGE SERAMİK SAN. VE TİC. A.Ş."
-  tim_olcut: ihracat
-  unit: "Milyon USD"
-  olcek: 1.0e-06
-  freq: yearly
-  charts: [level]
-
-- id: ihracat-ilk1000/egser-sira
-  title: "EGSER TİM İlk 1000 Genel Sırası"
-  category: ihracat-ilk1000
-  kaynak: { name: "TİM İlk 1000 İhracatçı", url: "https://tim.org.tr/tr/turkiyenin-ilk-1000-ihracatci-arastirmasi" }
-  kaynak_tipi: tim_ilk1000
-  tim_firma: "EGE SERAMİK SAN. VE TİC. A.Ş."
   tim_olcut: sira
   unit: "sıra"
   freq: yearly
@@ -50419,17 +50408,6 @@
   freq: monthly
   charts: [level, seasonality]
 
-- id: enflasyon/tufe-03132-giyim-aksesuarlari
-  title: "TÜFE 03132 · Giyim Aksesuarları"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.03132
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
 - id: enflasyon/tufe-0314-giyim-esyalarinin-temizlenmesi-onarimi-tadilati-
   title: "TÜFE 0314 · Giyim Eşyalarının Temizlenmesi, Onarımı, Tadilatı, Dikimi Ve Kiralanması"
   category: enflasyon
@@ -50513,28 +50491,6 @@
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
   kaynak_tipi: evds
   evds_code: TP.TUKFIY2025.03213
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-0322-ayakkabilarin-temizlenmesi-tamiri-ve-kiralanmasi
-  title: "TÜFE 0322 · Ayakkabıların Temizlenmesi, Tamiri Ve Kiralanması"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.0322
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-03220-ayakkabilarin-temizlenmesi-tamiri-ve-kiralanmasi
-  title: "TÜFE 03220 · Ayakkabıların Temizlenmesi, Tamiri Ve Kiralanması"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.03220
   evds_frequency: "5"
   unit: "Endeks (2025=100)"
   freq: monthly
@@ -51189,28 +51145,6 @@
   freq: monthly
   charts: [level, seasonality]
 
-- id: enflasyon/tufe-0612-medikal-tibbi-urunler
-  title: "TÜFE 0612 · Medikal Tıbbi Ürünler"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.0612
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-06121-medikal-tibbi-tani-urunleri
-  title: "TÜFE 06121 · Medikal Tıbbi Tanı Ürünleri"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.06121
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
 - id: enflasyon/tufe-0613-yardimci-urunler
   title: "TÜFE 0613 · Yardımcı Ürünler"
   category: enflasyon
@@ -51585,17 +51519,6 @@
   freq: monthly
   charts: [level, seasonality]
 
-- id: enflasyon/tufe-07241-otopark-hizmetleri
-  title: "TÜFE 07241 · Otopark Hizmetleri"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.07241
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
 - id: enflasyon/tufe-07242-gecis-ucretleri
   title: "TÜFE 07242 · Geçiş Ücretleri"
   category: enflasyon
@@ -51926,28 +51849,6 @@
   freq: monthly
   charts: [level, seasonality]
 
-- id: enflasyon/tufe-0815-kaydedilmemis-bos-kayit-ortamlari
-  title: "TÜFE 0815 · Kaydedilmemiş Boş Kayıt Ortamları"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.0815
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-08150-kaydedilmemis-bos-kayit-ortamlari
-  title: "TÜFE 08150 · Kaydedilmemiş Boş Kayıt Ortamları"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.08150
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
 - id: enflasyon/tufe-0819-diger-bilgi-ve-iletisim-ekipmanlari-ve-aksesuarl
   title: "TÜFE 0819 · Diğer Bilgi Ve İletişim Ekipmanları Ve Aksesuarları"
   category: enflasyon
@@ -51987,28 +51888,6 @@
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
   kaynak_tipi: evds
   evds_code: TP.TUKFIY2025.083
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-0831-sabit-iletisim-hizmetleri
-  title: "TÜFE 0831 · Sabit İletişim Hizmetleri"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.0831
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-08310-sabit-iletisim-hizmetleri
-  title: "TÜFE 08310 · Sabit İletişim Hizmetleri"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.08310
   evds_frequency: "5"
   unit: "Endeks (2025=100)"
   freq: monthly
@@ -52097,17 +51976,6 @@
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
   kaynak_tipi: evds
   evds_code: TP.TUKFIY2025.08392
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-08399-diger-bilgi-ve-iletisim-hizmetleri
-  title: "TÜFE 08399 · Diğer Bilgi Ve İletişim Hizmetleri"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.08399
   evds_frequency: "5"
   unit: "Endeks (2025=100)"
   freq: monthly
@@ -52278,17 +52146,6 @@
   freq: monthly
   charts: [level, seasonality]
 
-- id: enflasyon/tufe-09463-spor-faaliyetlerine-seyir-amacli-katilim
-  title: "TÜFE 09463 · Spor Faaliyetlerine Seyir Amaçlı Katılım"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.09463
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
 - id: enflasyon/tufe-0947-sans-oyunlari
   title: "TÜFE 0947 · Şans Oyunları"
   category: enflasyon
@@ -52306,39 +52163,6 @@
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
   kaynak_tipi: evds
   evds_code: TP.TUKFIY2025.09470
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-095-kulturel-mallar
-  title: "TÜFE 095 · Kültürel Mallar"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.095
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-0951-muzik-enstrumanlari
-  title: "TÜFE 0951 · Müzik Enstrümanları"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.0951
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-09510-muzik-enstrumanlari
-  title: "TÜFE 09510 · Müzik Enstrümanları"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.09510
   evds_frequency: "5"
   unit: "Endeks (2025=100)"
   freq: monthly
@@ -52372,28 +52196,6 @@
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
   kaynak_tipi: evds
   evds_code: TP.TUKFIY2025.09610
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-0963-fotografcilik-hizmetleri
-  title: "TÜFE 0963 · Fotoğrafçılık Hizmetleri"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.0963
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-09630-fotografcilik-hizmetleri
-  title: "TÜFE 09630 · Fotoğrafçılık Hizmetleri"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.09630
   evds_frequency: "5"
   unit: "Endeks (2025=100)"
   freq: monthly
@@ -52460,39 +52262,6 @@
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
   kaynak_tipi: evds
   evds_code: TP.TUKFIY2025.09719
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-0972-gazeteler-ve-sureli-yayinlar
-  title: "TÜFE 0972 · Gazeteler Ve Süreli Yayınlar"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.0972
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-09721-gazeteler
-  title: "TÜFE 09721 · Gazeteler"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.09721
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-09722-dergiler-ve-sureli-yayinlar
-  title: "TÜFE 09722 · Dergiler Ve Süreli Yayınlar"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.09722
   evds_frequency: "5"
   unit: "Endeks (2025=100)"
   freq: monthly
@@ -52658,50 +52427,6 @@
   kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
   kaynak_tipi: evds
   evds_code: TP.TUKFIY2025.10400
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-105-seviyeye-gore-tanimlanamayan-egitim
-  title: "TÜFE 105 · Seviyeye Göre Tanımlanamayan Eğitim"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.105
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-1050-seviyeye-gore-tanimlanamayan-egitim
-  title: "TÜFE 1050 · Seviyeye Göre Tanımlanamayan Eğitim"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.1050
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-10501-ozel-ders
-  title: "TÜFE 10501 · Özel Ders"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.10501
-  evds_frequency: "5"
-  unit: "Endeks (2025=100)"
-  freq: monthly
-  charts: [level, seasonality]
-
-- id: enflasyon/tufe-10509-seviyeye-gore-tanimlanamayan-diger-egitim
-  title: "TÜFE 10509 · Seviyeye Göre Tanımlanamayan Diğer Eğitim"
-  category: enflasyon
-  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
-  kaynak_tipi: evds
-  evds_code: TP.TUKFIY2025.10509
   evds_frequency: "5"
   unit: "Endeks (2025=100)"
   freq: monthly

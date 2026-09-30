@@ -15,8 +15,13 @@
   - enflasyon/ufe
   - enflasyon/beklenti-12a
   note: TÜFE serileri endeks seviyesidir (2025=100). TÜFE ailesi COICOP 2018'in TAM
-    hiyerarşisidir — EVDS bie_tukfiy2025 grubunda 349 seri var (13 ana grup + 45 alt grup
-    + 102 + 189 alt sınıf) ve hepsi katalogda. Kod deseni TP.TUKFIY2025.<rakamlar>,
+    hiyerarşisidir — EVDS bie_tukfiy2025 grubunda 349 seri vardı (13 ana grup
+    + 45 alt grup + 102 + 189 alt sınıf). TÜİK alt sınıfları 2026 Ocak'ta
+    ECOICOP v2'ye geçirip yeniden numaraladı (143 → 174); 24 kod iptal
+    edildi ve katalogdan çıkarıldı, kalan 325 seri burada. İptal edilenler —
+    03132, 0322/03220, 0612/06121, 07241, 0815/08150, 0831/08310/08399, 09463,
+    095/0951/09510, 0963/09630, 0972/09721/09722, 105/1050/10501/10509.
+    Kod deseni TP.TUKFIY2025.<rakamlar> —
     ör. .0111 tahıllar, .01115 makarna. Alt sınıflar ağırlıkları nedeniyle ana grup
     ortalamasının ALTINDA kalır (2026-08 — genel 134,75 > gıda 134,31 > 011 gıda 133,60
     > 0111 tahıllar 131,24), seviye karşılaştırırken bu normaldir. TEGE serileri ise

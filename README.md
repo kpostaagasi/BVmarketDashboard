@@ -8,7 +8,7 @@ istatistikli grafik sayfaları olarak sunma.
 
 ```
 app.py                    # st.navigation — sol menü katalogdan üretilir
-catalog/series.yaml       # tek doğruluk kaynağı: 3.706 seri tanımı
+catalog/series.yaml       # tek doğruluk kaynağı: 4.222 seri tanımı
 catalog/categories.yaml   # menü ağacı: 49 kategori + her birinin KPI panosu
 catalog/hisseler.yaml     # 8 BIST tickerı: kendi verisi + bağlam serileri
 core/                     # catalog, data, stats, charts, components, page, takvim
