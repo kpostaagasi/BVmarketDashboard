@@ -588,3 +588,47 @@ def test_seriyi_yaz_tefas_sektor_olcekli_eski_degerleri_korur(monkeypatch, tmp_p
         "date": ["2026-07-01", "2026-08-01", "2026-09-01"],
         "value": [9000.0, 9895.37287, 8600.0],
     }
+
+
+def test_main_kaynagin_reddettigi_http_kodu_kirmizi_yapmaz(monkeypatch):
+    """30 Eylül 2026 tam koşusu: fintables.com 403 döndürdü (runner'dan da
+    yerelden de). Kaynak bizi reddediyor; URL'imiz doğru, kodumuz doğru."""
+    import requests
+
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+    tum_adaptorleri_stubla(monkeypatch)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    def reddediyor(*a, **k):
+        yanit = requests.Response()
+        yanit.status_code = 403
+        yanit.url = "https://fintables.com/sirketler/THYAO/finansal-tablolar/bilanco"
+        raise requests.exceptions.HTTPError("403 Client Error: Forbidden", response=yanit)
+
+    monkeypatch.setattr(run.evds, "seri_cek", reddediyor)
+    assert run.main() == 0
+
+
+def test_main_bizim_kurdugumuz_yanlis_url_kirmizi_kalir(monkeypatch):
+    """404 bizim hatamız: URL'yi biz kurduk ve yanlış. Sessizce yeşile
+    çevirmek, bir sonraki upstream şema değişimini gizlerdi."""
+    import requests
+
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+    tum_adaptorleri_stubla(monkeypatch)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    def yok(*a, **k):
+        yanit = requests.Response()
+        yanit.status_code = 404
+        yanit.url = "https://evds3.tcmb.gov.tr/yanlis-kod"
+        raise requests.exceptions.HTTPError("404 Client Error: Not Found", response=yanit)
+
+    monkeypatch.setattr(run.evds, "seri_cek", yok)
+    assert run.main() == 1

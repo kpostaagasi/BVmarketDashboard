@@ -310,6 +310,11 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
     return olcekle(df, seri.olcek)
 
 
+# Kaynağın bizi reddettiği / geçici olarak sunamadığı durumlar. 404 burada
+# değil: o bizim kurduğumuz URL'nin yanlışı demek, bizim hatamızdır.
+KAPALI_HTTP_KODLARI = frozenset({403, 429, 500, 502, 503, 504})
+
+
 def erisilemez_mi(hata: BaseException) -> bool:
     """Hata bir kaynağa ulaşamamaktan mı geliyor, yoksa bizim kodumuzdan mı?
 
@@ -324,7 +329,15 @@ def erisilemez_mi(hata: BaseException) -> bool:
     yalnızca üçüncü taraf erişilemez. Bu koşuyu her gün kırmızı yapmak
     "kırmızı = bizim hatamız" sözleşmesini öldürür; ses çıkarmaya devam
     ederken çıkış kodunu temiz tutmak doğru olan.
+
+    HTTP tarafı da aynı sınıftır: 403/429/5xx "kaynak bize veri vermiyor"
+    demektir, bizim hatamız değil (30 Eylül 2026 tam koşusu: fintables.com
+    403 döndürdü, hem runner'dan hem yerelden). 404 KAPSAM DIŞIDIR — o bizim
+    kurduğumuz yanlış URL'dir, düzeltilebilir ve kırmızıyı hak eder.
+    401/402/407 de kapsam dışı: kimlik bilgisi/yetki = yapılandırma hatası,
+    zaten aksi hâlde `main()` 2 döndürüyor.
     """
+
     zincir: list[BaseException] = []
     gorulen: set[int] = set()
     adim = hata
@@ -332,9 +345,14 @@ def erisilemez_mi(hata: BaseException) -> bool:
         gorulen.add(id(adim))
         zincir.append(adim)
         adim = adim.__cause__ or adim.__context__
-    return any(
-        isinstance(adim, requests.exceptions.ConnectionError) for adim in zincir
-    )
+    for adim in zincir:
+        if isinstance(adim, requests.exceptions.ConnectionError):
+            return True
+        if isinstance(adim, requests.exceptions.HTTPError):
+            yanit = adim.response
+            if yanit is not None and yanit.status_code in KAPALI_HTTP_KODLARI:
+                return True
+    return False
 
 
 def seriyi_yaz(seri: Seri, df) -> int:
