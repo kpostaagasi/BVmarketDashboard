@@ -263,14 +263,23 @@ def _bolum_sayfalari(kitap) -> tuple[int, int]:
     bölüm başlığının bulunduğu sayfa bölümün sonudur. Bu, 336 MB'lık 2023
     kitabında 460 saniyelik tam-tablo taramasını ~30 saniyeye indirir.
     """
+    # `flush_cache()` şart: pdfplumber sayfa nesnesini (metin, nesne listesi,
+    # düzen ağacı) pdfminer belgesinin ağacında tutuyor. 2022 kitabında 370
+    # sayfanın metni taranırken bu birikim RSS'i 268 MB'den 2.988 MB'ye
+    # çıkardı; GitHub runner'ında (7 GB) koşuyu "operation was canceled"
+    # ile öldürüyordu. Sayfa bazında temizlenince birikim yok.
     ilk = son = None
     for i, sayfa in enumerate(kitap.pages):
-        metin = _sadelestir(sayfa.extract_text() or "")
-        if ilk is None:
-            if BOLUM_BASLIGI in metin and "ILK 1000" in metin:
-                ilk = i
-        elif BIRAKILIS_AYRACI in metin:
-            son = i - 1
+        try:
+            metin = _sadelestir(sayfa.extract_text() or "")
+            if ilk is None:
+                if BOLUM_BASLIGI in metin and "ILK 1000" in metin:
+                    ilk = i
+            elif BIRAKILIS_AYRACI in metin:
+                son = i - 1
+        finally:
+            sayfa.flush_cache()
+        if son is not None:
             break
     if ilk is None or son is None or son < ilk:
         raise RuntimeError(
@@ -292,25 +301,28 @@ def _kitabi_ayikla(baytlar: bytes, yil: int) -> dict[str, tuple[int, float]]:
     with pdfplumber.open(io.BytesIO(baytlar)) as kitap:
         ilk, son = _bolum_sayfalari(kitap)
         for sayfa in kitap.pages[ilk + 1: son + 1]:
-            for tablo in sayfa.extract_tables() or []:
-                for satir in tablo:
-                    if len(satir) != 4:
-                        continue
-                    sira = _sayi(satir[0])
-                    tutar = _sayi(satir[2])
-                    unvan = re.sub(r"\s+", " ", str(satir[3] or "")).strip()
-                    if sira is None or tutar is None or not unvan:
-                        continue
-                    if not 1 <= sira <= AZAMI_FIRMA:
-                        continue
-                    onceki = siralar.get(int(sira))
-                    if onceki is not None and onceki != unvan:
-                        raise RuntimeError(
-                            f"TİM {yil} kitabında {int(sira)}. sıra iki farklı "
-                            f"firmaya ait: {onceki!r} / {unvan!r}"
-                        )
-                    siralar[int(sira)] = unvan
-                    noktalar[unvan] = (int(sira), tutar)
+            try:
+                for tablo in sayfa.extract_tables() or []:
+                    for satir in tablo:
+                        if len(satir) != 4:
+                            continue
+                        sira = _sayi(satir[0])
+                        tutar = _sayi(satir[2])
+                        unvan = re.sub(r"\s+", " ", str(satir[3] or "")).strip()
+                        if sira is None or tutar is None or not unvan:
+                            continue
+                        if not 1 <= sira <= AZAMI_FIRMA:
+                            continue
+                        onceki = siralar.get(int(sira))
+                        if onceki is not None and onceki != unvan:
+                            raise RuntimeError(
+                                f"TİM {yil} kitabında {int(sira)}. sıra iki farklı "
+                                f"firmaya ait: {onceki!r} / {unvan!r}"
+                            )
+                        siralar[int(sira)] = unvan
+                        noktalar[unvan] = (int(sira), tutar)
+            finally:
+                sayfa.flush_cache()
     return noktalar
 
 
