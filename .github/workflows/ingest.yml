@@ -63,6 +63,12 @@ jobs:
           echo "Sıklık filtresi: ${FREQ:-tümü}"
           python -u -m ingest.run ${FREQ:+--freq "$FREQ"}
 
+      - name: Bayat seri raporu
+        if: always()
+        # Yalnızca görünürlük: gecikmiş/okunamayan serileri koşu özetine yazar,
+        # koşuyu kırmaz (bkz. ingest/bayat_rapor.py).
+        run: python -m ingest.bayat_rapor
+
       - name: Değişiklikleri commit'le
         if: always()
         run: |
