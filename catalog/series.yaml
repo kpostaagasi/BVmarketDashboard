@@ -44524,6 +44524,48 @@
 # +8.6 puan) YANLIŞTIR; aynı bültene göre Temmuz 2026 - Temmuz 2025 gerçek
 # farkı +1.9 / -0.3 / +2.2 puandır (seviyeler sitenin kartlarıyla birebir
 # tutuyor). Veri doğrudur, "düzeltilmemelidir" — bkz. turizm kategori notu.
+- id: turizm/geceleme-ktb-toplam
+  title: Bakanlık Belgeli Tesis Geceleme - Toplam (Aylık)
+  category: turizm
+  kaynak: { name: "Kültür ve Turizm Bakanlığı", url: "https://yigm.ktb.gov.tr/TR-201121/bakanlik-belgeli-tesis-konaklama-istatistikleri.html" }
+  kaynak_tipi: ktb
+  ktb_bulten: konaklama
+  ktb_gosterge: geceleme
+  ktb_olcut: toplam
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: last
+  yayin_notu: "Yalnızca işletme ve basit belgeli tesisler; Eurostat/TÜİK geceleme serilerinin (belediye belgeliler dahil) yerine değil, Türkiye iletimi gecikirken güncel göstergedir."
+  charts: [seasonality, level]
+
+- id: turizm/geceleme-ktb-yerli
+  title: Bakanlık Belgeli Tesis Geceleme - Yerli Ziyaretçi (Aylık)
+  category: turizm
+  kaynak: { name: "Kültür ve Turizm Bakanlığı", url: "https://yigm.ktb.gov.tr/TR-201121/bakanlik-belgeli-tesis-konaklama-istatistikleri.html" }
+  kaynak_tipi: ktb
+  ktb_bulten: konaklama
+  ktb_gosterge: geceleme
+  ktb_olcut: yerli
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: last
+  yayin_notu: "Yalnızca işletme ve basit belgeli tesisler; Eurostat/TÜİK geceleme serilerinin (belediye belgeliler dahil) yerine değil, Türkiye iletimi gecikirken güncel göstergedir."
+  charts: [seasonality, level]
+
+- id: turizm/geceleme-ktb-yabanci
+  title: Bakanlık Belgeli Tesis Geceleme - Yabancı Ziyaretçi (Aylık)
+  category: turizm
+  kaynak: { name: "Kültür ve Turizm Bakanlığı", url: "https://yigm.ktb.gov.tr/TR-201121/bakanlik-belgeli-tesis-konaklama-istatistikleri.html" }
+  kaynak_tipi: ktb
+  ktb_bulten: konaklama
+  ktb_gosterge: geceleme
+  ktb_olcut: yabancı
+  unit: "Adet"
+  freq: monthly
+  monthly_agg: last
+  yayin_notu: "Yalnızca işletme ve basit belgeli tesisler; Eurostat/TÜİK geceleme serilerinin (belediye belgeliler dahil) yerine değil, Türkiye iletimi gecikirken güncel göstergedir."
+  charts: [seasonality, level]
+
 - id: turizm/otel-doluluk-orani
   title: Konaklama Tesisleri Doluluk Oranı - Toplam
   category: turizm

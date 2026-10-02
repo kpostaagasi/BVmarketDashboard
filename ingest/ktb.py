@@ -89,6 +89,12 @@ KONAKLAMA_SAYFA = (
 KONAKLAMA_YIL_SAYFALARI = {2024: "https://yigm.ktb.gov.tr/TR-367939/2024.html"}
 KONAKLAMA_SAYFA_ADI = "Ay"
 _DOLULUK_SUTUN = {"yabancı": 10, "yerli": 11, "toplam": 12}
+# Aynı "Ay" sayfasındaki GECELEME sütunları (4/5/6): doluluktan farklı olarak
+# adet. Kapsam: yalnızca işletme ve basit belgeli tesisler; Eurostat/TÜİK
+# (belediye belgeliler dahil) geceleme serileriyle birebir aynı DEĞİL.
+_GECELEME_SUTUN = {"yabancı": 4, "yerli": 5, "toplam": 6}
+_GOSTERGE_SUTUN = {"doluluk": _DOLULUK_SUTUN, "geceleme": _GECELEME_SUTUN}
+_GOSTERGE_BASLIK = {"doluluk": ("DOLULUK ORANI", 10), "geceleme": ("GECELEME", 4)}
 _EKLETI_DESENI = re.compile(r'href="(/Eklenti/(\d+),[^"?]+\.xlsx?)(?:\?[^"]*)?"', re.I)
 _YIL_BASLIK = re.compile(r"\((\d{4})")
 
@@ -156,7 +162,9 @@ def _konaklama_indir(url: str, onbellek: dict, session=None) -> bytes:
     return onbellek[url]
 
 
-def _konaklama_ay_tablosu(baytlar: bytes) -> tuple[int, pd.DataFrame]:
+def _konaklama_ay_tablosu(
+    baytlar: bytes, gosterge: str = "doluluk"
+) -> tuple[int, pd.DataFrame]:
     """'Ay' sayfası → (yıl, tablo). Yıl dosya adından değil, 0. satırdaki
     başlıktan okunur ("... (2026 OCAK-TEMMUZ)") — dosya adı Türkçe
     karakterleri çözüyor.
@@ -166,19 +174,22 @@ def _konaklama_ay_tablosu(baytlar: bytes) -> tuple[int, pd.DataFrame]:
     yil_eslesme = _YIL_BASLIK.search(baslik)
     if not yil_eslesme:
         raise RuntimeError(f"KTB konaklama bülteninde yıl çözülemedi: {baslik[:90]}")
+    baslik_metni, baslik_sutunu = _GOSTERGE_BASLIK[gosterge]
     if str(df.iat[1, 0]).strip() != "AYLAR" or not str(
-        df.iat[1, 10]
-    ).strip().startswith("DOLULUK ORANI"):
+        df.iat[1, baslik_sutunu]
+    ).strip().startswith(baslik_metni):
         raise RuntimeError(
             f"KTB konaklama '{KONAKLAMA_SAYFA_ADI}' sayfası şablonu değişmiş: "
             f"{list(df.iloc[1, :4])}"
         )
-    if [str(df.iat[2, s]).strip() for s in _DOLULUK_SUTUN.values()] != [
+    if [str(df.iat[2, s]).strip() for s in _GOSTERGE_SUTUN[gosterge].values()] != [
         "YABANCI",
         "YERLI",
         "TOPLAM",
     ]:
-        raise RuntimeError("KTB konaklama doluluk sütunları beklenmiyor: YABANCI/YERLI/TOPLAM")
+        raise RuntimeError(
+            f"KTB konaklama {gosterge} sütunları beklenmiyor: YABANCI/YERLI/TOPLAM"
+        )
     return int(yil_eslesme.group(1)), df
 
 
@@ -188,9 +199,12 @@ def _konaklama_cek(seri, *, onbellek: dict | None = None, session=None) -> pd.Da
     """
     onbellek = {} if onbellek is None else onbellek
     olcut = getattr(seri, "ktb_olcut", None)
+    gosterge = getattr(seri, "ktb_gosterge", None) or "doluluk"
+    if gosterge not in _GOSTERGE_SUTUN:
+        raise RuntimeError(f"KTB konaklama göstergesi geçersiz: {gosterge!r}")
     if olcut not in _DOLULUK_SUTUN:
         raise RuntimeError(f"KTB konaklama ölçütü geçersiz: {olcut!r}")
-    sutun = _DOLULUK_SUTUN[olcut]
+    sutun = _GOSTERGE_SUTUN[gosterge][olcut]
 
     dosyalar = [
         _konaklama_dosya_url(KONAKLAMA_SAYFA, "aylik", session=session),
@@ -202,7 +216,9 @@ def _konaklama_cek(seri, *, onbellek: dict | None = None, session=None) -> pd.Da
 
     satirlar = []
     for url in dosyalar:
-        yil, df = _konaklama_ay_tablosu(_konaklama_indir(url, onbellek, session=session))
+        yil, df = _konaklama_ay_tablosu(
+            _konaklama_indir(url, onbellek, session=session), gosterge
+        )
         for i in range(3, len(df)):
             ay_adi = str(df.iat[i, 0]).strip()
             if ay_adi == "TOPLAM":
@@ -213,11 +229,11 @@ def _konaklama_cek(seri, *, onbellek: dict | None = None, session=None) -> pd.Da
             deger = df.iat[i, sutun]
             if pd.isna(deger):
                 raise RuntimeError(
-                    f"KTB konaklama doluluk hücresi boş: {yil}-{ay_no:02d} {olcut}"
+                    f"KTB konaklama {gosterge} hücresi boş: {yil}-{ay_no:02d} {olcut}"
                 )
             satirlar.append((f"{yil:04d}-{ay_no:02d}-01", float(deger)))
     if not satirlar:
-        raise RuntimeError("KTB konaklama bülteninde doluluk satırı bulunamadı")
+        raise RuntimeError(f"KTB konaklama bülteninde {gosterge} satırı bulunamadı")
 
     sonuc = (
         pd.DataFrame(satirlar, columns=["date", "value"])
