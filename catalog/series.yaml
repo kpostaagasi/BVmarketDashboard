@@ -37997,25 +37997,6 @@
   - seasonality
   - level
   osd_veri_tipi: ihracat
-- id: otomotiv/asuzu-hafif-kamyon-ihracat
-  title: Anadolu Isuzu Hafif Kamyon İhracatı (OSD)
-  category: otomotiv
-  kaynak:
-    name: OSD
-    url: https://www.osd.org.tr
-  kaynak_tipi: osd
-  osd_firma: A.I.O.S.
-  unit: adet
-  freq: monthly
-  monthly_agg: sum
-  yayin_notu: "OSD Değerlendirme Raporunda A.I.O.S. Kamyon-Truck dış satış hücresi
-    2023-06dan beri boş (son ihracat 48 adet). Kaynak bölümü yayımlıyor, veri yok;
-    şirket hafif kamyonu ürün grubu değiştirdi."
-  charts:
-  - seasonality
-  - level
-  osd_arac_tipi: KAMYON
-  osd_veri_tipi: ihracat
 - id: otomotiv/asuzu-otobus-ihracat
   title: Anadolu Isuzu Otobüs İhracatı (OSD)
   category: otomotiv
