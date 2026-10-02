@@ -159,3 +159,11 @@ def test_ceyreklik_gorunum_tamamlanmamis_ceyregi_gostermez():
     pd.testing.assert_frame_equal(
         gorunum_uygula(ceyreklik, "Çeyreklik", "quarterly"), ceyreklik
     )
+
+
+def test_ceyreklik_ayni_ceyrekte_birden_fazla_gozlem_patlamaz_son_gozlem_gecerli():
+    # BigChefs Mart 2026'dan sonra aylık bildirir: aynı çeyrekte birden çok nokta.
+    idx = pd.to_datetime(["2025-01-01", "2025-04-01", "2026-01-01", "2026-04-01", "2026-05-01"])
+    df = pd.DataFrame({"value": [100.0, 100.0, 120.0, 130.0, 150.0]}, index=idx)
+    assert yoy(df, "quarterly") == pytest.approx(50.0)  # 2026-Q2 son değer 150 / 2025-Q2 100
+    assert qoq(df) == pytest.approx(150.0 / 120.0 * 100 - 100)

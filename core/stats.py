@@ -88,6 +88,9 @@ def _seri_degisim(df: pd.DataFrame, offset: pd.DateOffset) -> pd.DataFrame:
 def _seri_ceyrek_degisim(df: pd.DataFrame, donem: int) -> pd.DataFrame:
     ceyrekler = df.index.to_period("Q")
     degerler = pd.Series(df["value"].to_numpy(), index=ceyrekler)
+    # Aynı çeyrekte birden fazla gözlem varsa (ör. çeyreklik seriye girmiş aylık
+    # nokta) reindex patlıyordu; çeyreğin son gözlemi geçerli sayılır.
+    degerler = degerler[~degerler.index.duplicated(keep="last")]
     onceki = degerler.reindex(ceyrekler - donem).to_numpy()
     with np.errstate(divide="ignore", invalid="ignore"):
         yuzde = (df["value"].to_numpy() / np.where(onceki <= 0, np.nan, onceki) - 1) * 100
