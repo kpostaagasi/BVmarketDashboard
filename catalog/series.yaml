@@ -45674,6 +45674,7 @@
   evds_frequency: "5"
   unit: "kişi"
   freq: monthly
+  yayin_notu: "TCMB EVDS/TÜİK yayını geride: son dönem 2026-03 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif için turizm/ziyaretci-ktb-toplam (farklı tanım)."
   charts: [level, seasonality]
 
 - id: saglik/turizm-kisi-basi-harcama
@@ -45685,6 +45686,7 @@
   evds_frequency: "5"
   unit: "USD"
   freq: monthly
+  yayin_notu: "TCMB EVDS/TÜİK yayını geride: son dönem 2026-03 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level, seasonality]
 
 - id: saglik/turizm-ulke-irak
@@ -45696,6 +45698,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-iran
@@ -45707,6 +45710,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-azerbaycan
@@ -45718,6 +45722,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-almanya
@@ -45729,6 +45734,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-rusya
@@ -45740,6 +45746,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-abd
@@ -45751,6 +45758,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-birlesik-krallik
@@ -45762,6 +45770,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-gurcistan
@@ -45773,6 +45782,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-ukrayna
@@ -45784,6 +45794,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-bulgaristan
@@ -45795,6 +45806,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-hollanda
@@ -45806,6 +45818,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-fransa
@@ -45817,6 +45830,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 - id: saglik/turizm-ulke-italya
@@ -45828,6 +45842,7 @@
   evds_frequency: "6"
   unit: "kişi"
   freq: quarterly
+  yayin_notu: "TCMB EVDS/TÜİK çeyreklik yayını geride: son dönem 2025-Q4 (2026-10 itibarıyla). Kaynak eskiye düşüyor, adaptör değil; güncel alternatif yok."
   charts: [level]
 
 # --- AYD & Akademetre AVM Metrekare Verimlilik Endeksi ---
