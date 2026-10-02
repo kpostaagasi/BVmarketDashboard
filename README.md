@@ -8,11 +8,11 @@ istatistikli grafik sayfaları olarak sunma.
 
 ```
 app.py                    # st.navigation — sol menü katalogdan üretilir
-catalog/series.yaml       # tek doğruluk kaynağı: 4.222 seri tanımı
-catalog/categories.yaml   # menü ağacı: 49 kategori + her birinin KPI panosu
+catalog/series.yaml       # tek doğruluk kaynağı: 4.225 seri tanımı
+catalog/categories.yaml   # menü ağacı: 51 kategori + her birinin KPI panosu
 catalog/hisseler.yaml     # 8 BIST tickerı: kendi verisi + bağlam serileri
 core/                     # catalog, data, stats, charts, components, page, takvim
-ingest/                   # 52 kaynak adaptörü (evds, yahoo, epias, osd, tim, tim_il,
+ingest/                   # 57 kaynak adaptörü (evds, yahoo, epias, osd, tim, tim_il,
                           # tim_ulke, bddk, tefas, eurocontrol, fred, thy, pgsus, tav,
                           # ebebek, epdk, turkcell, ttkom, odmd, eib, usk, turkbesd,
                           # worldbank, ifo, tsb, eurostat, ecb, turkcimento, tspb, sgk,
