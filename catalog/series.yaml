@@ -44437,6 +44437,18 @@
   monthly_agg: last
   charts: [seasonality, level]
 
+- id: turizm/ziyaretci-ktb-toplam
+  title: Türkiye'ye Gelen Toplam Ziyaretçi - KTB (Aylık)
+  category: turizm
+  kaynak: { name: "Kültür ve Turizm Bakanlığı", url: "https://yigm.ktb.gov.tr/TR-249702/sinir-istatistikleri.html" }
+  kaynak_tipi: ktb
+  ktb_sinir_olcut: toplam
+  unit: "Kişi"
+  freq: monthly
+  monthly_agg: last
+  yayin_notu: "Yabancı + yurt dışı ikametli vatandaş (KTB sınır bülteni). TCMB EVDS toplam ziyaretçi serisiyle aynı tanım değil (2025-01'de EVDS %14 yukarıda); onun yerine değil, güncel alternatif olarak durur. Vatandaş bileşeni yabancıdan ~2 ay geç yayımlanır (2026-10'da son veri 2026-06)."
+  charts: [seasonality, level]
+
 - id: turizm/seyahat-geliri
   title: Toplam Seyahat Geliri (Aylık)
   category: turizm

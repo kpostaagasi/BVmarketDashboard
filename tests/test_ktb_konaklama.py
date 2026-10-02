@@ -69,3 +69,38 @@ def test_gecersiz_gosterge_patlar(monkeypatch):
 def test_geceleme_basligi_degismisse_sablon_hatasi():
     with pytest.raises(RuntimeError, match="şablonu değişmiş"):
         _konaklama_ay_tablosu(_bulten_baytlari(basliklar_dogru=False), "geceleme")
+
+
+def _sinir_bulteni(sayfa: str) -> bytes:
+    """Sınır bülteni sayfası: 2. satırda AYLAR + yıl başlıkları, 3.. aylar."""
+    aylar = ["OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN",
+             "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"]
+    satirlar = [[None] * 4, [None, "YILLAR", None, None], ["AYLAR", 2025, 2026.0, None]]
+    for i, ay in enumerate(aylar):
+        satirlar.append([ay, 100 + i, 200 + i if i < 2 else None, None])
+    tampon = BytesIO()
+    pd.DataFrame(satirlar).to_excel(tampon, sheet_name=sayfa, header=False, index=False)
+    return tampon.getvalue()
+
+
+def test_sinir_toplam_ayri_sayfayi_okur_bos_hucreyi_atlar(monkeypatch):
+    govde = _sinir_bulteni("Gelen Ziyaretçiler ")
+    monkeypatch.setattr(ktb, "dosya_url", lambda session=None: "http://x/s.xls")
+    monkeypatch.setattr(ktb, "_dosya_indir", lambda *a, **k: govde)
+    seri = SimpleNamespace(ktb_sinir_olcut="toplam")
+    df = ktb._sinir_cek(seri)
+    assert df["date"].iloc[-1] == "2026-02-01"
+    assert df["value"].iloc[-1] == pytest.approx(201)
+    assert len(df) == 12 + 2
+
+
+def test_sinir_olcut_bos_ise_yabanci_sayfasi_geriye_uyumlu(monkeypatch):
+    govde = _sinir_bulteni("Gelen Yabancılar")
+    monkeypatch.setattr(ktb, "dosya_url", lambda session=None: "http://x/s.xls")
+    monkeypatch.setattr(ktb, "_dosya_indir", lambda *a, **k: govde)
+    assert len(ktb._sinir_cek(SimpleNamespace(ktb_sinir_olcut=None))) == 14
+
+
+def test_sinir_gecersiz_olcut_patlar():
+    with pytest.raises(RuntimeError, match="sınır ölçütü geçersiz"):
+        ktb._sinir_cek(SimpleNamespace(ktb_sinir_olcut="vatandas"), onbellek={"url": "x"})

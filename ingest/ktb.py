@@ -79,6 +79,11 @@ SAYFA = "https://yigm.ktb.gov.tr/TR-249702/sinir-istatistikleri.html"
 TABAN = "https://yigm.ktb.gov.tr"
 ZAMAN_ASIMI = 60
 SHEET = "Gelen Yabancılar"
+# Sınır bülteninin iki sayfası aynı şablonu (AYLAR × 3 yıl) taşır. "toplam" =
+# yabancı + yurt dışı ikametli vatandaş; sayfa adındaki SONDAKİ BOŞLUK kaynakta
+# böyle. TCMB EVDS'in toplam ziyaretçi serisiyle (TP.TURIZMYZS.GK178629)
+# ÖRTÜŞMEZ (2025-01: EVDS 3.355.818, KTB 2.949.849; tanım farkı), karıştırma.
+SINIR_SAYFALARI = {"yabanci": SHEET, "toplam": "Gelen Ziyaretçiler "}
 
 # --- Bakanlık Belgeli Konaklama İstatistikleri ---------------------------
 KONAKLAMA_SAYFA = (
@@ -245,14 +250,18 @@ def _konaklama_cek(seri, *, onbellek: dict | None = None, session=None) -> pd.Da
 
 def _sinir_cek(seri, *, onbellek: dict | None = None, session=None) -> pd.DataFrame:
     onbellek = {} if onbellek is None else onbellek
+    olcut = getattr(seri, "ktb_sinir_olcut", None) or "yabanci"
+    if olcut not in SINIR_SAYFALARI:
+        raise RuntimeError(f"KTB sınır ölçütü geçersiz: {olcut!r}")
+    sayfa = SINIR_SAYFALARI[olcut]
     if "url" not in onbellek:
         onbellek["url"] = dosya_url(session=session)
     baytlar = _dosya_indir(onbellek["url"], onbellek, session=session)
-    df = pd.read_excel(BytesIO(baytlar), sheet_name=SHEET, header=None)
+    df = pd.read_excel(BytesIO(baytlar), sheet_name=sayfa, header=None)
 
     baslik = list(df.iloc[2])
     if str(baslik[0]).strip() != "AYLAR":
-        raise RuntimeError(f"KTB '{SHEET}' sayfası şablonu değişmiş: {baslik[:4]}")
+        raise RuntimeError(f"KTB '{sayfa}' sayfası şablonu değişmiş: {baslik[:4]}")
 
     yillar: list[int] = []
     for hucre in baslik[1:4]:
@@ -267,7 +276,7 @@ def _sinir_cek(seri, *, onbellek: dict | None = None, session=None) -> pd.DataFr
     for i in range(3, 3 + len(_AYLAR_TR)):
         ay_adi = str(df.iat[i, 0]).strip()
         if ay_adi not in _AYLAR_TR:
-            raise RuntimeError(f"KTB '{SHEET}' ay satırı beklenmiyor: {ay_adi!r}")
+            raise RuntimeError(f"KTB '{sayfa}' ay satırı beklenmiyor: {ay_adi!r}")
         ay_no = _AYLAR_TR.index(ay_adi) + 1
         for j, yil in enumerate(yillar, start=1):
             deger = df.iat[i, j]

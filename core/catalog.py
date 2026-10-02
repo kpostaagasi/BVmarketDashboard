@@ -398,6 +398,8 @@ GECERLI_KTB_BULTENLER = {"konaklama"}
 GECERLI_KTB_OLCUTLERI = {"toplam", "yabancı", "yerli"}
 # Konaklama bülteninin iki göstergesi; boşsa doluluk (eski seriler).
 GECERLI_KTB_GOSTERGELER = {"doluluk", "geceleme"}
+# Sınır bülteni ölçütü (konaklama bülteninde verilmez); boşsa yabancı.
+GECERLI_KTB_SINIR_OLCUTLERI = {"yabanci", "toplam"}
 # MKK Aylık Piyasa Bülteni'nin üç sayfa başlığı. `ingest/mkk.py::SERI_ADLARI`
 # bunu assert ile doğrulur; iki liste birlikte değişmelidir.
 GECERLI_MKK_SERILERI = ("kayitli_yatirimci", "bakiyeli_yatirimci", "bakiyeli_hesap")
@@ -607,7 +609,7 @@ KAYNAK_ALANLARI = {
     },
     "ktb": {
         "zorunlu": (),
-        "istege_bagli": ("ktb_bulten", "ktb_olcut", "ktb_gosterge", "start_date"),
+        "istege_bagli": ("ktb_bulten", "ktb_olcut", "ktb_gosterge", "ktb_sinir_olcut", "start_date"),
     },
     "fintables": {
         "zorunlu": ("fintables_sirket", "fintables_tipi", "fintables_kalem"),
@@ -871,6 +873,7 @@ class Seri:
     ktb_bulten: str | None = None
     ktb_olcut: str | None = None
     ktb_gosterge: str | None = None
+    ktb_sinir_olcut: str | None = None
     fintables_sirket: str | None = None
     fintables_tipi: str | None = None
     fintables_kalem: str | None = None
@@ -1150,6 +1153,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             ktb_bulten=ham.get("ktb_bulten"),
             ktb_olcut=ham.get("ktb_olcut"),
             ktb_gosterge=ham.get("ktb_gosterge"),
+            ktb_sinir_olcut=ham.get("ktb_sinir_olcut"),
             fintables_sirket=ham.get("fintables_sirket"),
             fintables_tipi=ham.get("fintables_tipi"),
             fintables_kalem=ham.get("fintables_kalem"),
@@ -1616,6 +1620,15 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
                 f"{seri.id}: ktb_gosterge yalnızca konaklama bülteninde ve "
                 f"şunlardan biri olabilir: {', '.join(sorted(GECERLI_KTB_GOSTERGELER))} "
                 f"(verilen: '{seri.ktb_gosterge}')"
+            )
+        if seri.ktb_sinir_olcut is not None and (
+            seri.ktb_bulten is not None
+            or seri.ktb_sinir_olcut not in GECERLI_KTB_SINIR_OLCUTLERI
+        ):
+            raise KatalogHatasi(
+                f"{seri.id}: ktb_sinir_olcut yalnızca sınır bülteninde ve "
+                f"şunlardan biri olabilir: {', '.join(sorted(GECERLI_KTB_SINIR_OLCUTLERI))} "
+                f"(verilen: '{seri.ktb_sinir_olcut}')"
             )
     if (
         seri.kaynak_tipi == "fintables"
