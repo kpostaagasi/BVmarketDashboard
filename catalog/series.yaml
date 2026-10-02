@@ -38773,9 +38773,9 @@
 - id: avrupa/euro-tuketici-guven
   title: Euro Bölgesi Tüketici Güven Endeksi
   category: avrupa
-  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/CSCICP02EZM460S" }
-  kaynak_tipi: fred
-  fred_code: CSCICP02EZM460S
+  kaynak: { name: Eurostat (İş ve Tüketici Anketleri), url: "https://ec.europa.eu/eurostat/databrowser/view/ei_bsco_m" }
+  kaynak_tipi: eurostat_guven
+  eurostat_guven_gosterge: tuketici
   unit: "Denge (puan)"
   freq: monthly
   charts: [seasonality, level]
@@ -38783,9 +38783,9 @@
 - id: avrupa/euro-imalat-guven
   title: Euro Bölgesi İmalat Sanayi Güven Endeksi
   category: avrupa
-  kaynak: { name: FRED (OECD/Eurostat), url: "https://fred.stlouisfed.org/series/BSCICP02EZM460S" }
-  kaynak_tipi: fred
-  fred_code: BSCICP02EZM460S
+  kaynak: { name: Eurostat (İş ve Tüketici Anketleri), url: "https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2" }
+  kaynak_tipi: eurostat_guven
+  eurostat_guven_gosterge: imalat
   unit: "Denge (puan)"
   freq: monthly
   charts: [seasonality, level]

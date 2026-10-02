@@ -36,7 +36,7 @@ GECERLI_KAYNAK_TIPLERI = {
     "worldbank", "ifo",
     "istib", "tuik_kanatli", "botas", "epdk_fiyat",
     "sgk", "ayd", "gph", "orge", "tcud",
-    "dhmi", "uab", "ktb", "eurostat_turizm",
+    "dhmi", "uab", "ktb", "eurostat_turizm", "eurostat_guven",
     "iso_pmi", "tim_pazar_monitoru",
     "bigchefs", "turktraktor", "migros",
     "tepav", "tmsd", "ithib",
@@ -295,6 +295,9 @@ GECERLI_UAB_LIMANLARI = {
 # kaynak_tipi: eurostat) eksenleriyle KARIŞTIRILMAMALI. Bkz.
 # ingest/eurostat_turizm.py docstring'i.
 GECERLI_EUROSTAT_TURIZM_RESID = {"TOTAL", "DOM", "FOR"}
+
+# Eurostat euro bölgesi güven endeksleri (ingest/eurostat_guven.py).
+GECERLI_EUROSTAT_GUVEN_GOSTERGE = {"tuketici", "imalat"}
 
 # Eurostat sts_copr_m ("Production in construction") veri kümesinin tek
 # ekseni: NACE Rev.2 alt sektörü. F toplam inşaatı, F41 bina inşaatını,
@@ -623,6 +626,10 @@ KAYNAK_ALANLARI = {
         "zorunlu": ("eurostat_turizm_resid",),
         "istege_bagli": ("start_date",),
     },
+    "eurostat_guven": {
+        "zorunlu": ("eurostat_guven_gosterge",),
+        "istege_bagli": ("start_date",),
+    },
     "iso_pmi": {
         "zorunlu": ("iso_pmi_metrik",),
         "istege_bagli": ("iso_pmi_sektor", "start_date"),
@@ -842,6 +849,7 @@ class Seri:
     dhmi_olcut: str | None = None
     uab_liman: str | None = None
     eurostat_turizm_resid: str | None = None
+    eurostat_guven_gosterge: str | None = None
     iso_pmi_sektor: str | None = None
     iso_pmi_metrik: str | None = None
     tim_pm_sektor: str | None = None
@@ -1119,6 +1127,7 @@ def serileri_yukle() -> tuple[Seri, ...]:
             dhmi_olcut=ham.get("dhmi_olcut"),
             uab_liman=ham.get("uab_liman"),
             eurostat_turizm_resid=ham.get("eurostat_turizm_resid"),
+            eurostat_guven_gosterge=ham.get("eurostat_guven_gosterge"),
             iso_pmi_sektor=ham.get("iso_pmi_sektor"),
             iso_pmi_metrik=ham.get("iso_pmi_metrik"),
             tim_pm_sektor=ham.get("tim_pm_sektor"),
@@ -1209,6 +1218,15 @@ def _dogrula(seri: Seri, kategori_sluglari: set[str], gorulen: set[str]) -> None
             f"{seri.id}: geçersiz eurostat_turizm_resid "
             f"'{seri.eurostat_turizm_resid}' "
             f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_TURIZM_RESID))})"
+        )
+    if (
+        seri.kaynak_tipi == "eurostat_guven"
+        and seri.eurostat_guven_gosterge not in GECERLI_EUROSTAT_GUVEN_GOSTERGE
+    ):
+        raise KatalogHatasi(
+            f"{seri.id}: geçersiz eurostat_guven_gosterge "
+            f"'{seri.eurostat_guven_gosterge}' "
+            f"(geçerli: {', '.join(sorted(GECERLI_EUROSTAT_GUVEN_GOSTERGE))})"
         )
     if (
         seri.kaynak_tipi == "eurostat_insaat"

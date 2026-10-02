@@ -21,7 +21,7 @@ from urllib3.util.retry import Retry
 
 from core.catalog import Seri, seri_listele
 from core.data import seri_yolu
-from ingest import ayd, bddk, bigchefs, botas, dhmi, ebebek, eia, eib, ecb, epdk, epias, eurocontrol, eurostat, eurostat_insaat, eurostat_turizm, evds, fintables, fred, gph, ifo, iso_pmi, istib, ithib, ktb, migros, odmd, orge, osd, pgsus, sgk, tabgida, taid, tav, tcud, tefas, tepav, thy, tim, tmsd, trabzontb, tsb, tspb, ttkom, tuik, turkbesd, turkcell, turkcimento, turktraktor, uab, usk, worldbank, yahoo
+from ingest import ayd, bddk, bigchefs, botas, dhmi, ebebek, eia, eib, ecb, epdk, epias, eurocontrol, eurostat, eurostat_guven, eurostat_insaat, eurostat_turizm, evds, fintables, fred, gph, ifo, iso_pmi, istib, ithib, ktb, migros, odmd, orge, osd, pgsus, sgk, tabgida, taid, tav, tcud, tefas, tepav, thy, tim, tmsd, trabzontb, tsb, tspb, ttkom, tuik, turkbesd, turkcell, turkcimento, turktraktor, uab, usk, worldbank, yahoo
 from ingest import mkk
 from ingest import tim_ilk1000
 
@@ -265,6 +265,8 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
         df = ktb.seri_cek(seri, onbellek=ktb_onbellek, session=oturum)
     elif seri.kaynak_tipi == "eurostat_turizm":
         df = eurostat_turizm.seri_cek(seri, onbellek=eurostat_turizm_onbellek, session=oturum)
+    elif seri.kaynak_tipi == "eurostat_guven":
+        df = eurostat_guven.seri_cek(seri, session=oturum)
     elif seri.kaynak_tipi == "iso_pmi":
         df = iso_pmi.seri_cek(seri, onbellek=iso_pmi_onbellek, session=oturum)
     elif seri.kaynak_tipi == "tim_pazar_monitoru":
