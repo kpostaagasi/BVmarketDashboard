@@ -135,23 +135,46 @@ def test_seri_cek_blok_hic_bulunamazsa_yukselir(monkeypatch):
         tc.seri_cek(seri, onbellek={})
 
 
-def test_yil_dosyalari_desenle_eslesen_linkleri_cikarir():
-    html = (
-        '<a href="https://www.turkcimento.org.tr/uploads/pdf/Yeni-2026_Aylik-rev2.xls">İNDİR</a>'
-        '<a href="https://www.turkcimento.org.tr/uploads/pdf/Yeni-2025_Aylik-rev4.xls">İNDİR</a>'
-        '<a href="https://example.test/alakasiz.xls">İNDİR</a>'
-    )
+def test_yil_dosyalari_cms_kayitlarindan_url_urer():
+    govde = {
+        "items": [
+            {"year": 2026, "file": "aaa", "category": "veriler"},
+            {"year": 2025, "file": "bbb", "category": "veriler"},
+            {"year": 2024, "file": "ccc", "category": "baska"},
+        ]
+    }
 
     class SahteYanit:
         status_code = 200
-        text = html
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return govde
 
     class SahteOturum:
-        def get(self, url, timeout=None):
+        def get(self, url, params=None, headers=None, timeout=None):
+            assert params["filter[category][_eq]"] == "veriler"
+            assert headers["Accept"] == "application/json"
             return SahteYanit()
 
     eslesme = tc._yil_dosyalari(session=SahteOturum())
-    assert eslesme == {
-        2026: "https://www.turkcimento.org.tr/uploads/pdf/Yeni-2026_Aylik-rev2.xls",
-        2025: "https://www.turkcimento.org.tr/uploads/pdf/Yeni-2025_Aylik-rev4.xls",
-    }
+    kok = "https://www.turkcimento.org.tr/api/public/files"
+    assert eslesme == {2026: f"{kok}/aaa/raw", 2025: f"{kok}/bbb/raw"}
+
+
+def test_yil_dosyalari_bos_items_yukselir():
+    class SahteYanit:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"items": []}
+
+    class SahteOturum:
+        def get(self, url, params=None, headers=None, timeout=None):
+            return SahteYanit()
+
+    with pytest.raises(RuntimeError):
+        tc._yil_dosyalari(session=SahteOturum())

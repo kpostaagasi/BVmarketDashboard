@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import openpyxl
 import pytest
+import requests
 
 from ingest.tsb import ILK_DESTEKLENEN_YIL, dosya_listesi, kumulatif_seri, seri_cek, sheet_degerleri
 
@@ -51,6 +52,9 @@ class SahteYanit:
 
     def json(self):
         return self._json
+
+    def raise_for_status(self):
+        return None
 
 
 class SahteOturum:
@@ -307,7 +311,26 @@ def test_seri_cek_bilinmeyen_sirket_kodunda_hata():
 def test_seri_cek_http_hatasinda_yukselir():
     class HataliOturum:
         def get(self, url, params=None, timeout=None):
-            return SahteYanit(status_code=500)
+            yanit = requests.Response()
+            yanit.status_code = 500
+            yanit.url = url
+            yanit.reason = "Internal Server Error"
+            return yanit
 
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError) as bilgi:
         seri_cek(tsb_seri(start_date="2020-01-01"), onbellek={}, session=HataliOturum())
+    assert bilgi.value.response.status_code == 500
+
+
+def test_dosya_listesi_504_httperror():
+    class Oturum:
+        def get(self, url, params=None, timeout=None):
+            yanit = requests.Response()
+            yanit.status_code = 504
+            yanit.url = url
+            yanit.reason = "Gateway Timeout"
+            return yanit
+
+    with pytest.raises(requests.HTTPError) as bilgi:
+        dosya_listesi("prim-adet", en_eski_yil=2020, session=Oturum())
+    assert bilgi.value.response.status_code == 504

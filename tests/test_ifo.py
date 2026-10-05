@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import openpyxl
 import pytest
+import requests
 
 from ingest.ifo import (
     DOSYA_SABLONU,
@@ -111,9 +112,11 @@ class SahteOturum:
     def __init__(self, gercek_dosyalar: dict[str, bytes]):
         self.gercek_dosyalar = gercek_dosyalar
         self.cagrilar = []
+        self.basliklar = []
 
     def get(self, url, timeout=None, headers=None):
         self.cagrilar.append(url)
+        self.basliklar.append(headers)
         if url in self.gercek_dosyalar:
             return SahteYanit(content=self.gercek_dosyalar[url])
         return SahteYanit(content=b"<html>kabuk</html>")  # soft-404
@@ -131,6 +134,9 @@ def test_en_guncel_kitabi_indir_en_yeni_ayi_bulur():
     oturum = SahteOturum({url_agustos: _xlsx_baytlari()})
     kitap = _en_guncel_kitabi_indir(session=oturum, bugun=date(2026, 8, 25))
     assert kitap["ifo Business Climate"]["A2"].value == " 08/2026"
+    ua = oturum.basliklar[0]["User-Agent"]
+    assert not ua.startswith("Mozilla")
+    assert ua == requests.utils.default_user_agent()
 
 
 def test_en_guncel_kitabi_indir_yayimlanmamis_ayi_atlayip_gerideki_ayi_bulur():

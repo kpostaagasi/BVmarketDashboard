@@ -1,14 +1,13 @@
 """TürkÇimento (Türkiye Çimento Sanayicileri Birliği) aylık bölgesel çimento
 ve klinker istatistikleri istemcisi.
 
-Kaynak: `turkcimento.org.tr/tr/istatistikler/aylik-veriler` — her YIL için
-tek bir eski biçim Excel dosyası (`.xls`, BIFF) yayımlanır, adı
-`Yeni-<yıl>_Aylik-rev<N>.xls`. Revizyon numarası (`rev<N>`) öngörülemez
-biçimde artıyor (ör. 2026 için "rev2", 2022 için "rev8"), bu yüzden dosya
-adı sabitlenmez — listeleme sayfası HER ÇALIŞTIRMADA taze taranır. Dosyanın
-kendisi (aynı köke `/uploads/pdf/...xls` altında) WAF/oturum gerektirmeden
-düz `requests.get` ile erişilebilir (ölçüldü 2026-09-18); yalnızca liste
-sayfası taranarak dosya adı bulunur.
+Kaynak: CMS `istatistik_dosyalari`, kategori `veriler` (HTML yolu
+`aylik-veriler` yalnızca alias; 2026-10-05'te sayfa SPA kabuğu, HTML'de
+`.xls` yok). Her yıl için tek eski biçim Excel (`.xls`, BIFF)
+`/api/public/files/<uuid>/raw` adresinden iner; dosya adı
+(`Yeni-<yıl>_Aylik-rev<N>.xls`) revizyonla değişir, sabitlenmez — liste HER
+ÇALIŞTIRMADA taze çekilir. Ölçüldü 2026-10-05: liste 200, 9 kayıt (2018–2026);
+dosya 200, `application/vnd.ms-excel`, BIFF sihirli bayt `D0 CF 11 E0`.
 
 Her yılın dosyasında 12 sayfa var (`ocak`..`aralik`, Türkçe küçük harf ay
 adı, Türkçe karakter yok). Her sayfa o AYA ait bölgesel (Marmara/Ege/
@@ -41,22 +40,23 @@ tür revizyonları yakalamak için; bkz. diğer istemcilerin aynı ilkesi).
 
 from __future__ import annotations
 
-import re
-
 import pandas as pd
 import requests
 import xlrd
 
-LISTE_URL = "https://www.turkcimento.org.tr/tr/istatistikler/aylik-veriler"
+LISTE_URL = "https://www.turkcimento.org.tr/api/public/items/istatistik_dosyalari"
+DOSYA_KOK = "https://www.turkcimento.org.tr/api/public/files"
 ZAMAN_ASIMI = 60
+_LISTE_PARAMS = {
+    "lang": "tr",
+    "filter[status][_eq]": "published",
+    "filter[category][_eq]": "veriler",
+    "limit": 100,  # ponytail: tek sayfa 100, yıl sayısı bunu aşarsa offset döngüsü
+}
 
 AY_SAYFALARI = (
     "ocak", "subat", "mart", "nisan", "mayis", "haziran",
     "temmuz", "agustos", "eylul", "ekim", "kasim", "aralik",
-)
-
-_DOSYA_DESENI = re.compile(
-    r'href="(https://www\.turkcimento\.org\.tr/uploads/pdf/Yeni-(\d{4})_Aylik-rev\d+\.xls)"'
 )
 
 # Kart adı -> (ÇİMENTO/KLİNKER üst etiketi, ölçüt alt etiketi). Sayfadaki
@@ -74,16 +74,23 @@ METRIK_ESLEME = {
 
 
 def _yil_dosyalari(session=None) -> dict[int, str]:
-    """Liste sayfasından `{yıl: xls_url}` eşlemesini çıkarır."""
+    """CMS `veriler` listesinden `{yıl: raw_xls_url}` üretir."""
     http = session or requests
-    yanit = http.get(LISTE_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TürkÇimento liste sayfası HTTP {yanit.status_code}")
-    eslesme = {int(yil): url for url, yil in _DOSYA_DESENI.findall(yanit.text)}
+    yanit = http.get(
+        LISTE_URL,
+        params=_LISTE_PARAMS,
+        headers={"Accept": "application/json"},
+        timeout=ZAMAN_ASIMI,
+    )
+    yanit.raise_for_status()
+    eslesme = {
+        int(k["year"]): f"{DOSYA_KOK}/{k['file']}/raw"
+        for k in yanit.json().get("items") or []
+        if k.get("category") == "veriler" and k.get("year") is not None and k.get("file")
+    }
     if not eslesme:
         raise RuntimeError(
-            f"TürkÇimento liste sayfasında ({LISTE_URL}) hiç yıllık dosya "
-            "linki bulunamadı — sayfa yapısı değişmiş olabilir"
+            f"TürkÇimento CMS listesi boş ({LISTE_URL}) — yapı değişmiş olabilir"
         )
     return eslesme
 
@@ -91,8 +98,7 @@ def _yil_dosyalari(session=None) -> dict[int, str]:
 def _xls_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TürkÇimento dosya indirme başarısız ({url}): HTTP {yanit.status_code}")
+    yanit.raise_for_status()
     return yanit.content
 
 

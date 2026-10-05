@@ -12,8 +12,8 @@ Kaynak gerçekleri 2026-09-18'de canlı ölçüldü (sıfırdan yeniden keşfetm
   `IsActiveStatisticReport=false` döndürüyor. Bu bayrak `true` olursa TSB'nin
   önyüzü indirmeyi e-posta doğrulama kodu + reCAPTCHA akışının arkasına
   alır (bkz. `/page/Statistics.js` — `ControlRememberMe`/`SendVerification
-  CodeToEmail`); o noktada bu adaptör HTTP 200 dışı ya da beklenmeyen içerik
-  alır ve `RuntimeError` ile patlar (otomasyona kapatılmış bir akışı
+  CodeToEmail`). HTTP 200 dışı `requests.HTTPError` olur; beklenmeyen içerik
+  `RuntimeError` ile patlar (otomasyona kapatılmış bir akışı
   atlatmaya ÇALIŞILMAZ — bu durumda seri BLOKE olarak işaretlenmeli).
 - "Prim Üretimleri Sıralama <YYYY> <MM>.xlsx" dosyası (kategori
   `genel-sigorta-verileri`, alt kategori `prim-adet`) her ay o aya kadar
@@ -94,10 +94,7 @@ def dosya_listesi(alt_kategori: str, en_eski_yil: int, session=None) -> list[dic
             params={"CategoryUrl": KATEGORI, "SubCategoryUrl": alt_kategori, "pageId": sayfa},
             timeout=ZAMAN_ASIMI,
         )
-        if yanit.status_code != 200:
-            raise RuntimeError(
-                f"TSB HTTP {yanit.status_code} (alt kategori {alt_kategori}, sayfa {sayfa})"
-            )
+        yanit.raise_for_status()
         govde = yanit.json()
         satirlar = govde.get("Result") or []
         if not satirlar:
@@ -155,8 +152,7 @@ def sheet_degerleri(wb: openpyxl.Workbook, sheet: str) -> dict[int, float]:
 def _workbook_indir(url: str, session=None) -> openpyxl.Workbook:
     http = session or requests
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TSB dosyası indirilemedi: {url} (HTTP {yanit.status_code})")
+    yanit.raise_for_status()
     return openpyxl.load_workbook(BytesIO(yanit.content), data_only=True)
 
 

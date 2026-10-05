@@ -8,13 +8,12 @@ istemci tarafında JS çalıştırılınca oluşur — ölçüldü 2026-09-18); 
 kabuktan bağlantı ayıklamak mümkün değil, headless tarayıcı bağımlılığı da
 bu projede yok (`requirements-ingest.txt`).
 
-Buna karşılık statik dosya sunucusu (`/sites/default/files/secure/
-timeseries/`) WAF'ın arkasında DEĞİL — dosya adı öngörülebilir olduğu için
-(`gsk-e-YYYYMM.xlsx`, ayın ifo yayın tarihinden ~3-4 hafta sonra çıkar) en
-güncel aydan geriye doğru en fazla `MAKS_GERI_AY` ay denenir; var olmayan
-ay da HTTP 200 ile aynı ~3KB kabuğu döndürdüğü için (soft-404) doğrulama
-durum koduyla değil dosyanın ZIP/XLSX sihirli baytlarıyla (`PK\x03\x04`)
-yapılır.
+Buna karşılık `gsk-e-YYYYMM.xlsx` adı öngörülebilir; en güncel aydan geriye
+en fazla `MAKS_GERI_AY` ay denenir. Tarayıcı User-Agent'ı (yalın
+`Mozilla/5.0` dahil) bu yolda HTTP 200 + ~3KB Fastly JS kabuğu döndürür;
+dosyayı yalnızca requests varsayılan UA alır (ölçüldü 2026-10-05).
+Yayımlanmamış ay 406 / 0 bayt veya 200 kabuk olabilir; doğrulama durum
+koduyla değil ZIP/XLSX sihirli baytlarıyla (`PK\x03\x04`) yapılır.
 
 "ifo Business Climate" sayfasında "Germany" bloğu iki sütun grubu taşır:
 "Index, 2015=100, seasonally adjusted" (Business Climate / Situation /
@@ -40,7 +39,7 @@ TABAN = "https://www.ifo.de"
 DOSYA_SABLONU = TABAN + "/sites/default/files/secure/timeseries/gsk-e-{yil:04d}{ay:02d}.xlsx"
 MAKS_GERI_AY = 6
 ZAMAN_ASIMI = 60
-_BASLIKLAR = {"User-Agent": "Mozilla/5.0"}
+_BASLIKLAR = {"User-Agent": requests.utils.default_user_agent()}
 _XLSX_SIHIRLI_BAYT = b"PK\x03\x04"
 
 _AY_ETIKETI = re.compile(r"^\s*(\d{2})/(\d{4})\s*$")
