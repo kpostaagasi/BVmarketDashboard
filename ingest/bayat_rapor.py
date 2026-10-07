@@ -21,10 +21,19 @@ def rapor_uret(satirlar: list[TakvimSatiri]) -> str:
     baslik = f"## Bayat seri raporu: {len(sorunlu)} / {len(satirlar)} seri sorunlu"
     if not sorunlu:
         return baslik + "\n\nTüm seriler eşik içinde."
+    notlu = sum(1 for s in sorunlu if s.seri.yayin_notu)
+    notsuz = len(sorunlu) - notlu
     kaynaklar: dict[str, list[TakvimSatiri]] = defaultdict(list)
     for s in sorunlu:
         kaynaklar[s.seri.kaynak_tipi].append(s)
-    satir = [baslik, "", "| Kaynak tipi | Sorunlu | Durum | En eski bekleme |", "|---|---:|---|---:|"]
+    satir = [
+        baslik,
+        "",
+        f"Notu olan (kaynak geride): {notlu}. Notu olmayan (bakılacak): {notsuz}.",
+        "",
+        "| Kaynak tipi | Sorunlu | Durum | En eski bekleme |",
+        "|---|---:|---|---:|",
+    ]
     for tip, liste in sorted(kaynaklar.items(), key=lambda k: -len(k[1])):
         durumlar = ", ".join(f"{d} {sum(s.durum == d for s in liste)}" for d in SORUNLU
                              if any(s.durum == d for s in liste))
@@ -34,7 +43,8 @@ def rapor_uret(satirlar: list[TakvimSatiri]) -> str:
     for tip, liste in sorted(kaynaklar.items()):
         for s in liste[:3]:
             ek = f" ({s.bekleme_gunu} gün)" if s.bekleme_gunu is not None else ""
-            satir.append(f"- `{s.seri.id}` [{tip}]: {s.durum}{ek}")
+            notu = f" — {s.seri.yayin_notu}" if s.seri.yayin_notu else ""
+            satir.append(f"- `{s.seri.id}` [{tip}]: {s.durum}{ek}{notu}")
     return "\n".join(satir)
 
 

@@ -117,6 +117,42 @@ def _durum_metni(satir: TakvimSatiri) -> str:
     return f"{satir.durum} ({satir.bekleme_gunu} gün)"
 
 
+# Uyarı maddesinde görünen ad. Tablo sütunu `SIKLIK_ETIKETLERI` (büyük
+# harf) kullanır; madde cümlesi sayfadaki eski "Aylık" biçimini korur.
+_UYARI_SIKLIK = {
+    "daily": "Günlük", "weekly": "Haftalık", "monthly": "Aylık",
+    "quarterly": "Çeyreklik", "yearly": "Yıllık",
+}
+
+
+def uyari_govdesi(satir: TakvimSatiri) -> str:
+    """Başlığın sağındaki uyarı cümlesi. Yayın notu varsa sona eklenir.
+
+    Not, seriyi listeden düşürmez: takvim tazelik monitörüdür. Not yalnızca
+    "kaynak geride" ile "bakılacak"ı ayırır.
+    """
+    if satir.durum == OKUNAMADI:
+        sure = "veri dosyası okunamıyor"
+    elif satir.bekleme_gunu is None:
+        sure = "hiç veri yok"
+    else:
+        sure = f"{satir.bekleme_gunu} gündür yeni veri yok"
+    govde = f"{sure} ({_UYARI_SIKLIK[satir.seri.freq]})"
+    if satir.seri.yayin_notu:
+        govde = f"{govde}. {satir.seri.yayin_notu}"
+    return govde
+
+
+def uyari_basligi(sorunlular: list[TakvimSatiri]) -> str:
+    """Notu olan kaynak gecikmesi ile notu olmayan (bakılacak) seri ayrı sayılır."""
+    notlu = sum(1 for s in sorunlular if s.seri.yayin_notu)
+    notsuz = len(sorunlular) - notlu
+    return (
+        f"{len(sorunlular)} seri dikkat gerektiriyor: "
+        f"{notlu} kaynak geride (yayın notu var), {notsuz} bakılacak"
+    )
+
+
 SUTUNLAR = [
     "Veri",
     "Kategori",

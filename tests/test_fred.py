@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+import requests
 
 from core.catalog import Kaynak, Seri
 from ingest import fred
@@ -73,7 +74,7 @@ def test_fred_start_date_onceki_gunleri_atar():
     assert df["date"].tolist() == [pd.Timestamp("2026-03-01")]
 
 
-def test_fred_http_hatasinda_runtime_error_verir():
+def test_fred_http_hatasinda_httperror_verir():
     oturum = SahteOturum(SahteYanit("<!DOCTYPE html>", durum=404))
-    with pytest.raises(RuntimeError, match="TESTKOD"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         fred.seri_cek(_ornek_seri(), session=oturum)

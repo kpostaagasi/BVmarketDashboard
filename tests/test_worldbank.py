@@ -8,6 +8,8 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
+import requests
+
 from ingest.worldbank import (
     LANDING_SAYFASI,
     SERI_TANIMLARI,
@@ -103,7 +105,7 @@ def test_en_guncel_dosya_url_baglanti_yoksa_hata():
 
 def test_en_guncel_dosya_url_http_hatasi_yukselir():
     oturum = SahteOturum({LANDING_SAYFASI: SahteYanit(status_code=500)})
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         en_guncel_dosya_url(session=oturum)
 
 

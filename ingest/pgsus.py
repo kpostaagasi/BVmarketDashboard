@@ -27,6 +27,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_PGSUS_METRIKLERI, GECERLI_PGSUS_OLCUTLERI, GECERLI_PGSUS_SEGMENTLERI
 from ingest.ir_sunum import tr_sayi
 
@@ -174,8 +176,7 @@ def trafik_noktalari(baytlar: bytes) -> dict[tuple[str, str], dict[str, float]]:
 def _dosya_indir(session=None) -> bytes:
     http = session or requests
     yanit = http.get(UC, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Pegasus trafik bülteni HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 
@@ -300,8 +301,7 @@ def sunum_listesi(session=None) -> list[tuple[str, int, int]]:
     ayrıştırılır (URL slug'ı güvenilir değil — bkz. modül docstring'i)."""
     http = session or requests
     yanit = http.get(SUNUMLARIMIZ_SAYFASI, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Pegasus sunumlar sayfası HTTP {yanit.status_code} döndü")
+    durum_kodu_yukselt(yanit)
     liste = [
         (
             m.group(1) if m.group(1).startswith("http")
@@ -630,8 +630,7 @@ def _arsiv_noktalari(pdf, yil: int, ceyrek: int) -> dict[str, dict[str, float]]:
 
 def _sunumu_indir(http, url: str) -> bytes:
     yanit = http.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Pegasus yatırımcı sunumu indirilemedi ({url}): HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 

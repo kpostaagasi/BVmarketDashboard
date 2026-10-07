@@ -46,6 +46,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_EBEBEK_METRIKLERI
 
 LISTE_SAYFASI = "https://kurumsal.ebebek.com/yatirimci-duyurulari"
@@ -105,8 +107,7 @@ def duyuru_listesi(session=None) -> list[tuple[str, str]]:
     """
     http = session or requests
     yanit = http.get(LISTE_SAYFASI, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"ebebek yatirimci-duyurulari HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     kayitlar = re.findall(
         r'data-gtm-doc="([^"]+)"[^>]*data-gtm-doc-group="Özel Durum Açıklamaları".*?'
         r'href="(https://kurumsal\.ebebek\.com/download\?path=[^"]+)"',
@@ -120,8 +121,7 @@ def duyuru_listesi(session=None) -> list[tuple[str, str]]:
 def _pdf_metni(url: str, session=None) -> str:
     http = session or requests
     yanit = http.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"ebebek duyuru PDF HTTP {yanit.status_code}: {url}")
+    durum_kodu_yukselt(yanit)
     with pdfplumber.open(io.BytesIO(yanit.content)) as pdf:
         metin = "\n".join((sayfa.extract_text() or "") for sayfa in pdf.pages)
     return _normalize(metin)
@@ -274,8 +274,7 @@ def _sunum_listesi(session=None) -> list[dict]:
     okunur — çok daha güvenilir."""
     http = session or requests
     yanit = http.get(FINANSAL_SAYFA, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"ebebek finansal-bilgiler HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     sonuc = []
     for _gun, ay, yy, url in _SUNUM_SATIRI.findall(yanit.text):
         sonuc.append({"yil": 2000 + int(yy), "ceyrek": _AY_CEYREK[ay], "url": url})
@@ -297,8 +296,7 @@ def _sunum_pdfsini_getir(url: str, onbellek: dict, session=None) -> bytes | None
     if yanit.status_code == 404:
         onbellek[anahtar] = None
         return None
-    if yanit.status_code != 200:
-        raise RuntimeError(f"ebebek sunum PDF HTTP {yanit.status_code}: {url}")
+    durum_kodu_yukselt(yanit)
     onbellek[anahtar] = yanit.content
     return yanit.content
 

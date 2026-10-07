@@ -2,6 +2,7 @@ from datetime import date
 from types import SimpleNamespace
 
 import pytest
+import requests
 
 from ingest.epias import (
     _kapasite_agirlikli_doluluk,
@@ -149,7 +150,7 @@ def test_baraj_doluluk_cek_http_hatasinda_yukselir():
         "active-volume": SahteYanit(500),
         "dam-volume": _kapasite_govdesi([]),
     })
-    with pytest.raises(RuntimeError, match="500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         baraj_doluluk_cek(_seri(), "TGT-abc", session=oturum, bugun=date(2026, 9, 18))
 
 
@@ -191,5 +192,5 @@ def test_havza_listesi_cek_listeyi_doner():
 
 def test_havza_listesi_cek_http_hatasinda_yukselir():
     oturum = SahteCokluOturum({"basin-list": SahteYanit(404)})
-    with pytest.raises(RuntimeError, match="404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         havza_listesi_cek("TGT-abc", session=oturum)

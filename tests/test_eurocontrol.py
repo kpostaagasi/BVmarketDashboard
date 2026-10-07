@@ -10,6 +10,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 from ingest.eurocontrol import (
     DOSYALAR,
     dosya_url,
@@ -201,7 +203,7 @@ def test_seri_cek_dosyayi_onbellekten_paylasir():
 
 def test_seri_cek_http_hatasi_yukselir():
     oturum = SahteOturum({})
-    with pytest.raises(RuntimeError, match="HTTP 404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         seri_cek(ec_seri(), session=oturum, bugun=date(2026, 9, 8))
 
 

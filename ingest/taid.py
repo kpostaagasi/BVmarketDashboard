@@ -34,6 +34,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_TAID_MARKALARI
 
 TABAN = "https://www.taid.org.tr"
@@ -63,8 +65,7 @@ def bulten_listesini_cek(bugun: date, session=None) -> dict[str, str]:
     sayfa = 1
     while True:
         yanit = http.get(LISTE_URL, params={"page": sayfa}, timeout=ZAMAN_ASIMI)
-        if yanit.status_code != 200:
-            raise RuntimeError(f"TAİD bülten listesi HTTP {yanit.status_code} (sayfa {sayfa})")
+        durum_kodu_yukselt(yanit)
         govde = yanit.json()
         bultenler = govde.get("bultenler") or []
         if not bultenler:
@@ -195,8 +196,7 @@ def seri_cek(seri, *, onbellek: dict | None = None, session=None,
         if anahtar not in onbellek:
             http = session or requests
             yanit = http.get(pdf_url, timeout=ZAMAN_ASIMI)
-            if yanit.status_code != 200:
-                raise RuntimeError(f"TAİD bülten PDF HTTP {yanit.status_code} ({pdf_url})")
+            durum_kodu_yukselt(yanit)
             bolum = _tek_ay_bolumunu_ayikla(yanit.content)
             onbellek[anahtar] = marka_toplamlarini_ayikla(bolum)
         deger = onbellek[anahtar].get(marka)

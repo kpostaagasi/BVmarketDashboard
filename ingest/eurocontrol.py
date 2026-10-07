@@ -36,6 +36,8 @@ from datetime import date
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_EC_KAYNAKLARI
 
 TABAN = "https://www.eurocontrol.int/Economics"
@@ -140,10 +142,7 @@ def _dosya_cek(kaynak: str, onbellek: dict, session=None) -> list:
         return onbellek[kaynak]
     http = session or requests
     yanit = http.get(dosya_url(kaynak), timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(
-            f"EUROCONTROL HTTP {yanit.status_code} ({DOSYALAR[kaynak]})"
-        )
+    durum_kodu_yukselt(yanit)
     onbellek[kaynak] = json.loads(yanit.text)
     return onbellek[kaynak]
 

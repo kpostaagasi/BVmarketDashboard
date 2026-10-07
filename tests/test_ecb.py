@@ -5,6 +5,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+import requests
+
 from core.catalog import Kaynak, Seri
 from ingest import ecb
 
@@ -79,7 +81,7 @@ def test_ecb_404_yanlis_akis_anahtar_mesaji_verir():
 
 def test_ecb_diger_http_hatasinda_runtime_error_verir():
     oturum = SahteOturum(SahteYanit("error", durum=500))
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         ecb.seri_cek(_ornek_seri(), session=oturum)
 
 

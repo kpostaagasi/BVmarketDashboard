@@ -10,6 +10,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 from ingest.bddk import (
     VARSAYILAN_TARAF,
     deger_sutunu,
@@ -218,7 +220,7 @@ def test_seri_cek_hicbir_ayda_veri_yoksa_hata():
 
 def test_seri_cek_http_hatasi_yukselir():
     oturum = SahteOturum([SahteYanit({}, status_code=503)])
-    with pytest.raises(RuntimeError, match="HTTP 503"):
+    with pytest.raises(requests.HTTPError, match="HTTP 503"):
         seri_cek(bddk_seri(), session=oturum, bugun=date(2026, 9, 8))
 
 

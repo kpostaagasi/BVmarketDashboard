@@ -44,6 +44,8 @@ import re
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 TABAN = "https://www.tepav.org.tr"
 HUB_URL = f"{TABAN}/tr/calismalarimiz/s/470"
 ZAMAN_ASIMI = 60
@@ -87,8 +89,7 @@ def _yuzde_parse(ham: str) -> float:
 def _get(url: str, session=None) -> str:
     http = session or requests
     yanit = http.get(url, headers=_BASLIKLAR, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TEPAV: {url} HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return yanit.text
 
 

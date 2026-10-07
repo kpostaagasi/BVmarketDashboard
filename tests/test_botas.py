@@ -4,6 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 from ingest.botas import (
     _dagitim_bolumu,
     _kategori_belirle,
@@ -261,7 +263,7 @@ def test_seri_cek_indeks_http_hatasi_yukselir():
         def get(self, url, timeout=None):
             return SimpleNamespace(status_code=500, text="", content=b"")
 
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         seri_cek(botas_seri(), onbellek=dict(_BOS_ARSIV), session=HataliOturum())
 
 # --- arsiv_tarifeleri_cek: soft-404 tuzağı --------------------------------

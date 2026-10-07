@@ -8,6 +8,8 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
+import requests
+
 from ingest.eib import (
     _dogrula,
     ay_baglantilarini_cikar,
@@ -240,5 +242,5 @@ def test_seri_cek_icerik_http_hatasi_yukselir():
         def get(self, url, params=None, timeout=None):
             return SahteYanit(status_code=500)
 
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         seri_cek(eib_seri(), onbellek={}, session=HataliOturum(), bugun=date(2026, 9, 18))

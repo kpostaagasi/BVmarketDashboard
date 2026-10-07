@@ -18,6 +18,8 @@ from core.takvim import (
     satir_uret,
     sirala,
     tablo_df,
+    uyari_basligi,
+    uyari_govdesi,
 )
 
 
@@ -250,3 +252,38 @@ def test_takvim_kompozisyon_serisini_okunamadi_saymaz():
     ]
     assert satir.durum != OKUNAMADI
     assert satir.son_donem is not None
+
+
+def test_uyari_govdesi_not_yoksa_yalnizca_sureyi_yazar():
+    s = seri("monthly")
+    assert s.yayin_notu is None
+    satir = TakvimSatiri(s, date(2020, 1, 1), 2400, GECIKMIS)
+    assert uyari_govdesi(satir) == "2400 gündür yeni veri yok (Aylık)"
+
+
+def test_uyari_govdesi_yayin_notunu_sona_ekler():
+    s = dataclasses.replace(seri("monthly"), yayin_notu="Eurostat TR 2025-12'de duruyor")
+    satir = TakvimSatiri(s, date(2025, 12, 1), 278, GECIKMIS)
+    assert uyari_govdesi(satir) == (
+        "278 gündür yeni veri yok (Aylık). Eurostat TR 2025-12'de duruyor"
+    )
+
+
+def test_uyari_govdesi_veri_yok_ve_okunamadi():
+    s = seri("daily")
+    assert uyari_govdesi(TakvimSatiri(s, None, None, VERI_YOK)) == "hiç veri yok (Günlük)"
+    assert uyari_govdesi(TakvimSatiri(s, None, None, OKUNAMADI)) == (
+        "veri dosyası okunamıyor (Günlük)"
+    )
+
+
+def test_uyari_basligi_notlu_ile_bakilacagi_ayirir():
+    notlu = dataclasses.replace(seri("monthly"), yayin_notu="kaynak geride")
+    notsuz = seri("monthly")
+    baslik = uyari_basligi([
+        TakvimSatiri(notlu, date(2025, 12, 1), 278, GECIKMIS),
+        TakvimSatiri(notsuz, date(2020, 1, 1), 2400, GECIKMIS),
+    ])
+    assert baslik == (
+        "2 seri dikkat gerektiriyor: 1 kaynak geride (yayın notu var), 1 bakılacak"
+    )

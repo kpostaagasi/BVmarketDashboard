@@ -12,6 +12,8 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
+import requests
+
 from ingest.thy import (
     TRAFIK_SAYFASI,
     dosya_listesi,
@@ -275,7 +277,7 @@ def test_dosya_listesi_xlsx_yoksa_hata():
 
 def test_dosya_listesi_http_hatasi_yukselir():
     oturum = SahteOturum({TRAFIK_SAYFASI: SahteYanit(b"", status_code=500)})
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         dosya_listesi(session=oturum)
 
 
@@ -343,5 +345,5 @@ def test_seri_cek_dosya_http_hatasi_yukselir():
         TRAFIK_SAYFASI: SahteYanit(html),
         dosya_url: SahteYanit(b"", status_code=404),
     })
-    with pytest.raises(RuntimeError, match="HTTP 404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         seri_cek(thy_seri(), onbellek={}, session=oturum)

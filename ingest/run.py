@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
+import ssl
 import sys
 import time
 from collections import defaultdict
@@ -316,14 +318,28 @@ def _cek(seri: Seri, api_key: str | None, tgt: str | None, oturum,
 # değil: o bizim kurduğumuz URL'nin yanlışı demek, bizim hatamızdır.
 KAPALI_HTTP_KODLARI = frozenset({403, 429, 500, 502, 503, 504})
 
+# Adaptörler çoğu yerde `raise RuntimeError(f"... HTTP {kod}")` diyor ve
+# `from` kullanmıyor; HTTPError zincire hiç girmiyor. 5 Ekim 2026 TSB 504'ü
+# bu yüzden kod hatası sayıldı. Kalıp sıkı: yalnızca bu kodlar ve requests'in
+# kendi "504 Server Error" metni. 404/401 ve "şablon değişmiş" eşleşmez.
+_KAPALI_HTTP_METNI = re.compile(
+    r"HTTP\s+(?:403|429|500|502|503|504)\b"
+    r"|\b(?:403|429|500|502|503|504)\s+(?:Client|Server)\s+Error\b"
+)
+_SERTIFIKA_METNI = re.compile(
+    r"CERTIFICATE_VERIFY_FAILED|certificate has expired",
+    re.IGNORECASE,
+)
+
 
 def erisilemez_mi(hata: BaseException) -> bool:
     """Hata bir kaynağa ulaşamamaktan mı geliyor, yoksa bizim kodumuzdan mı?
 
     `requests` bağlantı hatalarını `ConnectionError` aileye koyar
-    (`ConnectTimeout` onun alt sınıfıdır). Adaptörler bu hatayı
-    `RuntimeError("... bağlantı hatası ...")` ile sarmalayıp `raise ... from`
-    dediği için zincirin dibine inmek gerekir.
+    (`ConnectTimeout` onun alt sınıfıdır). `ReadTimeout` bu ailenin içinde
+    değildir; sunucu bağlantıyı açıp cevap vermezse o da erişilemez sayılır.
+    Adaptörler bağlantı hatasını `RuntimeError("...") from hata` ile
+    sardığı için zincirin dibine inmek gerekir.
 
     Ayrım neden şart: 30 Eylül 2026'da TEFAS ve EPİAŞ GitHub runner'ından
     bağlantı zaman aşımına düştü (aynı istek yerelde 200 / 2.039 satır /
@@ -334,10 +350,14 @@ def erisilemez_mi(hata: BaseException) -> bool:
 
     HTTP tarafı da aynı sınıftır: 403/429/5xx "kaynak bize veri vermiyor"
     demektir, bizim hatamız değil (30 Eylül 2026 tam koşusu: fintables.com
-    403 döndürdü, hem runner'dan hem yerelden). 404 KAPSAM DIŞIDIR — o bizim
-    kurduğumuz yanlış URL'dir, düzeltilebilir ve kırmızıyı hak eder.
-    401/402/407 de kapsam dışı: kimlik bilgisi/yetki = yapılandırma hatası,
-    zaten aksi hâlde `main()` 2 döndürüyor.
+    403 döndürdü, hem runner'dan hem yerelden). Tür zincirde yoksa metin
+    yeter: `RuntimeError("... HTTP 504")` (5 Ekim 2026, TSB). 404 KAPSAM
+    DIŞIDIR — o bizim kurduğumuz yanlış URL'dir, düzeltilebilir ve kırmızıyı
+    hak eder. 401/402/407 de kapsam dışı: kimlik bilgisi/yetki =
+    yapılandırma hatası, zaten aksi hâlde `main()` 2 döndürüyor.
+
+    Çıplak `RuntimeError("okuma zaman aşımı")` erişilemez DEĞİLDİR. Her
+    zaman aşımı yazısını yeşil saymak, gerçek kod hatasını gizler.
     """
 
     zincir: list[BaseException] = []
@@ -350,10 +370,17 @@ def erisilemez_mi(hata: BaseException) -> bool:
     for adim in zincir:
         if isinstance(adim, requests.exceptions.ConnectionError):
             return True
+        if isinstance(adim, requests.exceptions.Timeout):
+            return True
+        if isinstance(adim, ssl.SSLError):
+            return True
         if isinstance(adim, requests.exceptions.HTTPError):
             yanit = adim.response
             if yanit is not None and yanit.status_code in KAPALI_HTTP_KODLARI:
                 return True
+        metin = str(adim)
+        if _KAPALI_HTTP_METNI.search(metin) or _SERTIFIKA_METNI.search(metin):
+            return True
     return False
 
 

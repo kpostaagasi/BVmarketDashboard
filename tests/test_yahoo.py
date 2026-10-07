@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import pytest
+import requests
 
 from core.catalog import seri_getir
 from ingest.yahoo import gun_yuvarla, noktalari_ayikla, sembol_kodla, seri_cek
@@ -91,7 +92,7 @@ def brent():
 
 def test_seri_cek_http_hatasinda_yukselir():
     oturum = SahteOturum(SahteYanit(429))
-    with pytest.raises(RuntimeError, match="429"):
+    with pytest.raises(requests.HTTPError, match="HTTP 429"):
         seri_cek(brent(), session=oturum)
 
 

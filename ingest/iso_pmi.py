@@ -61,6 +61,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 TABAN = "https://www.iso.org.tr"
 SEKTOREL_PROJE_URL = f"{TABAN}/projeler/iso-turkiye-sektorel-pmi/"
 MANSET_PROJE_URL = f"{TABAN}/projeler/iso-turkiye-imalat-pmi/"
@@ -113,12 +115,10 @@ def _zip_baglantisini_bul(html_metni: str) -> str:
 def _zip_indir(proje_url: str, session=None) -> bytes:
     http = session or requests
     sayfa = http.get(proje_url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if sayfa.status_code != 200:
-        raise RuntimeError(f"İSO proje sayfası HTTP {sayfa.status_code}: {proje_url}")
+    durum_kodu_yukselt(sayfa)
     zip_url = _zip_baglantisini_bul(sayfa.text)
     yanit = http.get(zip_url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"İSO ZIP indirilemedi HTTP {yanit.status_code}: {zip_url}")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 

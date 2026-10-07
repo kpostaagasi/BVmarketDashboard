@@ -74,6 +74,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import (
     GECERLI_EPDK_DOGALGAZ_OLCUTLERI,
     GECERLI_EPDK_FIYAT_KALEMLERI,
@@ -367,16 +369,14 @@ def ayin_tum_olculerini_cikar(baytlar: bytes, ay_adi: str) -> dict[str, dict[str
 def _dosya_listesi_cek(session=None) -> list[dict]:
     http = session or requests
     yanit = http.get(LISTE_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EPDK dosya listesi HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return cekilecek_dosyalar(dosyalari_ayikla(yanit.text))
 
 
 def _dosya_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(TABAN + url, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EPDK aylık EK dosyası HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 
@@ -723,8 +723,7 @@ def dogalgaz_ayin_tum_olculerini_cikar(baytlar: bytes, ay_adi: str) -> dict[str,
 def _dogalgaz_dosya_listesi_cek(session=None) -> list[dict]:
     http = session or requests
     yanit = http.get(DOGALGAZ_LISTE_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EPDK Doğal Gaz dosya listesi HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return cekilecek_dosyalar(dogalgaz_dosyalari_ayikla(yanit.text))
 
 
@@ -907,16 +906,14 @@ def fiyat_tablosunu_cikar(pdf_metni: str, hedef_ay_adi: str, hedef_yil: int) -> 
 def _fiyat_dosya_listesi_cek(session=None) -> list[dict]:
     http = session or requests
     yanit = http.get(FIYAT_LISTE_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EPDK Fiyatlandırma Raporu HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return fiyat_cekilecek_dosyalar(fiyat_dosyalarini_ayikla(yanit.text))
 
 
 def _fiyat_dosya_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(f"{TABAN}{url}", timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EPDK Fiyatlandırma Raporu dosya indirme HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 

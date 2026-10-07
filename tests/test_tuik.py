@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 from ingest.tuik import OLCUT_KODLARI, noktalari_ayikla, seri_cek
 
 
@@ -108,5 +110,5 @@ def test_seri_cek_http_hatasi_yukselir():
         def get(self, url, params=None, timeout=None):
             return SimpleNamespace(status_code=500, json=lambda: {})
 
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         seri_cek(tuik_seri(), onbellek={}, session=HataliOturum())

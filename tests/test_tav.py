@@ -16,6 +16,8 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
+import requests
+
 from ingest.tav import (
     LISTE_SAYFASI,
     AY_EN,
@@ -422,7 +424,7 @@ def test_dosya_listesi_hicbir_baglanti_yoksa_hata():
 
 def test_dosya_listesi_http_hatasi_yukselir():
     oturum = SahteOturum(liste_status=404)
-    with pytest.raises(RuntimeError, match="HTTP 404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         dosya_listesi(oturum)
 
 
@@ -478,5 +480,5 @@ def test_seri_cek_start_date_oncesini_kirpar():
 
 def test_seri_cek_xlsx_http_hatasi_yukselir():
     oturum = SahteOturum(xlsx_status=500)
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         seri_cek(tav_seri(), onbellek={}, session=oturum)

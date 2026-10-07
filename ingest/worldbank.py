@@ -25,6 +25,8 @@ import openpyxl
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_WB_SERILERI, Seri
 
 LANDING_SAYFASI = "https://www.worldbank.org/en/research/commodity-markets"
@@ -59,8 +61,7 @@ def en_guncel_dosya_url(session=None) -> str:
     """Pink Sheet açılış sayfasındaki güncel xlsx bağlantısı."""
     http = session or requests
     yanit = http.get(LANDING_SAYFASI, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Dünya Bankası Pink Sheet sayfası HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     eslesme = _DOSYA_BAGLANTISI.search(yanit.text)
     if not eslesme:
         raise RuntimeError(
@@ -76,8 +77,7 @@ def _kitabi_getir(onbellek: dict, session=None):
     http = session or requests
     url = en_guncel_dosya_url(session=session)
     yanit = http.get(url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Pink Sheet Excel'i indirilemedi ({url}): HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     onbellek["kitap"] = openpyxl.load_workbook(io.BytesIO(yanit.content), data_only=True)
     return onbellek["kitap"]
 

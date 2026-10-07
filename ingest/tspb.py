@@ -68,6 +68,8 @@ import openpyxl
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 TABAN = "https://tspb.org.tr"
 VERILER_API_URL = f"{TABAN}/wp-json/wp/v2/pages?slug=veriler"
 ZAMAN_ASIMI = 60
@@ -144,8 +146,7 @@ def _sayfa_icerigini_cek(session=None) -> str:
     """
     http = session or requests
     yanit = http.get(VERILER_API_URL, headers=_BASLIKLAR, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TSPB wp-json 'veriler' sayfası HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     sayfalar = yanit.json()
     if not sayfalar:
         raise RuntimeError("TSPB: wp-json'da 'veriler' slug'lı sayfa bulunamadı")
@@ -165,8 +166,7 @@ def _baglanti_bul(html: str, desen: re.Pattern, ad: str) -> str:
 def _workbook_indir(url: str, session=None):
     http = session or requests
     yanit = http.get(url, headers=_BASLIKLAR, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TSPB dosyası indirilemedi ({url}): HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return openpyxl.load_workbook(io.BytesIO(yanit.content), data_only=True)
 
 

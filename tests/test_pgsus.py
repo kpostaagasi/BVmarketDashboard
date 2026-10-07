@@ -11,6 +11,8 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
+import requests
+
 from ingest.pgsus import UC, seri_cek, trafik_noktalari
 
 SEGMENTLER = ["Toplam", "İç Hat", "Dış Hat"]
@@ -198,7 +200,7 @@ def test_seri_cek_start_date_oncesini_kirpar():
 
 def test_seri_cek_http_hatasi_yukselir():
     oturum = SahteOturum(SahteYanit(b"", status_code=404))
-    with pytest.raises(RuntimeError, match="HTTP 404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         seri_cek(pgsus_seri(), onbellek={}, session=oturum)
 
 

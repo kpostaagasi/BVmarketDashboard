@@ -15,6 +15,8 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
+import requests
+
 from ingest.epdk import (
     ILK_AY,
     ILK_YIL,
@@ -504,7 +506,7 @@ def test_seri_cek_liste_http_hatasi_yukselir():
     class Hatali:
         def get(self, url, timeout=None):
             return SahteYanit(503)
-    with pytest.raises(RuntimeError, match="HTTP 503"):
+    with pytest.raises(requests.HTTPError, match="HTTP 503"):
         seri_cek(epdk_seri(), onbellek={}, session=Hatali())
 
 
@@ -514,7 +516,7 @@ def test_seri_cek_dosya_indirme_hatasi_yukselir():
             if url.endswith("petrolaylik-sektor-raporu"):
                 return SahteYanit(200, text=_tek_aylik_liste_html())
             return SahteYanit(404)
-    with pytest.raises(RuntimeError, match="HTTP 404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         seri_cek(epdk_seri(), onbellek={}, session=YarimOturum())
 
 

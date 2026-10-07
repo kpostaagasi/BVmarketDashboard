@@ -173,11 +173,42 @@ def test_main_epias_giris_basarisizsa_diger_kaynaklar_calismaya_devam_eder(
     assert epias_idler, "katalogda epias serisi yok"
     diger_idler = {s.id for s in tum_seriler if s.kaynak_tipi != "epias"}
 
-    assert kod == 1, "en az bir hata varsa exit kodu 1 olmalı"
+    # HTTP 503 kaynak kapalı: diğer seriler yazılır, koşu kırmızı olmaz.
+    assert kod == 0
     assert set(yazilanlar) == diger_idler, (
         "epias dışındaki seriler yine yazılmalı"
     )
     assert not (set(yazilanlar) & epias_idler)
+
+
+def test_main_epias_giris_kod_hatasinda_kirmizi_kalir(monkeypatch):
+    """Girişteki KeyError bizim kodumuz: 503'ten farklı, koşu kırmızı kalır.
+    EPİAŞ dışı seriler yine yazılır."""
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte-anahtar")
+    monkeypatch.setenv("EPIAS_USERNAME", "sahte-kullanici")
+    monkeypatch.setenv("EPIAS_PASSWORD", "sahte-parola")
+    monkeypatch.setattr(sys, "argv", ["run.py"])
+
+    def patlayan_tgt_al(kullanici, parola, session=None):
+        raise KeyError("tgt")
+
+    def patlayan_epias_cek(*a, **k):
+        raise AssertionError("tgt yokken epias.seri_cek çağrılmamalı")
+
+    yazilanlar: list[str] = []
+
+    monkeypatch.setattr(run.epias, "tgt_al", patlayan_tgt_al)
+    monkeypatch.setattr(run.epias, "seri_cek", patlayan_epias_cek)
+    tum_adaptorleri_stubla(monkeypatch, haric={(run.epias, "seri_cek")})
+    monkeypatch.setattr(
+        run, "seriyi_yaz", lambda seri, df: (yazilanlar.append(seri.id), len(df))[1]
+    )
+
+    assert run.main() == 1
+    diger_idler = {s.id for s in seri_listele() if s.kaynak_tipi != "epias"}
+    assert set(yazilanlar) == diger_idler
 
 
 def test_main_epias_serileri_tek_onbellek_paylasir(monkeypatch):
@@ -547,6 +578,121 @@ def test_main_kod_hatasinda_kirmizi_kalir(monkeypatch):
 
     monkeypatch.setattr(run.evds, "seri_cek", kirik)
     assert run.main() == 1
+
+
+def _http_hatasi(kod: int):
+    import requests
+
+    yanit = requests.Response()
+    yanit.status_code = kod
+    hata = requests.HTTPError(f"{kod} Error")
+    hata.response = yanit
+    return hata
+
+
+def test_erisilemez_mi_runtimeerror_http_504():
+    from ingest import run
+
+    assert run.erisilemez_mi(RuntimeError("TSB HTTP 504"))
+
+
+def test_erisilemez_mi_runtimeerror_http_404_degil():
+    from ingest import run
+
+    assert not run.erisilemez_mi(RuntimeError("sayfa HTTP 404"))
+
+
+def test_erisilemez_mi_sablon_hatasi_degil():
+    from ingest import run
+
+    assert not run.erisilemez_mi(RuntimeError("şablon değişmiş olabilir"))
+
+
+def test_erisilemez_mi_sertifika_metni():
+    from ingest import run
+
+    assert run.erisilemez_mi(
+        RuntimeError("HTTPSConnectionPool: CERTIFICATE_VERIFY_FAILED")
+    )
+
+
+def test_erisilemez_mi_okuma_zamani_asimi_metni_degil():
+    """Çıplak metin kod hatası kalır; gerçek ReadTimeout erişilemez sayılır."""
+    import requests
+
+    from ingest import run
+
+    assert not run.erisilemez_mi(RuntimeError("okuma zaman aşımı"))
+    assert run.erisilemez_mi(requests.exceptions.ReadTimeout("read timed out"))
+
+
+def test_erisilemez_mi_httperror_504_erisilemez_404_degil():
+    from ingest import run
+
+    assert run.erisilemez_mi(_http_hatasi(504))
+    assert not run.erisilemez_mi(_http_hatasi(404))
+
+
+def test_erisilemez_mi_requests_403_metni():
+    from ingest import run
+
+    assert run.erisilemez_mi(RuntimeError(
+        "403 Client Error: Forbidden for url: https://fintables.com/x"
+    ))
+
+
+def test_main_http_503_metni_kirmizi_yapmaz(monkeypatch):
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+    tum_adaptorleri_stubla(monkeypatch)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    def kapali(*a, **k):
+        raise RuntimeError("BDDK HTTP 503")
+
+    monkeypatch.setattr(run.evds, "seri_cek", kapali)
+    assert run.main() == 0
+
+
+def test_main_sablon_hatasi_kirmizi_kalir(monkeypatch):
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--only", "enflasyon/tufe-genel"])
+    tum_adaptorleri_stubla(monkeypatch)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    def sablon(*a, **k):
+        raise RuntimeError("şablon değişmiş")
+
+    monkeypatch.setattr(run.evds, "seri_cek", sablon)
+    assert run.main() == 1
+
+
+def test_main_http_504_metni_devre_kesicide_yesil_kalir(monkeypatch):
+    """504 metni kesiciyi açar ama koşuyu kırmaz. Çıplak zaman aşımı metni
+    kırmızı kalır: test_main_ardisik_hatada_kaynagi_gecer."""
+    from ingest import run
+
+    monkeypatch.setenv("EVDS_API_KEY", "sahte")
+    monkeypatch.setenv("EPIAS_USERNAME", "sahte")
+    monkeypatch.setenv("EPIAS_PASSWORD", "sahte")
+    monkeypatch.setattr(sys, "argv", ["run.py", "--freq", "monthly"])
+    monkeypatch.setattr(run.epias, "tgt_al", lambda k, p, session=None: "TGT")
+    tum_adaptorleri_stubla(monkeypatch)
+    monkeypatch.setattr(run, "seriyi_yaz", lambda seri, df: len(df))
+
+    denemeler = []
+
+    def patlayan(*a, **k):
+        denemeler.append(1)
+        raise RuntimeError("HTTP 504")
+
+    monkeypatch.setattr(run.tim, "il_seri_cek", patlayan)
+    assert run.main() == 0
+    assert len(denemeler) == run.ARDISIK_HATA_TAVANI * 2
 
 
 def test_cek_tefas_sektor_csv_varsa_son_aylari_ister(monkeypatch, tmp_path):

@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 from ingest.istib import (
     URUN_ESLEME,
     _taban_ad,
@@ -182,5 +184,5 @@ def test_seri_cek_http_hatasi_yukselir():
         def get(self, url, params=None, timeout=None):
             return SimpleNamespace(status_code=500, text="")
 
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         seri_cek(istib_seri(), onbellek={}, session=HataliOturum(), bugun=date(2026, 9, 8))

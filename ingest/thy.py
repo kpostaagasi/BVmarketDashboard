@@ -54,6 +54,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_THY_METRIKLERI
 from ingest.ir_sunum import tr_sayi
 
@@ -107,8 +109,7 @@ def dosya_listesi(session=None) -> list[str]:
     """
     http = session or requests
     yanit = http.get(TRAFIK_SAYFASI, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"THY trafik sayfası HTTP {yanit.status_code} döndü")
+    durum_kodu_yukselt(yanit)
     html = yanit.content.decode("utf-8", errors="replace")
     baglantilar = re.findall(r'href="([^"]+\.xlsx)"', html)
     if not baglantilar:
@@ -249,8 +250,7 @@ def _tum_noktalari_getir(
     # kesin rakamları taşır.
     for url in dosya_listesi(session):
         yanit = http.get(url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-        if yanit.status_code != 200:
-            raise RuntimeError(f"THY dosyası indirilemedi ({url}): HTTP {yanit.status_code}")
+        durum_kodu_yukselt(yanit)
         for anahtar, aylik in trafik_noktalari(yanit.content).items():
             birlesik.setdefault(anahtar, {}).update(aylik)
 
@@ -322,8 +322,7 @@ def pdf_toplam_seri_cek(seri, session=None) -> pd.DataFrame:
     """
     http = session or requests
     yanit = http.get(TRAFIK_SAYFASI, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"THY trafik sayfası HTTP {yanit.status_code} döndü")
+    durum_kodu_yukselt(yanit)
     baglantilar = re.findall(r'href="([^"]+/trafik/[^"]+\.pdf)"', yanit.text)
     if not baglantilar:
         raise RuntimeError("THY trafik sayfasında aylık PDF bağlantısı bulunamadı")
@@ -332,8 +331,7 @@ def pdf_toplam_seri_cek(seri, session=None) -> pd.DataFrame:
     for baglanti in baglantilar:
         pdf_url = baglanti if baglanti.startswith("http") else f"{TABAN}{baglanti}"
         pdf_yaniti = http.get(pdf_url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-        if pdf_yaniti.status_code != 200:
-            raise RuntimeError(f"THY trafik PDF'i indirilemedi ({pdf_url}): HTTP {pdf_yaniti.status_code}")
+        durum_kodu_yukselt(pdf_yaniti)
         with pdfplumber.open(io.BytesIO(pdf_yaniti.content)) as pdf:
             metin = pdf.pages[0].extract_text() or ""
         tarih, ucak_sayisi, uculan_nokta = pdf_toplam_noktalari(metin)
@@ -449,8 +447,7 @@ def sunum_baglantilari(session=None) -> list[tuple[str, int, int]]:
     üçlüleri olarak döner."""
     http = session or requests
     yanit = http.get(SUNUMLAR_SAYFASI, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"THY sunumlar sayfası HTTP {yanit.status_code} döndü")
+    durum_kodu_yukselt(yanit)
     eslesmeler = _SUNUM_BAGLANTISI.findall(yanit.text)
     if not eslesmeler:
         raise RuntimeError("THY sunumlar sayfasında çeyreklik yatırımcı sunumu bağlantısı bulunamadı")
@@ -810,8 +807,7 @@ def _sunum_noktalarini_getir(onbellek: dict, session=None) -> dict[str, dict[str
     noktalar: dict[str, dict[str, float]] = {}
     for sira, (url, yil, ceyrek) in enumerate(sunum_baglantilari(session)):
         yanit = http.get(url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-        if yanit.status_code != 200:
-            raise RuntimeError(f"THY yatırımcı sunumu indirilemedi ({url}): HTTP {yanit.status_code}")
+        durum_kodu_yukselt(yanit)
         with pdfplumber.open(io.BytesIO(yanit.content)) as pdf:
             ayristirilmis = (
                 _sunumu_ayristir(pdf, yil, ceyrek) if sira == 0

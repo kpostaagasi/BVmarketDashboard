@@ -72,6 +72,8 @@ from html import unescape
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 TABAN = "https://celik.org.tr/tr/bilgi-merkezi/basin-bulteni"
 ZAMAN_ASIMI = 30
 
@@ -295,8 +297,7 @@ def _bulten_indir(url: str, session=None) -> str | None:
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
     if yanit.status_code == 404:
         return None
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TÇÜD HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.text
 
 

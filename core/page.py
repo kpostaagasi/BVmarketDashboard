@@ -28,7 +28,6 @@ from core.components import (
     degisim_rozeti,
     donem_etiketi,
     fon_karti,
-    SIKLIK_METNI,
     grafik_karti,
     kisa_sayi,
     kompozisyon_karti,
@@ -38,7 +37,7 @@ from core.components import (
 from core.data import VeriYokHatasi, load_series
 from core.ozet import OzetSatiri, one_cikanlar, ozet_uret, son_yayimlananlar
 from core.stats import GORUNUMLER, VARSAYILAN
-from core.takvim import GUNCEL, OKUNAMADI, tablo_df, takvim
+from core.takvim import GUNCEL, tablo_df, takvim, uyari_basligi, uyari_govdesi
 
 
 # Bir kategori bu sayıdan çok seri taşıyorsa hepsi birden çizilmez: TİM
@@ -474,18 +473,9 @@ def veri_takvimi_sayfasi() -> None:
 
     if sorunlular:
         with st.container(border=True):
-            st.markdown(f"**⚠ {len(sorunlular)} seri dikkat gerektiriyor**")
+            st.markdown(f"**⚠ {uyari_basligi(sorunlular)}**")
             for s in sorunlular:
-                if s.durum == OKUNAMADI:
-                    sure = "veri dosyası okunamıyor"
-                elif s.bekleme_gunu is None:
-                    sure = "hiç veri yok"
-                else:
-                    sure = f"{s.bekleme_gunu} gündür yeni veri yok"
-                st.markdown(
-                    f"- **{s.seri.title}** — {sure} "
-                    f"({SIKLIK_METNI[s.seri.freq]})"
-                )
+                st.markdown(f"- **{s.seri.title}** — {uyari_govdesi(s)}")
         st.divider()
 
     df = tablo_df(satirlar)

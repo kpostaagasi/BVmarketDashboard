@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from types import SimpleNamespace
 
 import pytest
+import requests
 
 from ingest.epias import noktalari_ayikla, pencereleri_bol, seri_cek, tgt_al
 
@@ -214,7 +215,7 @@ def _epias_seri(**kwargs):
 
 def test_seri_cek_http_hatasinda_yukselir():
     oturum = SahteOturum(SahteYanit(500))
-    with pytest.raises(RuntimeError, match="500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         seri_cek(_epias_seri(), "TGT-abc", session=oturum)
 
 

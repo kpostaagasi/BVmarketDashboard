@@ -331,6 +331,8 @@ def grafik_karti(seri: Seri, gorunum: str) -> None:
         return
     with st.container(key=_kart_anahtari(seri)):
         st.html(kart_basligi_html(seri))
+        if seri.yayin_notu:
+            st.caption(seri.yayin_notu)
 
         try:
             df = load_series(seri.id)
@@ -397,6 +399,8 @@ def kompozisyon_karti(seri: Seri) -> None:
     """
     with st.container(key=_kart_anahtari(seri)):
         st.html(kart_basligi_html(seri))
+        if seri.yayin_notu:
+            st.caption(seri.yayin_notu)
 
         try:
             df = load_wide_series(seri.id)

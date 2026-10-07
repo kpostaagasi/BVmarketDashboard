@@ -76,6 +76,8 @@ import openpyxl
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_EIB_KALEMLERI, GECERLI_EIB_OLCUTLERI
 
 ISTATISTIK_SI_ID = "AF5247B95C"
@@ -280,8 +282,7 @@ def yil_verisini_cikar(baytlar: bytes, yil: int) -> dict[tuple[str, str], dict[s
 def _icerik_cek(session=None) -> str:
     http = session or requests
     yanit = http.get(ICERIK_URL, params={"SI_Id": ISTATISTIK_SI_ID}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EİB istatistik sayfası HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     veri = yanit.json()
     if "icerik" not in veri:
         raise RuntimeError("EİB istatistik sayfası: beklenmeyen JSON gövdesi")
@@ -291,8 +292,7 @@ def _icerik_cek(session=None) -> str:
 def _dosya_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EİB yıllık bülten HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 

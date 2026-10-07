@@ -7,6 +7,8 @@ import json
 import pandas as pd
 import pytest
 
+import requests
+
 from ingest import tefas
 from test_tefas import SahteOturum, SahteYanit, yanit_govdesi
 
@@ -80,7 +82,7 @@ def test_http_hatasi_tam_gecmisi_kismi_dondurmez():
         SahteYanit(yanit_govdesi([fon_satiri("2026-07-31", 0.8)])),
         SahteYanit({"faultCode": "ERR-224"}, status_code=429),
     ])
-    with pytest.raises(RuntimeError, match="HTTP 429"):
+    with pytest.raises(requests.HTTPError, match="HTTP 429"):
         tefas.fon_tam_gecmisi("ADE", "2026-07-01", "2026-08-31", oturum)
 
 

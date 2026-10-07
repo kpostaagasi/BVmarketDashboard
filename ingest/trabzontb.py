@@ -41,6 +41,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 TABAN = "https://www.tb.org.tr/uploads/files/970-{gun}.pdf"
@@ -97,8 +99,7 @@ def bulten_cek(gun: date, session: requests.Session | None = None) -> str | None
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
     if yanit.status_code == 404:
         return None
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Trabzon TB HTTP {yanit.status_code} ({gun.isoformat()})")
+    durum_kodu_yukselt(yanit)
 
     with pdfplumber.open(BytesIO(yanit.content)) as pdf:
         return "\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages)

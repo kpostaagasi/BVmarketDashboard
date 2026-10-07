@@ -6,6 +6,7 @@ from io import BytesIO
 
 import openpyxl
 import pytest
+import requests
 
 from core.catalog import Kaynak, Seri
 from ingest import eia
@@ -80,7 +81,7 @@ def test_seri_cek_start_date_onceki_gunleri_atar():
 
 def test_seri_cek_http_hatasinda_yukselir():
     oturum = SahteOturum(SahteYanit(404))
-    with pytest.raises(RuntimeError, match="EER_EPJK_PF4_RGC_DPG"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         eia.seri_cek(_ornek_seri(), session=oturum)
 
 

@@ -27,6 +27,8 @@ from datetime import date
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 ENDPOINT = "https://evds3.tcmb.gov.tr/igmevdsms-dis/fe"
@@ -134,10 +136,7 @@ def seri_cek(seri: Seri, api_key: str, session: requests.Session | None = None,
         json=istek_govdesi(seri.evds_code, seri.evds_frequency, baslangic, bitis),
         timeout=ZAMAN_ASIMI,
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(
-            f"EVDS HTTP {yanit.status_code} ({seri.evds_code})"
-        )
+    durum_kodu_yukselt(yanit)
 
     noktalar = noktalari_ayikla(yanit.json(), seri.evds_code)
     if not noktalar:

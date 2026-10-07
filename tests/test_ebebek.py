@@ -13,6 +13,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 import ingest.ebebek as ebebek
 from ingest.ebebek import magaza_noktalari, satis_noktalari, seri_cek, ziyaret_noktalari
 
@@ -158,7 +160,7 @@ def test_duyuru_listesi_yalniz_ozel_durum_grubunu_alir():
 
 def test_duyuru_listesi_http_hatasi_yukselir():
     oturum = SahteOturum(SahteYanit(status_code=500, text=""))
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         ebebek.duyuru_listesi(session=oturum)
 
 

@@ -15,6 +15,7 @@ from datetime import date
 from types import SimpleNamespace
 
 import pytest
+import requests
 
 from core.takvim import donem_sonu
 
@@ -127,7 +128,7 @@ class SahteOturum:
 
 def test_veri_getir_http_hatasinda_yukselir():
     oturum = SahteOturum(SahteYanit(500))
-    with pytest.raises(RuntimeError, match="500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         _veri_getir("nrg_pc_204", {}, session=oturum)
 
 

@@ -47,6 +47,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_USK_KALEMLERI
 
 TAVSIYE_URL = "https://ulusalsutkonseyi.org.tr/yillara-gore-cig-sut-fiyatlari-2194/"
@@ -251,16 +253,14 @@ BASLIKLAR = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
 def _sayfa_cek(url: str, session=None) -> str:
     http = session or requests
     yanit = http.get(url, timeout=ZAMAN_ASIMI, headers=BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"USK sayfası HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.text
 
 
 def _dosya_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(url, timeout=ZAMAN_ASIMI, headers=BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"USK maliyet PDF'i HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 

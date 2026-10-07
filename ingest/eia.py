@@ -31,6 +31,8 @@ from io import BytesIO
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 TABAN = "https://www.eia.gov/dnav/pet/hist_xls/{kod}d.xls"
@@ -42,8 +44,7 @@ def seri_cek(seri: Seri, session: requests.Session | None = None) -> pd.DataFram
     http = session or requests
     url = TABAN.format(kod=seri.eia_series_id)
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EIA HTTP {yanit.status_code} ({seri.eia_series_id})")
+    durum_kodu_yukselt(yanit)
 
     df = pd.read_excel(
         BytesIO(yanit.content), sheet_name="Data 1", skiprows=3, header=None,

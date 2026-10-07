@@ -60,6 +60,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 LISTE_URL = "https://www.ithib.org.tr/bilgi-merkezi/istatistikler-raporlar/kategori/aylik-ihracat-degerlendirme-bilgi-notlari-7"
 ZAMAN_ASIMI = 60
 
@@ -242,8 +244,7 @@ def _liste_cek(onbellek: dict, session=None) -> dict[tuple[int, int], str]:
         return onbellek["liste"]
     http = session or requests
     yanit = http.get(LISTE_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"İTHİB HTTP {yanit.status_code} (liste sayfası)")
+    durum_kodu_yukselt(yanit)
     liste = liste_baglantilarini_cek(yanit.text)
     onbellek["liste"] = liste
     return liste
@@ -255,8 +256,7 @@ def _bulteni_getir(yil: int, ay: int, url: str, onbellek: dict, session=None) ->
         return onbellek[anahtar]
     http = session or requests
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"İTHİB HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     sonuc = bulteni_ayikla(yanit.content, yil, ay)
     onbellek[anahtar] = sonuc
     return sonuc

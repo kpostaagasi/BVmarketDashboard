@@ -14,6 +14,8 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
+import requests
+
 from ingest.turkcell import (
     CEYREK_SAYFASI,
     en_guncel_dosya_url as tcell_en_guncel_dosya_url,
@@ -206,7 +208,7 @@ def test_en_guncel_dosya_url_next_data_yoksa_hata():
 
 def test_en_guncel_dosya_url_http_hatasi_yukselir():
     oturum = SahteOturum({CEYREK_SAYFASI: SahteYanit(status_code=500)})
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         tcell_en_guncel_dosya_url(session=oturum)
 
 
@@ -412,7 +414,7 @@ def test_ttkom_en_guncel_dosya_url_baglanti_yoksa_hata():
 
 def test_ttkom_en_guncel_dosya_url_http_hatasi_yukselir():
     oturum = SahteOturum({ARSIV_SAYFASI: SahteYanit(status_code=404)})
-    with pytest.raises(RuntimeError, match="HTTP 404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         ttkom_en_guncel_dosya_url(session=oturum)
 
 

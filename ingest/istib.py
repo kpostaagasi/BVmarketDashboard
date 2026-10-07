@@ -53,6 +53,8 @@ from datetime import date, timedelta
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_ISTIB_URUNLERI, Seri
 
 UC = "https://bulten.istib.org.tr/Default/BultenlerAlt"
@@ -161,8 +163,7 @@ def haftalik_bulten_cek(pazartesi: date, session=None) -> str:
         "songun": pazartesi.isoformat(),
     }
     yanit = http.get(UC, params=parametreler, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"İTB HTTP {yanit.status_code} (hafta={pazartesi})")
+    durum_kodu_yukselt(yanit)
     return yanit.text
 
 

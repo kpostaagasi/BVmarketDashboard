@@ -47,6 +47,8 @@ import certifi
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 TABAN = "https://www.ayd.org.tr"
 ZAMAN_ASIMI = 30
 ILK_YIL = 2025
@@ -79,8 +81,7 @@ def _ca_paketi(session=None) -> str:
     pemler = []
     for url in ARA_SERTIFIKA_URLLERI:
         yanit = http.get(url, timeout=ZAMAN_ASIMI)
-        if yanit.status_code != 200:
-            raise RuntimeError(f"AYD: ara sertifika indirilemedi ({url}): HTTP {yanit.status_code}")
+        durum_kodu_yukselt(yanit)
         ham = yanit.content
         pemler.append(ham.decode() if ham.startswith(b"-----") else ssl.DER_cert_to_PEM_cert(ham))
     dosya = tempfile.NamedTemporaryFile("w", suffix=".pem", delete=False)

@@ -25,6 +25,8 @@ from urllib.parse import quote
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 ENDPOINT = "https://query1.finance.yahoo.com/v8/finance/chart"
@@ -80,8 +82,7 @@ def seri_cek(seri: Seri, session: requests.Session | None = None) -> pd.DataFram
         headers={"User-Agent": KULLANICI_AJANI, "Accept": "application/json"},
         timeout=ZAMAN_ASIMI,
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Yahoo HTTP {yanit.status_code} ({seri.yahoo_symbol})")
+    durum_kodu_yukselt(yanit)
 
     noktalar = noktalari_ayikla(yanit.json())
     if not noktalar:

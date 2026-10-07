@@ -25,6 +25,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 TABAN = "https://www.osd.org.tr"
 INDEKS_URL = f"{TABAN}/osd-yayinlari/otomotiv-sanayii-uretim-bultenleri"
 VARSAYILAN_GECMIS_YIL = 5
@@ -213,16 +215,14 @@ _SAYFA_AY_TOPLAM = 1            # 2. sayfa
 def _indeks_cek(session=None) -> dict[str, str]:
     http = session or requests
     yanit = http.get(INDEKS_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"OSD indeksi HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return bulten_baglantilari(yanit.text)
 
 
 def _pdf_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"OSD bülteni HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 
@@ -360,8 +360,7 @@ def degerlendirme_baglantilari(html: str) -> dict[str, str]:
 def _dis_satis_indeks_cek(session=None) -> dict[str, str]:
     http = session or requests
     yanit = http.get(DEGERLENDIRME_INDEKS_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"OSD Değerlendirme Raporu indeksi HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return degerlendirme_baglantilari(yanit.text)
 
 

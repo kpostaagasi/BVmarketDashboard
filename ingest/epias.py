@@ -27,6 +27,8 @@ from datetime import date, timedelta
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 TGT_URL = "https://giris.epias.com.tr/cas/v1/tickets"
@@ -247,10 +249,7 @@ def seri_cek(seri: Seri, tgt: str, session: requests.Session | None = None,
                 },
                 timeout=ZAMAN_ASIMI,
             )
-            if yanit.status_code != 200:
-                raise RuntimeError(
-                    f"EPİAŞ HTTP {yanit.status_code} ({seri.id})"
-                )
+            durum_kodu_yukselt(yanit)
             govde = yanit.json()
             if onbellek is not None:
                 onbellek[anahtar] = govde
@@ -299,8 +298,7 @@ def havza_listesi_cek(tgt: str, session: requests.Session | None = None) -> list
         headers={"TGT": tgt, "Accept": "application/json"},
         timeout=ZAMAN_ASIMI,
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(f"EPİAŞ havza listesi HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return yanit.json()
 
 
@@ -388,8 +386,7 @@ def baraj_doluluk_cek(
             json={"date": f"{bugun.isoformat()}T00:00:00+03:00"},
             timeout=ZAMAN_ASIMI,
         )
-        if yanit.status_code != 200:
-            raise RuntimeError(f"EPİAŞ HTTP {yanit.status_code} ({seri.id})")
+        durum_kodu_yukselt(yanit)
         govde = yanit.json()
         govdeler[anahtar] = govde
         if onbellek is not None:

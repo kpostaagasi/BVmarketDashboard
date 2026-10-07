@@ -6,6 +6,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+import requests
 
 from core.catalog import Kaynak, Seri
 from ingest import trabzontb as ttb
@@ -110,7 +111,7 @@ def test_bulten_cek_404_none_doner():
 def test_bulten_cek_http_hatasi_yukselir():
     url = "https://www.tb.org.tr/uploads/files/970-19.09.2026.pdf"
     oturum = SahteOturum({url: 500})
-    with pytest.raises(RuntimeError, match="500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         ttb.bulten_cek(date(2026, 9, 19), session=oturum)
 
 

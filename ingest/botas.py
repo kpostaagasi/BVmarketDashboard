@@ -81,6 +81,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_BOTAS_KATEGORILERI, Seri
 
 INDEKS_URL = "https://www.botas.gov.tr/Sayfa/satis-fiyat-tarifesi/439"
@@ -232,13 +234,11 @@ def kategori_fiyatlarini_cikar(html: str) -> dict[str, float]:
 def tarifeyi_cek(session=None) -> dict:
     http = session or requests
     indeks = http.get(INDEKS_URL, timeout=ZAMAN_ASIMI)
-    if indeks.status_code != 200:
-        raise RuntimeError(f"BOTAŞ indeks sayfası HTTP {indeks.status_code}")
+    durum_kodu_yukselt(indeks)
     detay_url = guncel_tarife_url(indeks.text)
 
     detay = http.get(detay_url, timeout=ZAMAN_ASIMI)
-    if detay.status_code != 200:
-        raise RuntimeError(f"BOTAŞ detay sayfası HTTP {detay.status_code} ({detay_url})")
+    durum_kodu_yukselt(detay)
     html = detay.text
     return {"tarih": yururluk_tarihi(html), "kategoriler": kategori_fiyatlarini_cikar(html)}
 
@@ -330,8 +330,7 @@ def arsiv_tarifeleri_cek(onbellek: dict, session=None) -> dict[str, dict[str, fl
         for dosya_adi in TARIFE_PDFLERI:
             url = f"{DOSYA_TABANI}/{dosya_adi}"
             yanit = http.get(url, timeout=ZAMAN_ASIMI)
-            if yanit.status_code != 200:
-                raise RuntimeError(f"BOTAŞ tarife PDF'i HTTP {yanit.status_code} ({url})")
+            durum_kodu_yukselt(yanit)
             with pdfplumber.open(BytesIO(_pdf_icerigi(yanit, url))) as pdf:
                 metin = "\n".join(sayfa.extract_text() or "" for sayfa in pdf.pages)
             noktalar[pdf_yururluk_tarihi(metin)] = pdf_kategori_fiyatlari(metin)

@@ -46,6 +46,8 @@ import certifi
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 UC = "https://www.bddk.org.tr/BultenAylik/tr/Home/GelismisRaporGetir"
 ARA_SERTIFIKA_URL = "http://secure.globalsign.com/cacert/gsrsaovsslca2018.crt"
 ZAMAN_ASIMI = 90
@@ -69,10 +71,7 @@ def _ca_paketi(session=None) -> str:
         return _ca_yolu
     http = session or requests
     yanit = http.get(ARA_SERTIFIKA_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(
-            f"GlobalSign ara sertifikası indirilemedi: HTTP {yanit.status_code}"
-        )
+    durum_kodu_yukselt(yanit)
     ham = yanit.content
     pem = ham.decode() if ham.startswith(b"-----") else ssl.DER_cert_to_PEM_cert(ham)
     dosya = tempfile.NamedTemporaryFile("w", suffix=".pem", delete=False)
@@ -197,8 +196,7 @@ def _rapor_cek(kalem: str, taraf: str, bugun: date, session=None,
             timeout=ZAMAN_ASIMI,
             verify=_ca_paketi(session),
         )
-        if yanit.status_code != 200:
-            raise RuntimeError(f"BDDK HTTP {yanit.status_code} (kalem {kalem})")
+        durum_kodu_yukselt(yanit)
         govde = yanit.json()
         if govde.get("success"):
             onbellek["bitis"] = bitis
@@ -283,8 +281,7 @@ def _haftalik_cari_tarih(session=None) -> str:
     yanit = http.get(
         f"{UC_HAFTALIK}/tr", timeout=ZAMAN_ASIMI, verify=_ca_paketi(session),
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(f"BDDK Haftalık Bülten HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     eslesme = re.search(r'"tarih":\s*\x27([\d.]+)\x27', yanit.text)
     if not eslesme:
         raise RuntimeError("BDDK Haftalık Bülten cari tarihi bulunamadı")
@@ -302,8 +299,7 @@ def _haftalik_json_cek(id_: str, sutun: int, taraf: str, tarih: str,
         },
         headers=BASLIKLAR, timeout=ZAMAN_ASIMI, verify=_ca_paketi(session),
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(f"BDDK Haftalık HTTP {yanit.status_code} (id {id_})")
+    durum_kodu_yukselt(yanit)
     return yanit.json()
 
 
@@ -449,8 +445,7 @@ def bdmk_satirlari_ayikla(tablo_html: str) -> dict[str, float]:
 def _bdmk_token(sayfa_url: str, session=None) -> str:
     http = session or requests
     yanit = http.get(sayfa_url, timeout=ZAMAN_ASIMI, verify=_ca_paketi(session))
-    if yanit.status_code != 200:
-        raise RuntimeError(f"BDMK HTTP {yanit.status_code} ({sayfa_url})")
+    durum_kodu_yukselt(yanit)
     eslesme = re.search(
         r'name="__RequestVerificationToken" type="hidden" value="([^"]+)"',
         yanit.text,
@@ -471,10 +466,7 @@ def _bdmk_tablo_cek(rapor_url: str, token: str, tablo_no: int, yil: int, ay: int
         },
         timeout=ZAMAN_ASIMI, verify=_ca_paketi(session),
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(
-            f"BDMK HTTP {yanit.status_code} (tablo {tablo_no}, {yil}-{ay:02d})"
-        )
+    durum_kodu_yukselt(yanit)
     eslesme = _BDMK_TABLO_RE.search(yanit.text)
     if not eslesme:
         return {}

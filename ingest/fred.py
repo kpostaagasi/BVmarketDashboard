@@ -12,6 +12,8 @@ from __future__ import annotations
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 TABAN = "https://fred.stlouisfed.org/graph/fredgraph.csv"
@@ -22,8 +24,7 @@ def seri_cek(seri: Seri, session=None) -> pd.DataFrame:
     """Tam pencereyi yeniden çeker (artımlı değil — revizyonlar yakalanmalı)."""
     http = session or requests
     yanit = http.get(f"{TABAN}?id={seri.fred_code}", timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"FRED HTTP {yanit.status_code} ({seri.fred_code})")
+    durum_kodu_yukselt(yanit)
     df = pd.read_csv(pd.io.common.StringIO(yanit.text))
     df = df.rename(columns={"observation_date": "date", seri.fred_code: "value"})
     df["date"] = pd.to_datetime(df["date"])

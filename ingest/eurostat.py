@@ -60,6 +60,8 @@ from __future__ import annotations
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 TABAN = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data"
@@ -123,8 +125,7 @@ def _veri_getir(dataset: str, onbellek: dict, session=None) -> list[dict]:
         ],
         timeout=ZAMAN_ASIMI,
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Eurostat HTTP {yanit.status_code} ({dataset})")
+    durum_kodu_yukselt(yanit)
     noktalar = _noktalari_coz(yanit.json())
     onbellek[dataset] = noktalar
     return noktalar

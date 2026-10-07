@@ -72,6 +72,8 @@ import pdfplumber
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 LISTE_SAYFASI = "https://www.mkk.com.tr/veri-hizmetleri/mkk-aylik-piyasa-bulteni"
@@ -113,8 +115,7 @@ def dosya_listesi(session=None) -> list[str]:
     """Liste sayfasını kazır, bülten PDF bağlantılarını mutlak URL olarak döner."""
     http = session or requests
     yanit = http.get(LISTE_SAYFASI, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"MKK bülten listesi HTTP {yanit.status_code}: {LISTE_SAYFASI}")
+    durum_kodu_yukselt(yanit)
     return [u if u.startswith("http") else "https://www.mkk.com.tr" + u
             for u in _DOSYA_RE.findall(yanit.text)]
 
@@ -237,8 +238,7 @@ def _tum_noktalar(onbellek: dict, session=None) -> dict[str, dict[str, float]]:
         bultenler = []
         for yol in dosya_listesi(http):
             yanit = http.get(yol, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-            if yanit.status_code != 200:
-                raise RuntimeError(f"MKK bülteni HTTP {yanit.status_code}: {yol}")
+            durum_kodu_yukselt(yanit)
             ad = yol.rsplit("/", 1)[-1]
             yil, ay = _kapak_tarihi(yanit.content, ad)
             bultenler.append(((yil, ay), yanit.content, ad))

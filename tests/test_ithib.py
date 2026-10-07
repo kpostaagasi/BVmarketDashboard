@@ -14,6 +14,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 import ingest.ithib as ithib_mod
 from ingest.ithib import (
     KALEM_IPLIK,
@@ -291,7 +293,7 @@ def test_seri_cek_iki_nokta_uretir_bu_ay_ve_gecen_yil(monkeypatch):
 
 def test_seri_cek_liste_sayfasi_404_hata_verir():
     oturum = SahteOturum({ithib_mod.LISTE_URL: SahteYanit(404)})
-    with pytest.raises(RuntimeError, match="HTTP 404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         seri_cek(ithib_seri(), session=oturum)
 
 
@@ -327,5 +329,5 @@ def test_seri_cek_start_date_oncesini_kirpar(monkeypatch):
 
 def test_bulteni_getir_pdf_404_hata_verir():
     oturum = SahteOturum({})
-    with pytest.raises(RuntimeError, match="HTTP 404"):
+    with pytest.raises(requests.HTTPError, match="HTTP 404"):
         _bulteni_getir(2026, 8, "https://x/yok.pdf", {}, oturum)

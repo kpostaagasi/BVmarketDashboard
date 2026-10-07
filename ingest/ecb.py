@@ -21,6 +21,8 @@ from __future__ import annotations
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import Seri
 
 TABAN = "https://data-api.ecb.europa.eu/service/data"
@@ -40,10 +42,7 @@ def seri_cek(seri: Seri, session=None) -> pd.DataFrame:
             f"ECB'de seri bulunamadı: {seri.ecb_akis}/{seri.ecb_anahtar} "
             f"(HTTP 404) — ecb_akis/ecb_anahtar yanlış olabilir"
         )
-    if yanit.status_code != 200:
-        raise RuntimeError(
-            f"ECB HTTP {yanit.status_code} ({seri.ecb_akis}/{seri.ecb_anahtar})"
-        )
+    durum_kodu_yukselt(yanit)
     df = pd.read_csv(pd.io.common.StringIO(yanit.text))
     if "TIME_PERIOD" not in df.columns or "OBS_VALUE" not in df.columns:
         raise RuntimeError(

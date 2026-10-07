@@ -35,6 +35,8 @@ from __future__ import annotations
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_TUIK_KANATLI_OLCUTLERI, Seri
 
 UC = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/apro_mt_pwgtm"
@@ -63,8 +65,7 @@ def _json_cek(session=None) -> dict:
         },
         timeout=ZAMAN_ASIMI,
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(f"Eurostat HTTP {yanit.status_code} (apro_mt_pwgtm)")
+    durum_kodu_yukselt(yanit)
     return yanit.json()
 
 

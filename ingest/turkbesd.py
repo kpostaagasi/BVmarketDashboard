@@ -59,6 +59,8 @@ import openpyxl
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_TURKBESD_OLCUTLERI, GECERLI_TURKBESD_URUNLERI
 
 SAYFA_URL = "https://www.turkbesd.org/turkbesd-son-5-yilin-rakamlari/"
@@ -169,16 +171,14 @@ def yil_verisini_ayikla(baytlar: bytes, olcut: str) -> dict[str, dict[int, float
 def _sayfa_cek(session=None) -> str:
     http = session or requests
     yanit = http.get(SAYFA_URL, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TÜRKBESD sayfası HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     return yanit.text
 
 
 def _dosya_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TÜRKBESD XLSX indirme HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 

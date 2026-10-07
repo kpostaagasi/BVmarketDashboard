@@ -14,6 +14,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 from ingest.thy import (
     PDF_TOPLAM_OLCUTLERI,
     SUNUMLAR_SAYFASI,
@@ -311,7 +313,7 @@ def test_sunum_bilgisi_baglanti_yoksa_hata():
 
 def test_sunum_bilgisi_http_hatasi_yukselir():
     oturum = SahteOturum({SUNUMLAR_SAYFASI: SahteYanit(b"", status_code=500)})
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         sunum_bilgisi(session=oturum)
 
 

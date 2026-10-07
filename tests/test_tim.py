@@ -12,6 +12,8 @@ from types import SimpleNamespace
 import openpyxl
 import pytest
 
+import requests
+
 from ingest.tim import (
     IL_GENEL_TOPLAM,
     bulten_url,
@@ -316,7 +318,7 @@ def test_seri_cek_start_date_oncesini_kirpar():
 def test_seri_cek_http_hatasi_yukselir():
     """404 "henüz yok" demek; 500 sessizce yutulmamalı."""
     oturum = SahteOturum({bulten_url(2019, 12): SahteYanit(500)})
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         seri_cek(tim_seri(), session=oturum, bugun=date(2019, 12, 31))
 
 

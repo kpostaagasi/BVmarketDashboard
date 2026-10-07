@@ -96,6 +96,8 @@ import openpyxl
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_TAV_OLCUTLERI, GECERLI_TAV_SEGMENTLERI
 
 LISTE_SAYFASI = "https://ir.tav.aero/en-EN/financials-and-operationals"
@@ -147,10 +149,7 @@ def dosya_listesi(session=None) -> list[str]:
     yanit = http.get(
         LISTE_SAYFASI, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI
     )
-    if yanit.status_code != 200:
-        raise RuntimeError(
-            f"TAV finansal/operasyonel sayfası HTTP {yanit.status_code}"
-        )
+    durum_kodu_yukselt(yanit)
     baglantilar = re.findall(r'href="([^"]+\.xlsx)"', yanit.text)
 
     def damga(url: str):
@@ -351,8 +350,7 @@ def ucus_noktalari(baytlar: bytes) -> dict[tuple[str, str], dict[str, float]]:
 def _dosya_indir(url: str, session=None) -> bytes:
     http = session or requests
     yanit = http.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TAV trafik bülteni HTTP {yanit.status_code}: {url}")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 

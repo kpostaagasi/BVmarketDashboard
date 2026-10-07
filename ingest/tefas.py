@@ -37,6 +37,8 @@ from datetime import date, timedelta
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 from core.catalog import GECERLI_TEFAS_OLCUTLERI, GECERLI_TEFAS_TIPLERI
 
 UC = "https://www.tefas.gov.tr/api/funds/fonGnlBlgSiraliGetir"
@@ -188,8 +190,7 @@ def _gun_cek(tip: str, gun: date, session=None) -> list[dict] | None:
                 )
             time.sleep(GERI_CEKILME_SANIYE)
             continue
-        if yanit.status_code != 200:
-            raise RuntimeError(f"TEFAS HTTP {yanit.status_code} ({tip} {gun})")
+        durum_kodu_yukselt(yanit)
         break
     govde = yanit.json()
     satirlar = govde.get("resultList")
@@ -288,8 +289,7 @@ def fon_gecmisi(
     govde["bitTarih"] = bit_gun.strftime("%Y%m%d")
     yanit = http.post(UC, data=json.dumps(govde), headers=BASLIKLAR,
                       timeout=ZAMAN_ASIMI)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TEFAS HTTP {yanit.status_code} ({fon_kodu})")
+    durum_kodu_yukselt(yanit)
     sonuc = yanit.json()
     mesaj = sonuc.get("errorMessage") or ""
     if sonuc.get("errorCode"):

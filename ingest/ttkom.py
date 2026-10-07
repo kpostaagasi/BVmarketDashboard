@@ -61,6 +61,8 @@ import openpyxl
 import pandas as pd
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 TABAN = "https://www.ttyatirimciiliskileri.com.tr"
 ARSIV_SAYFASI = f"{TABAN}/tr-tr/mali-operasyonel-veriler/sayfalar/ceyrek-donem-sonuclari"
 ZAMAN_ASIMI = 60
@@ -107,8 +109,7 @@ def en_guncel_dosya_url(session=None) -> str:
     xlsx bağlantısı (liste yeniden-eskiye sıralı, ilk eşleşme en güncel)."""
     http = session or requests
     yanit = http.get(ARSIV_SAYFASI, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TTKOM çeyrek sonuçları sayfası HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     eslesme = _DOSYA_BAGLANTISI.search(yanit.text)
     if not eslesme:
         raise RuntimeError(
@@ -210,8 +211,7 @@ def _kitabi_getir(onbellek: dict, session=None):
     http = session or requests
     url = en_guncel_dosya_url(session)
     yanit = http.get(url, timeout=ZAMAN_ASIMI, headers=_BASLIKLAR)
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TTKOM F&O Excel'i indirilemedi ({url}): HTTP {yanit.status_code}")
+    durum_kodu_yukselt(yanit)
     onbellek["kitap"] = openpyxl.load_workbook(io.BytesIO(yanit.content), data_only=True)
     return onbellek["kitap"]
 

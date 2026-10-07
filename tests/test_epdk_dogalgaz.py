@@ -15,6 +15,7 @@ MarketVisuals'ın epdk_dogalgaz_verileri.html kartlarıyla BİREBİR eşleşti.
 from types import SimpleNamespace
 
 import pytest
+import requests
 from ingest.epdk import (
     AYGAZ_SIRKET_ADI,
     BOTAS_SIRKET_ADI,
@@ -295,7 +296,7 @@ def test_dogalgaz_seri_cek_dosya_listesi_bos_donerse_hata():
 
 def test_dogalgaz_seri_cek_liste_http_hatasinda_yukselir():
     oturum = SahteOturum({"dogal-gazaylik-sektor-raporu": SahteYanit(500)})
-    with pytest.raises(RuntimeError, match="500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         dogalgaz_seri_cek(dogalgaz_seri(), onbellek={}, session=oturum)
 
 

@@ -8,6 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 from ingest.tcud import (
     GECERLI_TCUD_KALEMLERI,
     KALEM_CIN,
@@ -285,7 +287,7 @@ def test_seri_cek_yayimlanmamis_cari_ayi_atlar():
 def test_seri_cek_http_hatasi_yukselir():
     """404 'henüz yok' demek; 500 sessizce yutulmamalı."""
     oturum = SahteOturum({bulten_url(2026, 1): SahteYanit(500, "")})
-    with pytest.raises(RuntimeError, match="HTTP 500"):
+    with pytest.raises(requests.HTTPError, match="HTTP 500"):
         seri_cek(tcud_seri(), onbellek={}, session=oturum, bugun=date(2026, 1, 31))
 
 

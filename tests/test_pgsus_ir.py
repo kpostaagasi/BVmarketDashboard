@@ -12,6 +12,8 @@ from types import SimpleNamespace
 
 import pytest
 
+import requests
+
 from ingest.pgsus import (
     SUNUMLARIMIZ_SAYFASI,
     _arti_nakit_noktasi,
@@ -276,7 +278,7 @@ def test_sunum_bilgisi_baglanti_yoksa_hata():
 
 def test_sunum_bilgisi_http_hatasi_yukselir():
     oturum = SahteOturum({SUNUMLARIMIZ_SAYFASI: SahteYanit(b"", status_code=503)})
-    with pytest.raises(RuntimeError, match="HTTP 503"):
+    with pytest.raises(requests.HTTPError, match="HTTP 503"):
         sunum_bilgisi(session=oturum)
 
 

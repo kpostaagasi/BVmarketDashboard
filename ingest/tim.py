@@ -40,6 +40,8 @@ import pandas as pd
 import pdfplumber
 import requests
 
+from ingest.http import durum_kodu_yukselt
+
 TABAN = "https://tim.org.tr"
 ZAMAN_ASIMI = 60
 SAYFA_ADI = "SEKTOR"
@@ -440,8 +442,7 @@ def _bulten_indir(url: str, session=None) -> bytes | None:
     yanit = http.get(url, timeout=ZAMAN_ASIMI)
     if yanit.status_code == 404:
         return None
-    if yanit.status_code != 200:
-        raise RuntimeError(f"TİM HTTP {yanit.status_code} ({url})")
+    durum_kodu_yukselt(yanit)
     return yanit.content
 
 
@@ -1051,8 +1052,7 @@ def pazar_monitoru_bulten_baglantilari(session=None) -> dict[tuple[int, int], st
     bkz. modül üstü not — URL asla yeniden inşa edilmez)."""
     http = session or requests
     ana = http.get(PAZAR_MONITORU_INDEKS_URL, timeout=ZAMAN_ASIMI)
-    if ana.status_code != 200:
-        raise RuntimeError(f"TİM İPM arşiv ana sayfası HTTP {ana.status_code}")
+    durum_kodu_yukselt(ana)
 
     yil_sayfalari: dict[int, str] = {}
     for eslesme in _PM_YIL_BAGLANTISI.finditer(ana.text):
