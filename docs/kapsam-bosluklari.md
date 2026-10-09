@@ -65,6 +65,7 @@ Bunlar "eksik veri" değil — çoğu sitenin kendi türetilmiş görünümü:
 | TİM Pazar Monitörü 10 aylık boşluk | **Kapatıldı** — 47 CSV'nin 47'si de 12 satır (2024-12 → 2026-08). |
 | THY / Pegasus / ebebek tek satırlık serileri | **Kapatıldı** — arşiv sunumlar/PDF'ler taranmıyordu. |
 | `otomotiv/asuzu-kamyonet-ihracat` | **Kaldırıldı** — A.I.O.S. 6 bültenin 12'sinde de "-" bildirmiş; sahte 0 yazmak yerine seri silindi. |
+| `tcmb_menkul_kiymet` haftalık toplam | **Kapatıldı** — `ekonomi-makro/yabanci-portfoy-net-degisim` (`TP.MKNETHAR.M20`, Net Değişim Genel Toplam, 317 hafta, son 2026-10-02). Not: önceki notun −316,01 değeri CSV'de birebir bulunamadı (EVDS ana sayfası revize/farklı hafta gösteriyor olabilir); `M21`–`M26` alt kırılımları eklenmedi. Keşif ucu: `/categories/withDatagroups` + `/serieList/fe` (bkz. `tools/evds_kesif.py`); `/GroupList`, `/tumSeriler`, `/md` bu ağdan 400/403/404. |
 
 ## Ücretli lisans arkasında (19 kart)
 
@@ -92,7 +93,6 @@ Kullanıcı kararı (2026-09-20): **lisans alınmayacak, boşluk belgelenecek.**
 | Panelder PMI | **YAPILAMAZ** — sayı yalnızca sayı basılı bir JPEG'de; metin katmanı yok. |
 | TÜİK J61 hizmet üretim/ciro endeksleri | EVDS'de yayımlanmıyor (daha önce ölçüldü, yeniden doğrulanmadı). |
 | `ecb_car_registrations` mevsimsellik/iş günü düzeltmeli | ECB CAR akışında **yalnız `PN`** (düzeltmesiz) varyantı var (`N.K`, `N.S` → HTTP 404). Sitenin "Tescil (mevsimsellik arındırılmış)" kartı kendi render-time türetimi; bizde `mevsimsellik_figuru` var. |
-| `tcmb_menkul_kiymet` haftalık toplam | EVDS ana sayfa "Yurt Dışı Yerleşikler MK Portföyü (Net Değişim) (Haftalık)" = −316,01 mn USD yayımlıyor; bizde yok. **EVDS'in diğer uçları (`/GroupList`, `/tumSeriler`, `/md`) bu ağdan 400/403/404**, ama çalışan grup sözlüğü ucu var: `/categories/withDatagroups` + `/serieList/fe` (bkz. `tools/evds_kesif.py`). Bu uçlar taranmalı — aşağıdaki TÜFE boşluğu tam olarak bu yüzden kaçmıştı. |
 
 ## TÜİK Veri Portalı — GEREKMEDİĞİ DOĞRULANDI
 

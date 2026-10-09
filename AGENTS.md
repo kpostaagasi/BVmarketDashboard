@@ -56,7 +56,7 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 |---|---|
 | `core/` | App layer: catalog, data I/O, stats, charts, theme, components, page, takvim, ozet |
 | `ingest/` | `run.py` orchestrator + 57 adapter modülü (66 `kaynak_tipi` değerini karşılar) |
-| `catalog/` | `series.yaml` (4.225 seri), `categories.yaml` (51 kategori / 6 grup), `hisseler.yaml` (8 hisse) |
+| `catalog/` | `series.yaml` (4.226 seri), `categories.yaml` (51 kategori / 6 grup), `hisseler.yaml` (8 hisse) |
 | `data/<kategori>/<seri>.csv` | committed CSV artifact (~43 MB), one per series |
 | `tests/` | 84 flat pytest files (1.366 test), no `conftest.py`, no fixture data files |
 | `docs/superpowers/{specs,plans}/` | Per-phase design specs ve execution planları (Turkish) — **koddan geride kalıyor**, aşağıdaki "Docs Drift" gotchasına bak |
@@ -64,7 +64,7 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 ## Project Scale (2026-10-02 itibarıyla)
 
 | | |
-| Seri | 4.225 |
+| Seri | 4.226 |
 | Kategori | 51 (6 `grup` altında) |
 | Hisse sayfası | 8 (`catalog/hisseler.yaml`) |
 | `kaynak_tipi` değeri | 66 |
@@ -245,7 +245,7 @@ markers = [
   yani faz 3h+ ve sonrası kod olarak var, spec/plan dosyası yok. Yeni bir
   kaynak adaptörü eklerken faz etiketi uydurma; dosya yoksa belgelerin
   kapsamadığını bil ve kodu doğrulamak için kataloğa/`ingest/run.py`'ye bak.
-- **`README.md` güncel** (2026-10-02 sayılar elle eşitlendi): 4.225 seri /
+- **`README.md` güncel** (2026-10-09 sayılar elle eşitlendi): 4.226 seri /
   51 kategori / 8 ticker / 57 adaptör, yol haritası "Faz 3 Planlandı"
   demiyor. Tek eksik: `kaynak_tipi` satırı 8 örnek listeliyor (gerçekte 66
   değer var) — salt örnek, yanlış değil. Sayılar elle tutuluyor, otomatik

@@ -41654,6 +41654,18 @@
   monthly_agg: last
   charts: [level, seasonality]
 
+- id: ekonomi-makro/yabanci-portfoy-net-degisim
+  title: Yurt Dışı Yerleşikler Menkul Kıymet Portföyü - Net Değişim Genel Toplam
+  category: ekonomi-makro
+  kaynak: { name: TCMB EVDS, url: "https://evds3.tcmb.gov.tr" }
+  kaynak_tipi: evds
+  unit: "Milyon USD"
+  freq: weekly
+  evds_code: TP.MKNETHAR.M20
+  evds_frequency: "2"
+  monthly_agg: sum
+  charts: [level, seasonality]
+
 # ===== beklentiler (15 yeni seri) =====
 
 - id: beklentiler/tufe-cari-ay
