@@ -356,6 +356,10 @@ def erisilemez_mi(hata: BaseException) -> bool:
     hak eder. 401/402/407 de kapsam dışı: kimlik bilgisi/yetki =
     yapılandırma hatası, zaten aksi hâlde `main()` 2 döndürüyor.
 
+    EPİAŞ'ın bir havzayı o gün raporlamaması da aynı sınıftır
+    (`epias.BarajRaporlanmamisHatasi`, 12 Ekim 2026). Tür ile tanınır,
+    metinle değil.
+
     Çıplak `RuntimeError("okuma zaman aşımı")` erişilemez DEĞİLDİR. Her
     zaman aşımı yazısını yeşil saymak, gerçek kod hatasını gizler.
     """
@@ -373,6 +377,8 @@ def erisilemez_mi(hata: BaseException) -> bool:
         if isinstance(adim, requests.exceptions.Timeout):
             return True
         if isinstance(adim, ssl.SSLError):
+            return True
+        if isinstance(adim, epias.BarajRaporlanmamisHatasi):
             return True
         if isinstance(adim, requests.exceptions.HTTPError):
             yanit = adim.response
