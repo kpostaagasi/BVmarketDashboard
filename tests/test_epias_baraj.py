@@ -194,3 +194,19 @@ def test_havza_listesi_cek_http_hatasinda_yukselir():
     oturum = SahteCokluOturum({"basin-list": SahteYanit(404)})
     with pytest.raises(requests.HTTPError, match="HTTP 404"):
         havza_listesi_cek("TGT-abc", session=oturum)
+
+
+def test_kapasite_agirlikli_doluluk_havza_raporlanmamissa_ayri_tur_yukselir():
+    # Havzanın barajı dam-volume'da var, active-volume'da yok (12 Ekim 2026).
+    from ingest.epias import BarajRaporlanmamisHatasi
+
+    with pytest.raises(BarajRaporlanmamisHatasi, match="Asi"):
+        _kapasite_agirlikli_doluluk({}, {1: 100.0}, {1: "Asi"}, "Asi")
+
+
+def test_kapasite_agirlikli_doluluk_taninmayan_havza_raporlanmamis_sayilmaz():
+    from ingest.epias import BarajRaporlanmamisHatasi
+
+    with pytest.raises(RuntimeError, match="tanınmıyor") as hata:
+        _kapasite_agirlikli_doluluk({}, {1: 100.0}, {1: "Asi"}, "Yok")
+    assert not isinstance(hata.value, BarajRaporlanmamisHatasi)

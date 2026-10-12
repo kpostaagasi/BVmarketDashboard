@@ -602,6 +602,22 @@ def test_erisilemez_mi_runtimeerror_http_404_degil():
     assert not run.erisilemez_mi(RuntimeError("sayfa HTTP 404"))
 
 
+def test_erisilemez_mi_baraj_raporlanmamis():
+    from ingest import epias, run
+
+    assert run.erisilemez_mi(
+        epias.BarajRaporlanmamisHatasi("'Asi' havzasının barajları yok")
+    )
+
+
+def test_erisilemez_mi_baraj_taninmayan_havza_degil():
+    from ingest import run
+
+    assert not run.erisilemez_mi(
+        RuntimeError("EPİAŞ baraj doluluk: 'Yok' havzası tanınmıyor")
+    )
+
+
 def test_erisilemez_mi_sablon_hatasi_degil():
     from ingest import run
 

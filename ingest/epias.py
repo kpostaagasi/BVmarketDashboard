@@ -302,6 +302,19 @@ def havza_listesi_cek(tgt: str, session: requests.Session | None = None) -> list
     return yanit.json()
 
 
+class BarajRaporlanmamisHatasi(RuntimeError):
+    """Havzanın barajları `dam-volume`'da var ama bugünkü `active-volume`
+    yanıtında yok: kaynak o havzayı henüz raporlamamış.
+
+    Ayrı tür, çünkü bu bizim kodumuzun değil kaynağın boşluğu.
+    `ingest.run.erisilemez_mi` bunu tanır ve koşuyu kırmızı yapmaz (12 Ekim
+    2026: Asi, Susurluk, Marmara, Kuzey Ege aynı gün raporlanmadı, tek sebep
+    buydu). Baraj CSV'leri biriktirildiği için geçmiş kaybolmaz, yalnızca o
+    günün noktası eksik kalır. Tanınmayan havza ise düz `RuntimeError`
+    olarak kalır: o katalog hatasıdır.
+    """
+
+
 def _kapasite_agirlikli_doluluk(
     aktif_hacimler: dict, kapasiteler: dict, havza_by_id: dict, havza: str | None
 ) -> float:
@@ -339,7 +352,7 @@ def _kapasite_agirlikli_doluluk(
             # baraj döndü; Gediz'in tek barajı (DEMİRKÖPRÜ) hacim yanıtında
             # yoktu. Bu kaynak tarafı boşluğu — sıfır yazmak veriyi yanlış
             # temsil eder, bu yüzden patlatıyoruz.
-            raise RuntimeError(
+            raise BarajRaporlanmamisHatasi(
                 f"EPİAŞ baraj doluluk: '{etiket}' havzasının barajları bugünkü "
                 "active-volume yanıtında yok (kaynak henüz raporlamamış)"
             )
