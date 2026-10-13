@@ -114,6 +114,6 @@ repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 | 7 | TEFAS fon ailesi (969 fon), TİM il×sektör (741) ve ülke×sektör (674) kırılımları | ✅ |
 | 8 | Sektör aileleri: havacılık IR derinliği, otomotiv marka/pazar (OSD+ODMD+TAİD), beyaz eşya (TÜRKBESD), çelik (TÇÜD), tekstil (İTHİB), makarna (TMSD), çimento, su ürünleri/hayvansal (EİB), çiğ süt (USK), sigorta (TSB), sermaye piyasaları (TSPB), sağlık (SGK), liman (UAB), turizm (KTB+EVDS), doğal gaz (EPDK+BOTAŞ), İSO sektörel PMI, TİM pazar monitörü | ✅ |
 | 9 | Görünümler: YoY / MoM / Çeyreklik toplulaştırma, `freq: yearly` desteği | ✅ |
-| 10 | Favoriler, AI raporları | Planlandı |
+| 10 | Favoriler (yer imi, `?f=`) ve veri raporları (ölçülmüş gözlemden cümle; model yok) | ✅ |
 
 Tasarım detayları: `docs/superpowers/specs/2026-08-27-streamlit-dashboard-design.md`

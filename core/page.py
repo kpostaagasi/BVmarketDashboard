@@ -35,7 +35,14 @@ from core.components import (
     piyasa_karti_html,
 )
 from core.data import VeriYokHatasi, load_series
+from core.favori import (
+    FAVORI_TAVANI,
+    favori_degistir,
+    favori_metni,
+    favorileri_coz,
+)
 from core.ozet import OzetSatiri, one_cikanlar, ozet_uret, son_yayimlananlar
+from core.rapor import hisse_raporu, piyasa_raporu
 from core.stats import GORUNUMLER, VARSAYILAN
 from core.takvim import GUNCEL, tablo_df, takvim, uyari_basligi, uyari_govdesi
 
@@ -152,7 +159,54 @@ def kategori_sayfasi_yap(kategori: Kategori) -> Callable[[], None]:
     return sayfa
 
 
-def _izgara_ciz(seriler: list[Seri], gorunum: str, sutun_sayisi: int = 2) -> None:
+def _favori_param() -> str:
+    ham = st.query_params.get("f", "")
+    if isinstance(ham, list):
+        return ham[0] if ham else ""
+    return str(ham)
+
+
+def _favorileri_yukle(gecerli: set[str]) -> list[str]:
+    if "favori_secim" not in st.session_state:
+        st.session_state["favori_secim"] = favorileri_coz(_favori_param(), gecerli)
+    else:
+        temiz = [i for i in st.session_state["favori_secim"] if i in gecerli]
+        if temiz != st.session_state["favori_secim"]:
+            st.session_state["favori_secim"] = temiz
+    return list(st.session_state["favori_secim"])
+
+
+def _favorileri_kaydet(idler: list[str]) -> None:
+    st.session_state["favori_secim"] = idler
+    metin = favori_metni(idler)
+    if _favori_param() == metin:
+        return
+    if metin:
+        st.query_params["f"] = metin
+    elif "f" in st.query_params:
+        del st.query_params["f"]
+
+
+def _favori_dugmesi(seri_id: str) -> None:
+    gecerli = {s.id for s in seri_listele()}
+    idler = _favorileri_yukle(gecerli)
+    secili = seri_id in idler
+    etiket = "★ Favoride" if secili else "☆ Favoriye al"
+    if st.button(etiket, key=f"favori_{seri_id}"):
+        yeni = favori_degistir(idler, seri_id)
+        if yeni == idler and not secili:
+            st.toast(f"Favori listesi dolu ({FAVORI_TAVANI})")
+            return
+        _favorileri_kaydet(yeni)
+        st.rerun()
+
+
+def _izgara_ciz(
+    seriler: list[Seri],
+    gorunum: str,
+    sutun_sayisi: int = 2,
+    favori: bool = True,
+) -> None:
     """Grafik ızgarası — kategori sayfasıyla aynı ritim.
 
     `sutun_sayisi` yalnızca hisse sayfasının şirket bloğu için 1 olur: tek
@@ -166,6 +220,8 @@ def _izgara_ciz(seriler: list[Seri], gorunum: str, sutun_sayisi: int = 2) -> Non
     sutunlar = st.columns(sutun_sayisi)
     for sira, seri in enumerate(seriler):
         with sutunlar[sira % sutun_sayisi]:
+            if favori:
+                _favori_dugmesi(seri.id)
             if "composition" in seri.charts:
                 kompozisyon_karti(seri)
             else:
@@ -454,7 +510,7 @@ def fon_sayfasi() -> None:
         key="fon_secim",
         label_visibility="collapsed",
     )
-    st.divider()
+    _favori_dugmesi(secim)
     fon_karti(indeks[secim])
 
 
@@ -486,3 +542,93 @@ def veri_takvimi_sayfasi() -> None:
         column_config=TAKVIM_SUTUN_AYARI,
         column_order=takvim_sutun_sirasi(df),
     )
+
+
+def favori_sayfasi() -> None:
+    """Kayıtlı seriler. Liste `?f=` ile yer imine yazılır; oturum da onu taşır."""
+    indeks = {s.id: s for s in seri_listele()}
+    basliklar = {k.slug: k.title for k in kategorileri_yukle()}
+    mevcut = _favorileri_yukle(set(indeks))
+
+    st.title("Favoriler")
+    st.caption(
+        f"{len(mevcut)} / {FAVORI_TAVANI} seri · "
+        "Kalıcılık adres çubuğundaki ?f= parametresinde. Yer imine ekleyin."
+    )
+    secim = st.multiselect(
+        "Seri",
+        list(indeks),
+        format_func=lambda seri_id: arama_etiketi(indeks[seri_id], basliklar),
+        key="favori_secim",
+        max_selections=FAVORI_TAVANI,
+        label_visibility="collapsed",
+        placeholder="Seri, kategori ya da birim yazın",
+    )
+    metin = favori_metni(list(secim))
+    if _favori_param() != metin:
+        if metin:
+            st.query_params["f"] = metin
+        elif "f" in st.query_params:
+            del st.query_params["f"]
+    if not secim:
+        return
+
+    gorunum = st.segmented_control(
+        "Görünüm",
+        GORUNUMLER,
+        default=VARSAYILAN,
+        key="gorunum_favori",
+        label_visibility="collapsed",
+    )
+    st.divider()
+    _izgara_ciz(
+        [indeks[i] for i in secim],
+        gorunum or VARSAYILAN,
+        favori=False,
+    )
+
+
+def _rapor_parcalari(idler: tuple[str, ...]) -> tuple[list[OzetSatiri], list[str]]:
+    bulunan = {s.seri.id: s for s in _ozet_satirlari(idler, date.today())}
+    satirlar: list[OzetSatiri] = []
+    eksik: list[str] = []
+    for seri_id in idler:
+        if seri_id in bulunan:
+            satirlar.append(bulunan[seri_id])
+        else:
+            eksik.append(seri_getir(seri_id).title)
+    return satirlar, eksik
+
+
+def rapor_sayfasi() -> None:
+    """Hisse ve piyasa özeti. Cümleler ölçülmüş gözlemdir; model çağrısı yok."""
+    hisseler = list(hisseleri_yukle())
+    secenekler = ["piyasa", *[h.kod for h in hisseler]]
+    etiket = {"piyasa": "Piyasa özeti"}
+    etiket.update({h.kod: f"{h.kod} · {h.title}" for h in hisseler})
+
+    st.title("Raporlar")
+    st.caption("Sayıdan üretilir. Model yok. Alım-satım önerisi değildir.")
+    secim = st.selectbox(
+        "Rapor",
+        secenekler,
+        format_func=etiket.get,
+        key="rapor_secim",
+        label_visibility="collapsed",
+    )
+    st.divider()
+
+    if secim == "piyasa":
+        artan, dusen = one_cikanlar(
+            _ozet_satirlari(ozet_adaylari(), date.today()), adet=5
+        )
+        st.markdown(piyasa_raporu(artan, dusen))
+        _izgara_ciz([s.seri for s in [*artan, *dusen]], VARSAYILAN)
+        return
+
+    hisse = next(h for h in hisseler if h.kod == secim)
+    kendi, eksik_kendi = _rapor_parcalari(hisse.kendi)
+    baglam, eksik_baglam = _rapor_parcalari(hisse.baglam)
+    st.markdown(hisse_raporu(hisse, kendi, baglam, [*eksik_kendi, *eksik_baglam]))
+    st.divider()
+    _izgara_ciz([s.seri for s in [*kendi, *baglam]], VARSAYILAN)

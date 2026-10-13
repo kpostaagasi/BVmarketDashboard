@@ -10,10 +10,12 @@ from core.catalog import KATEGORI_GRUPLARI, hisseleri_yukle, kategorileri_yukle
 from core.components import stil_uygula
 from core.page import (
     arama_sayfasi,
+    favori_sayfasi,
     fon_sayfasi,
     genel_bakis_yap,
     hisse_sayfasi_yap,
     kategori_sayfasi_yap,
+    rapor_sayfasi,
     veri_takvimi_sayfasi,
 )
 
@@ -58,6 +60,18 @@ arama = st.Page(
     url_path="ara",
 )
 
+favoriler = st.Page(
+    favori_sayfasi,
+    title="Favoriler",
+    url_path="favoriler",
+)
+
+raporlar = st.Page(
+    rapor_sayfasi,
+    title="Raporlar",
+    url_path="raporlar",
+)
+
 fonlar_sayfasi = st.Page(
     fon_sayfasi,
     title="Fonlar",
@@ -90,7 +104,7 @@ bolumler = {
 
 st.navigation(
     {
-        "Genel": [ana_sayfa, arama, fonlar_sayfasi, takvim_sayfasi],
+        "Genel": [ana_sayfa, arama, favoriler, raporlar, fonlar_sayfasi, takvim_sayfasi],
         **bolumler,
         "Hisseler": hisse_sayfalari,
     },

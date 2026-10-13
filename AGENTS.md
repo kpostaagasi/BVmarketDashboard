@@ -54,7 +54,7 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 
 | Path | Purpose |
 |---|---|
-| `core/` | App layer: catalog, data I/O, stats, charts, theme, components, page, takvim, ozet |
+| `core/` | App layer: catalog, data I/O, stats, charts, theme, components, page, takvim, ozet, favori, rapor |
 | `ingest/` | `run.py` orchestrator + 57 adapter modülü (66 `kaynak_tipi` değerini karşılar) |
 | `catalog/` | `series.yaml` (4.226 seri), `categories.yaml` (51 kategori / 6 grup), `hisseler.yaml` (8 hisse) |
 | `data/<kategori>/<seri>.csv` | committed CSV artifact (~43 MB), one per series |
