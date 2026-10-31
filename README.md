@@ -1,8 +1,17 @@
 # BV Market Dashboard
 
-Türkiye ekonomisi için veri ve grafikler — BV Portföy iç kullanımı.
-Resmi kaynaklardan otomatik veri çekme, normalize etme, hazır
-istatistikli grafik sayfaları olarak sunma.
+Türkiye ekonomisi için veri ve grafik panosu (BV Portföy iç kullanımı).
+Resmi ve sektörel kaynaklardan veriyi her gün otomatik çeker, normalize eder ve
+hazır istatistikli grafik sayfaları olarak sunar.
+
+| Kapsam | Sayı |
+|---|---|
+| Veri serisi | 4.226 |
+| Kategori | 51 |
+| Kaynak adaptörü | 57 |
+| Hisse sayfası | 8 |
+
+**Teknoloji:** Python, Streamlit, TCMB EVDS API, GitHub Actions
 
 ## Mimari
 
@@ -90,7 +99,7 @@ seri id'si `KatalogHatasi` verir.
 
 ## Deploy
 
-Streamlit Community Cloud, private repo. Erişim viewer allowlist'i ile
+Streamlit Community Cloud. Uygulamaya erişim viewer allowlist'i ile
 BV Portföy e-postalarına kısıtlıdır.
 
 Uygulama hareketsizlik sonrası uykuya dalar; günün ilk kullanıcısı
@@ -102,6 +111,11 @@ Uygulama hareketsizlik sonrası uykuya dalar; günün ilk kullanıcısı
 repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 
 ## Yol haritası
+
+10 fazın tamamı bitti.
+
+<details>
+<summary>Fazları göster</summary>
 
 | Faz | İçerik | Durum |
 |---|---|---|
@@ -115,5 +129,7 @@ repo secret'ına `EVDS_API_KEY` olarak ekleyin.
 | 8 | Sektör aileleri: havacılık IR derinliği, otomotiv marka/pazar (OSD+ODMD+TAİD), beyaz eşya (TÜRKBESD), çelik (TÇÜD), tekstil (İTHİB), makarna (TMSD), çimento, su ürünleri/hayvansal (EİB), çiğ süt (USK), sigorta (TSB), sermaye piyasaları (TSPB), sağlık (SGK), liman (UAB), turizm (KTB+EVDS), doğal gaz (EPDK+BOTAŞ), İSO sektörel PMI, TİM pazar monitörü | ✅ |
 | 9 | Görünümler: YoY / MoM / Çeyreklik toplulaştırma, `freq: yearly` desteği | ✅ |
 | 10 | Favoriler (yer imi, `?f=`) ve veri raporları (ölçülmüş gözlemden cümle; model yok) | ✅ |
+
+</details>
 
 Tasarım detayları: `docs/superpowers/specs/2026-08-27-streamlit-dashboard-design.md`
