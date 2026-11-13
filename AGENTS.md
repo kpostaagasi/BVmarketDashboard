@@ -41,6 +41,13 @@ columns `date,value` — or `date,<Component>,…` wide for composition series.
 
 **Render (read path, runtime).** `app.py` builds one `st.Page` per category via
 `core.page.kategori_sayfasi_yap(kategori)`, then `st.navigation({...}).run()`.
+Navigation is `position="top"`; category pages are sectioned by
+`Kategori.grup` in `KATEGORI_GRUPLARI` order. Besides categories, `app.py`
+registers fixed pages (Genel Bakış — default, Ara, Favoriler, Raporlar, Fonlar,
+Veri Takvimi) and one page per entry in `catalog/hisseler.yaml`. Their logic
+lives in Streamlit-free modules like `takvim.py`: `core/ozet.py` (per-series
+summary rows), `core/rapor.py` (sentences built from measured observations, no
+model), `core/favori.py` (`?f=` encoding).
 There is **no `pages/` directory** — navigation is fully generated. A single
 chart flows: `page._kategoriyi_ciz` → `catalog.seri_listele(slug)` →
 `components.grafik_karti` → `data.load_series` → `stats.gorunum_uygula` →
@@ -58,17 +65,17 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 | `ingest/` | `run.py` orchestrator + 57 adapter modülü (66 `kaynak_tipi` değerini karşılar) |
 | `catalog/` | `series.yaml` (4.226 seri), `categories.yaml` (51 kategori / 6 grup), `hisseler.yaml` (8 hisse) |
 | `data/<kategori>/<seri>.csv` | committed CSV artifact (~43 MB), one per series |
-| `tests/` | 84 flat pytest files (1.366 test), no `conftest.py`, no fixture data files |
+| `tests/` | 87 flat pytest files (1.414 test), no `conftest.py`, no fixture data files |
 | `docs/superpowers/{specs,plans}/` | Per-phase design specs ve execution planları (Turkish) — **koddan geride kalıyor**, aşağıdaki "Docs Drift" gotchasına bak |
 
-## Project Scale (2026-10-02 itibarıyla)
+## Project Scale (2026-11-13 itibarıyla)
 
 | | |
 | Seri | 4.226 |
 | Kategori | 51 (6 `grup` altında) |
 | Hisse sayfası | 8 (`catalog/hisseler.yaml`) |
 | `kaynak_tipi` değeri | 66 |
-| Test | 1.366 passed + 10 network (deselect) |
+| Test | 1.414 passed + 10 network (deselect) |
 | `core/` + `ingest/` + `app.py` | ~21.600 satır Python |
 
 `marketvisuals.net` referansının **kendi arama indeksi**
@@ -93,8 +100,22 @@ EVDS_API_KEY=<key> python -m ingest.run    # refresh all data
 python -m ingest.run --only enflasyon/tufe-genel   # debug one series
 ```
 
-`ingest.run` exit codes: `0` all good, `1` at least one series failed,
-`2` config error (unknown `--only` id, or missing required credentials).
+`ingest.run` exit codes: `0` nothing of ours is broken, `1` at least one series
+failed because of **our code**, `2` config error (unknown `--only` id, a
+`--freq` matching no series, or missing required credentials).
+`erisilemez_mi()` classifies connection errors, timeouts, SSL errors, HTTP
+403/429/5xx and `epias.BarajRaporlanmamisHatasi` as "source unreachable": those
+are printed and listed but exit `0` — a red build must mean a code defect. 404
+and 401/402/407 stay red (wrong URL / bad credentials). After
+`ARDISIK_HATA_TAVANI` (5) consecutive failures of one `kaynak_tipi`, the rest of
+that source is skipped for the run. `--freq daily,weekly` restricts a run to
+those frequencies; `python -m ingest.bayat_rapor` prints the stale-series
+report and always exits 0.
+
+Locally the dependencies live in `.venv` (the system `python3` has no PyYAML):
+prefix commands with `.venv/bin/` (`.venv/bin/pytest`, `.venv/bin/python -m
+ingest.run …`). A single test: `.venv/bin/pytest
+tests/test_stats.py::test_son_tarih_ve_son_deger`.
 
 **No lint, format, or type-check tooling is configured** — no ruff/black/mypy
 config, no pre-commit. Do not add or run one uninvited; match surrounding style.
@@ -123,8 +144,10 @@ config, no pre-commit. Do not add or run one uninvited; match surrounding style.
 - **Run-scoped caches** (`epias_onbellek`, `osd_onbellek`) are created in
   `main()` and threaded through `_cek()` so series sharing an upstream response
   (or PDF bulletin) fetch it once. A single `requests.Session` is shared per run.
-- **No `st.session_state`.** Widget state is keyed inline, e.g.
-  `key=f"gorunum_{kategori.slug}"`, `key=f"kompozisyon_{seri.id}"`.
+- **No `st.session_state`, with one exception.** Widget state is keyed inline,
+  e.g. `key=f"gorunum_{kategori.slug}"`, `key=f"kompozisyon_{seri.id}"`. The
+  exception is favorites: `core/page.py::_favorileri_yukle`/`_favorileri_kaydet`
+  keep `st.session_state["favori_secim"]` mirrored to the `?f=` query parameter.
 - Comments carry provenance and defect IDs (`# C1:`, `(M5)`, "Faz 3c final
   incelemesinin Critical bulgusu") tying code to `docs/superpowers/` specs.
   Preserve these; they encode why non-obvious code exists.
@@ -170,10 +193,16 @@ Optional `olcek` scales values (e.g. `0.001` for MWh→GWh).
 - `core/theme.py` — dark-mode palette constants only. `RENKLER["kategorik"]` and
   `CIZGI_DESENLERI` keys must match `epias_bilesenler` group names 1:1
   (`tests/test_theme.py` enforces this).
-- `.github/workflows/ingest.yml` — daily `cron: "0 6 * * *"` (09:00 TSİ);
-  `permissions: contents: write`; runs `python -m ingest.run` then
-  `git add data` + conditional commit/push under `if: always()`.
-- `.github/workflows/test.yml` — `pytest -v` on every push and PR.
+- `.github/workflows/ingest.yml` — **no `cron:` trigger**: `workflow_dispatch`
+  only, fired daily at 09:00 TSİ by cron-job.org (GitHub's own schedule lagged
+  4–6 hours). Monday/Thursday runs are full; other days pass
+  `freq=daily,weekly`, so monthly/quarterly/yearly series (~70% of the catalog)
+  refresh twice a week. `permissions: contents: write`; a `concurrency` group
+  serialises runs; after `python -m ingest.run` it runs `ingest.bayat_rapor`,
+  then `git add data` + conditional commit under `if: always()`, retrying
+  `git pull --rebase -X theirs` + push up to five times.
+- `.github/workflows/test.yml` — `pytest -v` on push and PR, skipped when only
+  `data/**`, `docs/**` or `*.md` changed.
 - `.streamlit/config.toml` — dark navy/gold theme, `headless = true`.
 
 ## Runtime/Tooling Preferences
@@ -183,13 +212,16 @@ Optional `olcek` scales values (e.g. `0.001` for MWh→GWh).
   package; run it directly. Imports resolve via pytest's `pythonpath = ["."]`.
 - **Plain `pip`** with layered requirements; no Poetry/uv/pipenv, no lockfile:
   `requirements.txt` (app: streamlit, pandas, plotly, PyYAML, requests) ⊂
-  `requirements-ingest.txt` (+pdfplumber) ⊂ `requirements-dev.txt` (+pytest).
-  Keep `pdfplumber` out of `requirements.txt` — Streamlit Cloud installs that
-  file and must not gain the PDF dependency.
+  `requirements-ingest.txt` (+pdfplumber, openpyxl, xlrd) ⊂
+  `requirements-dev.txt` (+pytest). Keep those three out of `requirements.txt`
+  — Streamlit Cloud installs that file and must not gain the PDF/Excel
+  dependencies.
 - Dependencies use lower bounds only (`streamlit>=1.49`); no upper pins.
 - Env vars, ingest-time only: `EVDS_API_KEY`, `EPIAS_USERNAME`,
   `EPIAS_PASSWORD` (GitHub secrets; local gitignored `.env`).
-- Deploy: Streamlit Community Cloud, private repo, viewer allowlist.
+- Deploy: Streamlit Community Cloud, viewer allowlist. The GitHub repo is
+  **public** (measured 2026-11-13 with `gh repo view`), not private — Actions
+  minutes are free for that reason.
 
 ## Testing & QA
 
@@ -213,8 +245,8 @@ markers = [
 ```
 
 - **No coverage config** (`--cov`, `.coveragerc`, `[tool.coverage]` all absent).
-  Don't claim coverage numbers. Suite is currently 1.366 test (84 dosya,
-  ~3.5 dk); network testleri `-m 'not network'` ile elenir.
+  Don't claim coverage numbers. Suite is currently 1.414 test (87 dosya,
+  ~5 dk); network testleri `-m 'not network'` ile elenir.
 - Assertions target observable behavior. Plotly internals
   (`fig.data[0].line.color`) are asserted only because they *are* the contract
   of a chart factory.
@@ -226,7 +258,25 @@ markers = [
 
 - **CSVs are fully rewritten every run, never appended** — "tam pencereyi
   yeniden çeker (artımlı değil — revizyonlar yakalanmalı)". A careless change to
-  an adapter's date-window logic silently truncates history on the next cron.
+  an adapter's date-window logic silently truncates history on the next run.
+  Four exceptions accumulate instead, all in `ingest/run.py`: EPİAŞ
+  `baraj-doluluk` (endpoint returns only today's snapshot), `tefas` sector
+  totals (only the last `TEFAS_SEKTOR_SON_AY` month-ends are refetched; merged
+  after scaling), `thy_ir` (the newest investor presentation carries only two
+  periods; earlier quarters would vanish), and `tefas_fon` (incremental from
+  `TEFAS_GERI_GUN` days back, merged in `tefas_fon_cek`, written without
+  `float_format`).
+- **`seriyi_yaz` refuses an empty frame** (raises, existing CSV untouched). On
+  2026-10-22 the UAB site was redesigned, the adapter silently returned nothing
+  and ten CSVs lost 32 months each. An adapter whose scrape matches nothing
+  must raise, not return an empty or shorter frame.
+- **Catalog fields common to every `kaynak_tipi`** (`ORTAK_ALANLAR`): `olcek`
+  and `gecikme_gunu` (added to the freshness threshold in `core/takvim.py`).
+  `yayin_notu` marks a series whose upstream is stalled, sparse or blocked; it
+  is shown on the card and counted separately in the stale report. Rule: every
+  stale series is either fixed, removed, or carries a `yayin_notu`.
+- **Turkish upper-casing**: `"Ekim".upper()` is `"EKIM"`, PDFs print `"EKİM"`.
+  Build upper-case lookups with `.replace("i", "İ").upper()`.
 - **EPİAŞ**: hard 89-day request window (`AZAMI_PENCERE_GUN`; exceeding it →
   HTTP 400 `(BUS)SEF1117`), hence `pencereleri_bol`. The TGT ticket has no
   refresh logic (~2h validity, fine only because a run takes minutes). Incomplete

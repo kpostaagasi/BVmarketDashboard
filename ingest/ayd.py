@@ -69,6 +69,8 @@ _AY_SLUG = {
 # alternatifin ilk kolu (noktalı) önce denenir.
 _PUAN_DESENI = re.compile(r"(\d{1,3}(?:\.\d{3})+|\d{3,5})\s*puan")
 
+GOVDE_PENCERESI = 20_000
+
 _ca_yolu: str | None = None
 
 
@@ -99,7 +101,10 @@ def _govdeyi_ayikla(html: str) -> str:
     idx = html.find("content_box activityDescription")
     if idx == -1:
         raise RuntimeError("AYD: içerik kutusu ('content_box activityDescription') bulunamadı — şablon değişmiş olabilir")
-    return html[idx: idx + 2000]
+    # Pencere 2.000 karakterdi; Eylül 2026 bülteninde seviye ("5.531 puan")
+    # uzun bir yorum paragrafından sonra, ~4.200. karakterde geliyor
+    # (ölçüldü 2026-11-13). İlk eşleşme yine aylık seviyedir.
+    return html[idx: idx + GOVDE_PENCERESI]
 
 
 def puan_cek(html: str) -> float:

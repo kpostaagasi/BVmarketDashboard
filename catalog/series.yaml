@@ -43669,6 +43669,8 @@
   unit: "TL/kg"
   freq: weekly
   monthly_agg: mean
+  yayin_notu: "Kaynak dalgalı: kemikli hindi eti her hafta tescil edilmiyor; bültende
+    işlem olmayan haftalarda seri boşluk bırakıyor (2026'da en uzun ara 7 hafta)."
   charts: [seasonality, level]
 
 - id: kanatli/hindi-eti-kemiksiz
@@ -47699,6 +47701,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Duran Varlıklar"
@@ -47713,6 +47718,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Özkaynaklar"
@@ -47727,6 +47735,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Özkaynaklar"
@@ -47741,6 +47752,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Özkaynaklar"
@@ -47755,6 +47769,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Duran Varlıklar"
@@ -47769,6 +47786,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Kısa Vadeli Yükümlülükler"
@@ -47783,6 +47803,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Uzun Vadeli Yükümlülükler"
@@ -47797,6 +47820,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Dönen Varlıklar"
@@ -47811,6 +47837,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Dönen Varlıklar"
@@ -47825,6 +47854,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: bilanco
   fintables_bolum: "Dönen Varlıklar"
@@ -47839,6 +47871,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: gelir-tablosu
   fintables_kalem: "Satış Gelirleri"
@@ -47852,6 +47887,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: gelir-tablosu
   fintables_kalem: "Dönem Karı (Zararı)"
@@ -47865,6 +47903,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: gelir-tablosu
   fintables_kalem: "Ana Ortaklık Payları"
@@ -47878,6 +47919,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: gelir-tablosu
   fintables_kalem: "Amortisman"
@@ -47891,6 +47935,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: nakit-akim-tablosu
   fintables_kalem: "İşletme Faaliyetlerinden Nakit Akışları"
@@ -47904,6 +47951,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: nakit-akim-tablosu
   fintables_kalem: "Yatırım Faaliyetlerinden Kaynaklanan Nakit Akışları"
@@ -47917,6 +47967,9 @@
   category: hisse-finansal
   kaynak: { name: Fintables, url: "https://fintables.com/sirketler/THYAO/finansal-tablolar" }
   kaynak_tipi: fintables
+  yayin_notu: "Kaynak erişimi kapalı: fintables.com 2026-09-30'dan beri otomatik
+    isteklere HTTP 403 dönüyor (runner ve yerel). Son veri 2026 2. çeyrek; adaptör değil,
+    kaynak engelliyor."
   fintables_sirket: THYAO
   fintables_tipi: nakit-akim-tablosu
   fintables_kalem: "Finansman Faaliyetlerinden Nakit Akışları"

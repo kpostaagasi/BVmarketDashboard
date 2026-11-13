@@ -66,9 +66,15 @@ _AYLAR_TR = (
     "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık",
 )
 
+# Site 2026-10'da yenilendi (ölçüldü 2026-11-13): yıl sayfaları artık
+# `/istatistikler/yuk-istatistikleri-<yıl>/` adresine yönleniyor ve dosya
+# bağlantıları GÖRELİ — `/media/denizcilikistatistikleri/<kimlik>/…xls`.
+# Eski mutlak `/uploads/pages/yuk-istatistikleri-<yıl>/…` biçimi de kabul
+# edilir. Yalnızca mutlak biçimi arayan desen hiçbir şey yakalamadığı için
+# 22 Ekim 2026 koşusu 10 liman CSV'sini başlık satırına indirmişti.
 _DOSYA_DESENI = re.compile(
-    r'href="(https://denizcilikistatistikleri\.uab\.gov\.tr/uploads/pages/'
-    r'yuk-istatistikleri-\d{4}/liman-baskanliklari-bazinda-yuk-ellecleme-[a-f0-9]+\.xls)"'
+    r'href="((?:https://denizcilikistatistikleri\.uab\.gov\.tr)?/[^"]*?'
+    r'liman-baskanliklari-bazinda-yuk-ellecleme-[a-f0-9]+\.xls)"'
 )
 
 
@@ -77,7 +83,10 @@ def dosya_listesi(yil: int, session=None) -> list[str]:
     http = session or requests
     yanit = http.get(f"{TABAN}/yuk-istatistikleri-{yil}", timeout=ZAMAN_ASIMI)
     yanit.raise_for_status()
-    return sorted(set(_DOSYA_DESENI.findall(yanit.text)))
+    return sorted({
+        yol if yol.startswith("http") else TABAN + yol
+        for yol in _DOSYA_DESENI.findall(yanit.text)
+    })
 
 
 def _dosya_indir(url: str, onbellek: dict, session=None) -> bytes:
@@ -158,5 +167,12 @@ def seri_cek(seri, *, onbellek: dict | None = None, session=None) -> pd.DataFram
             satirlar.append((f"{yil:04d}-{ay:02d}-01", cari - onceki))
             onceki = cari
 
+    if not satirlar:
+        # Boş çerçeve dönmek `seriyi_yaz`da geçmişi silerdi; sayfa şablonu
+        # kaydıysa (bağlantı biçimi değiştiyse) bunu gürültüyle söyle.
+        raise RuntimeError(
+            "UAB yıl sayfalarında hiçbir bülten bağlantısı bulunamadı "
+            "(sayfa şablonu değişmiş olabilir)"
+        )
     df = pd.DataFrame(satirlar, columns=["date", "value"]).sort_values("date")
     return df.reset_index(drop=True)

@@ -113,3 +113,17 @@ def test_seri_cek_onbellek_tekrar_taramaz(monkeypatch):
     ilk_cagri_sayisi = len(oturum.cagrilar)
     seri_cek(SimpleNamespace(), onbellek=onbellek, session=oturum, bugun=date(2025, 1, 15))
     assert len(oturum.cagrilar) == ilk_cagri_sayisi  # ikinci çağrı önbellekten döndü
+
+
+def test_puan_cek_seviye_govdenin_ilerisinde_olsa_da_bulur():
+    """Eylül 2026 bülteni seviyeyi ("5.531 puan") açılış paragrafında değil,
+    uzun bir ekonomist yorumundan SONRA veriyor; 2.000 karakterlik pencere
+    onu göremedi ve 9/12 Kasım 2026 tam koşuları kırmızıya döndü. İlk
+    "<sayı> puan" aylık seviyedir; çeyreklik ("5.194 puana") sonra gelir."""
+    html = (
+        '<div class="content_box activityDescription">'
+        + "<p>" + "yorum " * 900 + "</p>"
+        + "<p>yüzde 2,6 oranında artış göstererek 5.531 puan olarak kaydedildi.</p>"
+        + "<p>üçüncü çeyrek döneminde 5.194 puana yükseldi.</p></div>"
+    )
+    assert puan_cek(html) == 5531.0

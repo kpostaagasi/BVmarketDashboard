@@ -279,7 +279,12 @@ _TRAFIK_PDF_BASLIKLARI = (
 )
 _UCAK_SAYISI_DESENI = re.compile(r"^Uçak Sayısı (\d+) (\d+)(?: ?%| [\d,]+%)", re.M)
 _UCULAN_NOKTA_DESENI = re.compile(r"^Uçulan Nokta(?: \(Şehir Bazında\))? (\d+) (\d+)(?: ?%| [\d,]+%)", re.M)
-_AY_BUYUK_HARF = {ay.upper(): i + 1 for i, ay in enumerate(AYLAR)}
+# Türkçe büyütme: `str.upper()` "i"yi "İ" değil "I" yapar ("Ekim" → "EKIM"),
+# PDF başlığı ise "EKİM" yazar. Ekim 2026 bülteni bu yüzden "bilinmeyen ay
+# adı" ile düştü; Nisan ve Haziran da aynı durumdaydı.
+_AY_BUYUK_HARF = {
+    ay.replace("i", "İ").upper(): i + 1 for i, ay in enumerate(AYLAR)
+}
 
 
 def pdf_toplam_noktalari(metin: str) -> tuple[str, float, float]:
@@ -463,13 +468,15 @@ def sunum_bilgisi(session=None) -> tuple[str, int, int]:
     return sunum_baglantilari(session)[0]
 
 
-def _sayfa_metni_bul(pdf, icerir: str) -> tuple[int, str]:
+def _sayfa_metni_bul(pdf, icerir: str | tuple[str, ...]) -> tuple[int, str]:
     """Verilen alt dizeyi içeren İLK sayfayı bulur; `(sayfa indeksi, metin)`
     döner. Sabit sayfa numarası yerine içerikle arama: sunum çeyrekten
-    çeyreğe sayfa sırasını değiştirebiliyor."""
+    çeyreğe sayfa sırasını değiştirebiliyor. Demet verilirse yazımlardan
+    HERHANGİ birini taşıyan ilk sayfa (çeyrekler arası yazım farkı için)."""
+    arananlar = (icerir,) if isinstance(icerir, str) else icerir
     for i, sayfa in enumerate(pdf.pages):
         metin = sayfa.extract_text() or ""
-        if icerir in metin:
+        if any(a in metin for a in arananlar):
             return i, metin
     raise RuntimeError(f"THY sunumunda {icerir!r} içeren sayfa bulunamadı (şablon değişmiş olabilir)")
 
@@ -499,7 +506,11 @@ _CASK_DESENLERI = {
 }
 
 # "Önemli Performans Göstergeleri (KPI)" sayfası: Akaryakıt (USD/ton).
-_KPI_DESENI = re.compile(r"([\d.]+)\s+([\d.]+)\s+%[\d,]+\s+Akaryakıt \(USD/ton\)")
+# Etiket 2Ç'26'ya kadar "Akaryakıt (USD/ton)", 3Ç'26'da "Akaryakıt Fiyatı
+# (Usd/ton)" (ölçüldü 2026-11-13).
+_KPI_DESENI = re.compile(
+    r"([\d.]+)\s+([\d.]+)\s+%[\d,]+\s+Akaryakıt(?: Fiyatı)? \((?:USD|Usd)/ton\)"
+)
 
 # "Bilanço" sayfası: yedi yıl/dönem sütunu (2020..2025 + dönem sonu tarihi).
 _BILANCO_ETIKET_ESLEME = {
@@ -572,18 +583,71 @@ def _passenger_rask_degerleri(sayfa) -> tuple[float, float]:
     return _passenger_rask_kelimelerden(kelimeler)
 
 
+def _parcalari_birlestir(kelimeler: list[dict]) -> list[dict]:
+    """Aynı satırda UÇ UCA duran parçaları tek kelimeye birleştirir.
+
+    3Ç'26 sunumunda (ölçüldü 2026-11-13) "Yolcu RASK" grafiğinin metni
+    glif glif geliyor: "7" ",9" "2" ve "3" "Ç" "'2" "5" (parçalar arası
+    boşluk 0,0pt). Gerçek kelimeler arasında en az ~2,5pt boşluk var, o
+    yüzden 0,5pt eşiği ayrı kelimeleri yapıştırmaz; bütün gelen eski
+    sunumlar bu işlemden değişmeden çıkar."""
+    sonuc: list[dict] = []
+    for k in sorted(kelimeler, key=lambda k: (round(k["top"]), k["x0"])):
+        son = sonuc[-1] if sonuc else None
+        if (
+            son is not None
+            and abs(son["top"] - k["top"]) <= 1.0
+            and abs(k["x0"] - son.get("x1", son["x0"] - 99)) <= 0.5
+        ):
+            sonuc[-1] = {**son, "text": son["text"] + k["text"],
+                         "x1": k.get("x1", k["x0"])}
+        else:
+            sonuc.append(dict(k))
+    return sonuc
+
+
+def _basligi_bul(kelimeler: list[dict], ilk: tuple[str, ...], ikinci: str | None,
+                 alt_sinir: float = -1.0) -> dict | None:
+    """`ilk` kelimelerinden biri (ve verilmişse hemen sağında aynı satırda
+    `ikinci`) ile başlayan, `alt_sinir`in altındaki İLK başlığı döner."""
+    for k in sorted(kelimeler, key=lambda k: k["top"]):
+        if k["text"] not in ilk or k["top"] <= alt_sinir:
+            continue
+        if ikinci is None or any(
+            d["text"] == ikinci and abs(d["top"] - k["top"]) <= 1.0 and d["x0"] > k["x0"]
+            for d in kelimeler
+        ):
+            return k
+    return None
+
+
 def _passenger_rask_kelimelerden(kelimeler: list[dict]) -> tuple[float, float]:
     """`_passenger_rask_degerleri`'nin saf mantığı — `extract_words()`
-    çıktısı üzerinden test edilebilir (gerçek PDF gerektirmez)."""
-    baslik = next((k for k in kelimeler if k["text"] == "Passenger"), None)
-    sonraki_baslik = next((k for k in kelimeler if k["text"] == "Revenue"), None)
+    çıktısı üzerinden test edilebilir (gerçek PDF gerektirmez).
+
+    Başlık 2Ç'26'ya kadar İngilizceydi ("Passenger RASK" / "Revenue
+    Yield"), 3Ç'26'da Türkçeleşti ("Yolcu RASK" / "Yolcu Birim Gelir");
+    ikisi de tanınır. Dipnottaki "Yolcu RASK:" başlık sayılmaz (iki nokta).
+    Eksen etiketi çeyreğe göre değişir ("2Ç'26", "3Ç'26")."""
+    baslik = _basligi_bul(kelimeler, ("Passenger",), None) or _basligi_bul(
+        kelimeler, ("Yolcu",), "RASK"
+    )
+    sonraki_baslik = baslik and (
+        _basligi_bul(kelimeler, ("Revenue",), None, baslik["top"])
+        or _basligi_bul(kelimeler, ("Yolcu",), "Birim", baslik["top"])
+    )
     if baslik is None or sonraki_baslik is None:
         raise RuntimeError("THY sunumunda 'Passenger RASK' grafiği bulunamadı (şablon değişmiş olabilir)")
-    bant = [k for k in kelimeler if baslik["top"] <= k["top"] < sonraki_baslik["top"]]
+    bant = _parcalari_birlestir(
+        [k for k in kelimeler if baslik["top"] <= k["top"] < sonraki_baslik["top"]]
+    )
 
-    ceyrek_etiketleri = [k for k in bant if re.fullmatch(r"2Ç'\d\d", k["text"])]
+    ceyrek_etiketleri = sorted(
+        (k for k in bant if re.fullmatch(r"\dÇ'\d\d", k["text"])),
+        key=lambda k: k["x0"],
+    )
     if len(ceyrek_etiketleri) < 2:
-        raise RuntimeError("THY sunumunda Passenger RASK eksen etiketleri (2Ç'XX) eksik")
+        raise RuntimeError("THY sunumunda Passenger RASK eksen etiketleri (NÇ'XX) eksik")
     etiket_onceki, etiket_simdiki = ceyrek_etiketleri[0], ceyrek_etiketleri[1]
 
     adaylar = [k for k in bant if re.fullmatch(r"\d+,\d+", k["text"])]
@@ -615,6 +679,15 @@ def _net_borc_favok_noktalari(sayfa, yil: int, ceyrek: int) -> dict[str, float]:
 def _net_borc_favok_kelimelerden(kelimeler: list[dict], yil: int, ceyrek: int) -> dict[str, float]:
     """`_net_borc_favok_noktalari`'nin saf mantığı — `extract_words()`
     çıktısı üzerinden test edilebilir (gerçek PDF gerektirmez)."""
+    # 3Ç'26 sunumunda (ölçüldü 2026-11-13) bu grafiğin metni de glif glif
+    # geliyor ("3" ",9" "x", "2" "0" "1" "9") ve aynı sayfanın ÜST grafiği
+    # (Gelir / EBITDAR Marjı) 2019–2025 yıl etiketlerini bütün hâlde
+    # taşıyor. Parçalar birleştirilir, yalnızca "… Oranı" başlığının
+    # ALTINDAKİ kelimeler değerlendirilir.
+    kelimeler = _parcalari_birlestir(kelimeler)
+    baslik = next((k for k in kelimeler if k["text"] == "Oranı"), None)
+    if baslik is not None:
+        kelimeler = [k for k in kelimeler if k["top"] > baslik["top"]]
     degerler = [k for k in kelimeler if _NET_BORC_DEGER_DESENI.match(k["text"])]
     etiketler = [k for k in kelimeler if _NET_BORC_ETIKET_DESENI.match(k["text"])]
     if len(degerler) != 8 or len(etiketler) != 8:
@@ -744,7 +817,9 @@ def _sunumu_ayristir(pdf, yil: int, ceyrek: int) -> dict[str, dict[str, float]]:
     # Başlık ("Birim Gider (CASK) Kırılımı") pdfplumber'da bindirmeli font
     # efektiyle bozuk geliyor (ölçüldü); "CASK2 (AKTK dahil)" veri satırı
     # etiketi bozulmadan geliyor ve bu sayfaya özgü.
-    _, metin = _sayfa_metni_bul(pdf, "CASK2 (AKTK dahil)")
+    # 3Ç'26 sunumu aynı satırı "CASK2 (ATK dahil)" diye yazıyor (ölçüldü
+    # 2026-11-13); iki yazım da kabul edilir.
+    _, metin = _sayfa_metni_bul(pdf, ("CASK2 (AKTK dahil)", "CASK2 (ATK dahil)"))
     for metrik, desen in _CASK_DESENLERI.items():
         m = desen.search(metin)
         if not m:

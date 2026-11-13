@@ -48,6 +48,20 @@ def test_bulten_baglantilari_hicbiri_yoksa_yukselir():
         bulten_baglantilari("<html><body>hiçbir şey</body></html>")
 
 
+def test_bulten_baglantilari_yeniden_yukleme_sonekini_kabul_eder():
+    """OSD düzeltilmiş bülteni `…-2026.09_1.pdf` adıyla yeniden yüklüyor.
+    Sonek tanınmadığı için 2026'nın tek bülteni eşleşmedi ve 31 seri
+    2025-12'de kaldı (ölçüldü 2026-11-13: 317 gün gecikme)."""
+    html = (
+        '<a href="/saved-files\\PDF\\2026\\10\\15\\'
+        'Otomotiv_Sanayii_Uretim_Bulteni-2026.09_1.pdf">Eylül</a>'
+    )
+    assert bulten_baglantilari(html) == {
+        "2026.09": "https://www.osd.org.tr/saved-files/PDF/2026/10/15/"
+                   "Otomotiv_Sanayii_Uretim_Bulteni-2026.09_1.pdf"
+    }
+
+
 # --- Bülten seçimi ---
 
 BAGLANTILAR = {

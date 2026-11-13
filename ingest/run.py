@@ -405,12 +405,28 @@ def seriyi_yaz(seri: Seri, df) -> int:
     SONRA yapılır — bazı serilerin `olcek`i var ve CSV'deki eski değerler
     zaten ölçekli; `_cek` içinde birleştirmek onları ikinci kez ölçeklerdi.
 
+    THY yatırımcı sunumu (`thy_ir`) da biriktirilir: metriklerin çoğu
+    yalnızca EN YENİ sunumdan okunur ve o sunum iki nokta taşır (cari çeyrek
+    + geçen yılın aynı çeyreği); üzerine yazmak her yeni çeyrekte öncekini
+    siliyordu (3Ç'26 sunumu çıkınca 2Ç noktaları gitti, 2026-11-13).
+
     TEFAS fonları da geçmişi korur, ama birleştirme burada değil
     `tefas_fon_cek`te yapılır (artımlı çekim); buraya tam seri gelir.
     """
+    # Boş çerçeve hiçbir kaynak için geçerli sonuç değil: yazmak mevcut
+    # geçmişi başlık satırına indirir (22 Ekim 2026, UAB: site yenilendi,
+    # adaptör sessizce boş döndü, 10 CSV'nin 32'şer ayı silindi). Hata
+    # `erisilemez_mi` sınıfına girmez → koşu kırmızı olur, CSV'ye dokunulmaz.
+    if len(df) == 0:
+        raise RuntimeError(
+            f"{seri.kaynak_tipi} adaptörü boş veri döndü; mevcut CSV korunuyor"
+        )
     yol = seri_yolu(seri.id)
     yol.parent.mkdir(parents=True, exist_ok=True)
-    biriken = seri.epias_ucu == "baraj-doluluk" or seri.kaynak_tipi == "tefas"
+    biriken = (
+        seri.epias_ucu == "baraj-doluluk"
+        or seri.kaynak_tipi in ("tefas", "thy_ir")
+    )
     if biriken and yol.exists():
         df = (
             pd.concat([pd.read_csv(yol), df], ignore_index=True)

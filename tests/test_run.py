@@ -794,3 +794,50 @@ def test_main_bizim_kurdugumuz_yanlis_url_kirmizi_kalir(monkeypatch):
 
     monkeypatch.setattr(run.evds, "seri_cek", yok)
     assert run.main() == 1
+
+
+def test_seriyi_yaz_bos_cerceveyi_yazmaz_eski_veri_kalir(monkeypatch, tmp_path):
+    """22 Ekim 2026: UAB adaptörü site yenilenince boş çerçeve döndü ve
+    `seriyi_yaz` 10 CSV'nin 32'şer aylık geçmişini başlık satırına indirdi.
+    Boş çerçeve hiçbir kaynak için geçerli bir sonuç değil."""
+    from types import SimpleNamespace
+
+    from ingest import run
+
+    yol = tmp_path / "aliaga.csv"
+    yol.write_text("date,value\n2026-09-01,6587600.00000\n")
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: yol)
+    seri = SimpleNamespace(
+        id="denizcilik/aliaga-yuk-ellecleme", kaynak_tipi="uab", epias_ucu=None
+    )
+    bos = pd.DataFrame({"date": [], "value": []})
+    with pytest.raises(RuntimeError, match="boş veri döndü"):
+        run.seriyi_yaz(seri, bos)
+    assert yol.read_text() == "date,value\n2026-09-01,6587600.00000\n"
+
+
+def test_seriyi_yaz_thy_sunum_serisinde_onceki_ceyrekleri_korur(monkeypatch, tmp_path):
+    """THY yatırımcı sunumunun TÜM metrikleri yalnızca en yeni sunumdan
+    okunur ve o sunum iki nokta taşır (cari çeyrek + geçen yılın aynı
+    çeyreği). Üzerine yazmak her yeni çeyrekte öncekini siliyordu: 3Ç'26
+    sunumu çıkınca 2Ç'25 ve 2Ç'26 noktaları kayboldu (ölçüldü 2026-11-13).
+    Kaynakta eski sunum geri gelmediği için bu seriler biriktirilir; aynı
+    tarihin değeri yenisiyle güncellenir."""
+    from types import SimpleNamespace
+
+    from ingest import run
+
+    yol = tmp_path / "yolcu-rask.csv"
+    yol.write_text("date,value\n2025-04-01,7.27000\n2026-04-01,8.20000\n")
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: yol)
+    seri = SimpleNamespace(
+        id="havacilik/thyao-sunum-yolcu-rask", kaynak_tipi="thy_ir", epias_ucu=None
+    )
+    yeni = pd.DataFrame(
+        {"date": ["2026-04-01", "2025-07-01", "2026-07-01"], "value": [8.26, 7.92, 8.86]}
+    )
+    assert run.seriyi_yaz(seri, yeni) == 4
+    assert yol.read_text() == (
+        "date,value\n2025-04-01,7.27000\n2025-07-01,7.92000\n"
+        "2026-04-01,8.26000\n2026-07-01,8.86000\n"
+    )

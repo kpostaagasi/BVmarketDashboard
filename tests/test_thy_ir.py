@@ -26,6 +26,8 @@ from ingest.thy import (
     _filo_noktalari,
     _net_borc_favok_kelimelerden,
     _passenger_rask_kelimelerden,
+    _KPI_DESENI,
+    _sayfa_metni_bul,
     pdf_toplam_noktalari,
     pdf_toplam_seri_cek,
     sunum_bilgisi,
@@ -201,6 +203,39 @@ def test_passenger_rask_kelimelerden_x0_ile_dogru_esler():
     assert simdiki == 8.26
 
 
+def _parca(text, x0, x1, top):
+    return {"text": text, "x0": x0, "x1": x1, "top": top}
+
+
+def test_passenger_rask_kelimelerden_turkce_baslik_ve_parcali_glifleri_okur():
+    """3Ç'26 sunumu (ölçüldü 2026-11-13): başlık "Yolcu RASK", sonraki
+    başlık "Yolcu Birim Gelir", eksen "3Ç'XX" ve grafik metni glif glif
+    parçalı ("7" ",9" "2"). 9 ve 12 Kasım 2026 tam koşuları burada düştü.
+    Sağlama: Özet tablosunda Yolcu Geliri / AKK = 5.891/74,4 = 7,92 ve
+    6.801/76,8 = 8,86."""
+    kelimeler = [
+        _parca("Yolcu", 157.2, 189.9, 207.7), _parca("RASK", 193.3, 226.9, 207.7),
+        _parca("(USc)", 230.5, 261.9, 207.7), _parca("%14,9", 460.7, 488.8, 207.2),
+        _parca("Yolcu", 157.0, 189.7, 350.8), _parca("Birim", 193.1, 223.8, 350.8),
+        _parca("7", 386.0, 391.6, 241.7), _parca("3", 384.1, 389.1, 315.4),
+        _parca(",9", 391.6, 400.0, 241.7), _parca("2", 400.0, 405.6, 241.7),
+        _parca("Ç", 389.2, 395.7, 315.4), _parca("'2", 395.7, 402.5, 315.4),
+        _parca("5", 402.5, 407.5, 315.4),
+        _parca("8", 461.9, 467.4, 235.5), _parca("3", 459.9, 465.0, 315.4),
+        _parca(",8", 467.4, 475.8, 235.5), _parca("6", 475.8, 481.4, 235.5),
+        _parca("Ç", 465.0, 471.5, 315.4), _parca("'2", 471.5, 478.3, 315.4),
+        _parca("6", 478.3, 483.3, 315.4),
+        # Kur Etkisi Hariç sütunu: etiket ve değer, iç içe geçmiş parçalarla
+        _parca("3", 515.3, 520.4, 315.4), _parca("Ç", 520.4, 526.9, 315.4),
+        _parca("'2", 526.9, 533.7, 315.4), _parca("6", 533.7, 538.7, 315.4),
+        _parca("9", 537.7, 543.3, 234.0), _parca(",0", 543.2, 551.6, 234.0),
+        _parca("K", 541.2, 547.3, 315.4), _parca("9", 551.6, 557.2, 234.0),
+        # dipnot: başlık sanılmamalı
+        _parca("Yolcu", 175.0, 195.0, 511.0), _parca("RASK:", 197.0, 220.0, 511.0),
+    ]
+    assert _passenger_rask_kelimelerden(kelimeler) == (7.92, 8.86)
+
+
 def test_passenger_rask_kelimelerden_baslik_yoksa_hata():
     with pytest.raises(RuntimeError, match="Passenger RASK"):
         _passenger_rask_kelimelerden([_kelime("Revenue", 157.0, 358.0)])
@@ -272,6 +307,16 @@ def test_pdf_toplam_noktalari_dogru_tarih_ve_deger_dondurur():
     assert tarih == "2026-08-01"
     assert ucak == 566.0
     assert nokta == 358.0
+
+
+def test_pdf_toplam_noktalari_noktali_buyuk_i_tasiyan_aylari_tanir():
+    """`"Ekim".upper()` Python'da "EKIM" verir, PDF "EKİM" yazar. Ekim 2026
+    bülteni 9 ve 12 Kasım 2026 tam koşularını bu yüzden kırmızıya çevirdi;
+    Nisan ve Haziran da aynı tuzakta."""
+    assert pdf_toplam_noktalari(_trafik_pdf_metni(ay="EKİM"))[0] == "2026-10-01"
+    assert pdf_toplam_noktalari(_trafik_pdf_metni(ay="NİSAN"))[0] == "2026-04-01"
+    assert pdf_toplam_noktalari(_trafik_pdf_metni(ay="HAZİRAN"))[0] == "2026-06-01"
+    assert pdf_toplam_noktalari(_trafik_pdf_metni(ay="ARALIK"))[0] == "2026-12-01"
 
 
 def test_pdf_toplam_noktalari_bilinmeyen_ay_adinda_hata():
@@ -418,3 +463,53 @@ def test_pdf_toplam_seri_cek_baglanti_yoksa_hata():
             SimpleNamespace(id="x", thy_segment="Toplam", thy_olcut="ucak-sayisi", start_date=None),
             session=oturum,
         )
+
+
+class _SahteSayfa:
+    def __init__(self, metin):
+        self._metin = metin
+
+    def extract_text(self):
+        return self._metin
+
+
+def test_sayfa_metni_bul_yazim_seceneklerinden_birini_kabul_eder():
+    """3Ç'26 sunumu "CASK2 (AKTK dahil)" yerine "CASK2 (ATK dahil)" yazdı."""
+    pdf = SimpleNamespace(pages=[_SahteSayfa("kapak"), _SahteSayfa("7,38 8,86 CASK2 (ATK dahil)2")])
+    idx, metin = _sayfa_metni_bul(pdf, ("CASK2 (AKTK dahil)", "CASK2 (ATK dahil)"))
+    assert idx == 1
+    assert "ATK dahil" in metin
+
+
+def test_sayfa_metni_bul_hicbiri_yoksa_hata():
+    pdf = SimpleNamespace(pages=[_SahteSayfa("kapak")])
+    with pytest.raises(RuntimeError, match="içeren sayfa bulunamadı"):
+        _sayfa_metni_bul(pdf, ("CASK2 (AKTK dahil)", "CASK2 (ATK dahil)"))
+
+
+def test_kpi_deseni_iki_etiket_yazimini_da_okur():
+    eski = _KPI_DESENI.search("780 1.480 %89,8 Akaryakıt (USD/ton) 799 1.165 %45,8")
+    yeni = _KPI_DESENI.search("814 1.254 %54,0 Akaryakıt Fiyatı (Usd/ton) 805 1.197 %48,7")
+    assert eski.groups() == ("780", "1.480")
+    assert yeni.groups() == ("814", "1.254")
+
+
+def test_net_borc_favok_kelimelerden_parcali_glifleri_ve_ust_grafigi_ayirir():
+    """3Ç'26 sunumu: değerler ve yıl etiketleri glif glif; üst grafiğin
+    bütün yıl etiketleri (2019…2025) alt grafiğe sayılmamalı."""
+    yillar = ["2019", "2020", "2021", "2022", "2023", "2024", "2025", "S12A"]
+    degerler = ["3,9x", "9,5x", "3,4x", "1,7x", "1,3x", "1,1x", "1,6x", "2,2x"]
+    kelimeler = [_parca("Oranı", 520.5, 551.9, 279.2)]
+    for i, yil in enumerate(yillar[:7]):  # üst grafik: bütün etiketler
+        kelimeler.append(_parca(yil, 214.4 + i * 65.1, 233.9 + i * 65.1, 226.5))
+    for i, (yil, deger) in enumerate(zip(yillar, degerler)):
+        x = 205.0 + i * 73.0
+        for j, harf in enumerate(yil):  # alt grafik: glif glif
+            kelimeler.append(_parca(harf, x + j * 5.0, x + (j + 1) * 5.0, 454.0))
+        for j, harf in enumerate(deger):
+            kelimeler.append(_parca(harf, x + j * 5.5, x + (j + 1) * 5.5, 400.0 - i))
+    sonuc = _net_borc_favok_kelimelerden(kelimeler, 2026, 3)
+    assert sonuc["2019-10-01"] == 3.9
+    assert sonuc["2025-10-01"] == 1.6
+    assert sonuc["2026-07-01"] == 2.2
+    assert len(sonuc) == 8

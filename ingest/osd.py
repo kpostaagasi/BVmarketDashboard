@@ -32,8 +32,10 @@ INDEKS_URL = f"{TABAN}/osd-yayinlari/otomotiv-sanayii-uretim-bultenleri"
 VARSAYILAN_GECMIS_YIL = 5
 
 # 2022 alt çizgi, 2023+ tire kullanıyor; ikisi de kabul edilir.
+# Yeniden yüklenen (düzeltilmiş) bülten `_1` gibi bir sonek alıyor
+# (ölçüldü 2026-11-13: `…-2026.09_1.pdf`, 2026'nın indeksteki tek bülteni).
 _BAGLANTI = re.compile(
-    r'href="(/saved-files[^"]*?Otomotiv_Sanayii_Uretim_Bulteni[-_](\d{4}\.\d{2})\.pdf)"'
+    r'href="(/saved-files[^"]*?Otomotiv_Sanayii_Uretim_Bulteni[-_](\d{4}\.\d{2})(?:_\d+)?\.pdf)"'
 )
 
 _ATLANACAK_ONEKLER = ("Pay /", "Toplam Pay", "Tipler")

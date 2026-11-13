@@ -207,3 +207,33 @@ def test_dosya_listesi_http_hatasi_yukselir():
     oturum = SahteOturum({}, {}, eksik_yillar={2019})
     with pytest.raises(requests.HTTPError, match="HTTP 404"):
         dosya_listesi(2019, session=oturum)
+
+
+def test_dosya_listesi_goreli_media_baglantisini_mutlak_adrese_cevirir():
+    """Site 2026-10'da yenilendi: bağlantılar artık
+    `/media/denizcilikistatistikleri/<kimlik>/…xls` biçiminde GÖRELİ. Eski
+    desen hiçbirini yakalamadığı için 22 Ekim 2026 koşusu 10 liman CSV'sini
+    başlık satırına indirdi."""
+    html = (
+        '<a href="/media/denizcilikistatistikleri/0r0daju0/'
+        'liman-baskanliklari-bazinda-yuk-ellecleme-6a798252eb1b0.xls">Liman</a>'
+        '<a href="/media/denizcilikistatistikleri/0fqo02ia/'
+        'ulkeler-bazinda-yuk-ellecleme-6a79782e90d3e.xls">Ülke</a>'
+    )
+    oturum = SahteOturum({2026: html}, {})
+    assert dosya_listesi(2026, session=oturum) == [
+        "https://denizcilikistatistikleri.uab.gov.tr/media/denizcilikistatistikleri/"
+        "0r0daju0/liman-baskanliklari-bazinda-yuk-ellecleme-6a798252eb1b0.xls"
+    ]
+
+
+def test_seri_cek_hicbir_yilda_bulten_yoksa_hata():
+    """Boş çerçeve dönmek geçmişi siler; şablon kayması gürültüyle düşmeli."""
+    bugunku_yil = date.today().year
+    yil_html = {
+        y: "<html><body>bağlantı yok</body></html>"
+        for y in range(bugunku_yil - GECMIS_YIL_SAYISI, bugunku_yil + 1)
+    }
+    oturum = SahteOturum(yil_html, {})
+    with pytest.raises(RuntimeError, match="hiçbir bülten bağlantısı bulunamadı"):
+        seri_cek(uab_seri(uab_liman="aliaga"), onbellek={}, session=oturum)
