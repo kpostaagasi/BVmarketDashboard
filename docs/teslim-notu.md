@@ -14,7 +14,7 @@ sayfaları olarak sunan, BV Portföy iç kullanımına yönelik bir pano.
 | Hisse sayfası | 8 |
 | Sabit sayfa | 6 (Genel Bakış, Ara, Favoriler, Raporlar, Fonlar, Veri Takvimi) |
 | Kaynak adaptörü | 57 |
-| Otomatik test | 1.416 |
+| Otomatik test | 1.421 |
 
 Kapsam donduruldu. Referans siteye (`marketvisuals.net`) göre karşılama
 %92,1; kalan boşlukların dökümü `docs/kapsam-bosluklari.md` dosyasında.
@@ -33,7 +33,7 @@ kırmızı yapmaz.
 
 | Kontrol | Sonuç |
 |---|---|
-| Test paketi | 1.416 geçti |
+| Test paketi | 1.421 geçti |
 | Sayfa taraması (65 sayfa, başsız) | İstisna, hata ve uyarı yok |
 | Bayat seri raporu | 20 seri gecikmiş, tamamı açıklama notlu; notsuz 0 |
 | Gözle (tarayıcıda) kontrol | **Yapılmadı** |
@@ -49,10 +49,11 @@ kırmızı yapmaz.
 - **Kaynak şablonu değişince adaptör kırılır.** Bu beklenen bir bakım
   yüküdür: 13 Kasım'da beş kaynakta (UAB, OSD, THY trafik, THY sunum, AYD)
   şablon kayması düzeltildi.
-- **Kısmi veri dönüşü henüz genel olarak engellenmiyor.** Bir kaynak geçici
-  olarak kısa geçmiş döndürürse CSV o gün kısalır, ertesi koşuda düzelir
-  (Yahoo TTF doğal gazda Kasım 2026'da üç kez görüldü). Tamamen boş dönüş
-  engelleniyor.
+- **Kısmi veri dönüşü kısmen engelleniyor.** Bir kaynak mevcut CSV'nin
+  yarısından kısa veri döndürürse yazılmaz, eski veri kalır ve koşu özetinde
+  uyarı çıkar (Yahoo TTF doğal gazda Kasım 2026'da üç kez tek satıra
+  düşmüştü). Tek bir ayın ya da çeyreğin sessizce eksik gelmesi hâlâ
+  yakalanmıyor; taramada 11 adaptörde bu risk görüldü.
 - **Uygulama uykuya dalar**; günün ilk kullanıcısı ~30 saniye bekler.
 
 ## Bakım
@@ -68,9 +69,8 @@ kırmızı yapmaz.
 
 Geliştirici rehberi: `AGENTS.md`. Kullanıcıya dönük özet: `README.md`.
 
-## Açık kararlar
+## Verilen kararlar
 
-- GitHub deposu herkese açık (public). İç kullanım için bilinçli bir tercih
-  olup olmadığı teyit edilmeli; private yapılırsa Actions dakikaları
-  ücretlenir.
-- Kısalan veriyi reddeden genel koruma önerildi, henüz uygulanmadı.
+- GitHub deposu bilinçli olarak herkese açık (public): kod ve tüm veri
+  dışarıdan okunabilir, Actions dakikaları ücretsizdir. Depoya gizli kalması
+  gereken hiçbir şey commit edilmemeli.

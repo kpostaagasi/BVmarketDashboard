@@ -342,6 +342,27 @@ _SERTIFIKA_METNI = re.compile(
 #               2026-11-13: iso-imalat-pmi.csv 3 satırdı, ayda bir satır
 #               kaybediyordu)
 #   tmsd      — yalnızca en yeni PDF okunur, ~3 yıllık kayan pencere
+# Kısalma koruması: mevcut CSV en az bu kadar satırsa ve yeni veri onun bu
+# oranından kısaysa yazılmaz. Ölçüldü (son 60 günün veri commit'leri,
+# 2026-11-13): Yahoo TTF doğal gaz 2, 6 ve 11 Kasım'da ~2.270 satırdan TEK
+# satıra indi, şeker 6 Ekim'de 3.769 satır kaybetti (kaynak o gün yalnızca
+# son günü döndürdü), UAB 22 Ekim'de 10 dosyayı boşalttı. Bugüne göre kayan
+# pencereler koşu başına birkaç satır kaybeder, eşiğin çok altında kalır.
+KISALMA_ASGARI_SATIR = 20
+KISALMA_ORANI = 0.5
+# Bilinçli kısaltma (katalog temizliği, `start_date` eklenmesi, kaynak
+# değişimi) için `--kisalmaya-izin-ver`; `main()` bunu açar.
+KISALMAYA_IZIN = False
+
+
+class VeriKisaldiHatasi(RuntimeError):
+    """Kaynak, mevcut CSV'nin yarısından kısa veri döndürdü; CSV korunur.
+
+    `erisilemez_mi` bunu kaynak sorunu sayar: veri eskiye düşer ama koşu
+    kırmızı olmaz. Tamamen BOŞ dönüş ayrı ele alınır ve kırmızıdır (şablon
+    kayması bizim düzelteceğimiz bir şeydir)."""
+
+
 BIRIKEN_KAYNAK_TIPLERI = frozenset({"tefas", "thy_ir", "pgsus_ir", "iso_pmi", "tmsd"})
 
 
@@ -392,6 +413,8 @@ def erisilemez_mi(hata: BaseException) -> bool:
         if isinstance(adim, ssl.SSLError):
             return True
         if isinstance(adim, epias.BarajRaporlanmamisHatasi):
+            return True
+        if isinstance(adim, VeriKisaldiHatasi):
             return True
         if isinstance(adim, requests.exceptions.HTTPError):
             yanit = adim.response
@@ -447,6 +470,15 @@ def seriyi_yaz(seri: Seri, df) -> int:
             .sort_values("date")
             .reset_index(drop=True)
         )
+    if yol.exists() and not KISALMAYA_IZIN:
+        with yol.open() as dosya:
+            eski_satir = sum(1 for _ in dosya) - 1
+        if eski_satir >= KISALMA_ASGARI_SATIR and len(df) < eski_satir * KISALMA_ORANI:
+            raise VeriKisaldiHatasi(
+                f"{seri.kaynak_tipi} kaynağı {len(df)} satır döndürdü, mevcut CSV "
+                f"{eski_satir} satır; CSV korunuyor (bilinçliyse "
+                "--kisalmaya-izin-ver)"
+            )
     if seri.kaynak_tipi == "tefas_fon":
         df.to_csv(yol, index=False)
     else:
@@ -465,7 +497,14 @@ def main() -> int:
         "--freq",
         help="Yalnızca bu sıklıklardaki serileri çek (virgülle: daily,weekly)",
     )
+    ayristirici.add_argument(
+        "--kisalmaya-izin-ver",
+        action="store_true",
+        help="Mevcut CSV'nin yarısından kısa veriyi de yaz (bilinçli kısaltma)",
+    )
     args = ayristirici.parse_args()
+    global KISALMAYA_IZIN
+    KISALMAYA_IZIN = args.kisalmaya_izin_ver
 
     seriler = seri_listele()
     if args.freq:

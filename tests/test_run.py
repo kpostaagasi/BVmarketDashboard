@@ -861,3 +861,55 @@ def test_seriyi_yaz_iso_pmi_serisinde_kaynaktan_dusen_ayi_korur(monkeypatch, tmp
     assert yol.read_text() == (
         "date,value\n2026-07-01,47.90000\n2026-08-01,48.40000\n2026-09-01,49.10000\n"
     )
+
+
+def _kisalma_duzeni(monkeypatch, tmp_path, satir=40):
+    from types import SimpleNamespace
+
+    from ingest import run
+
+    yol = tmp_path / "ttf.csv"
+    govde = "".join(f"2026-01-{g:02d},{g}.00000\n" for g in range(1, satir + 1))
+    yol.write_text("date,value\n" + govde)
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: yol)
+    seri = SimpleNamespace(id="emtia-enerji/dogalgaz-ttf", kaynak_tipi="yahoo", epias_ucu=None)
+    return run, yol, seri
+
+
+def test_seriyi_yaz_yaridan_kisa_veriyi_yazmaz(monkeypatch, tmp_path):
+    """Yahoo TTF 2, 6 ve 11 Kasım 2026'da yalnızca son günü döndürdü ve
+    ~2.270 satırlık CSV tek satıra indi."""
+    run, yol, seri = _kisalma_duzeni(monkeypatch, tmp_path)
+    once = yol.read_text()
+    tek = pd.DataFrame({"date": ["2026-11-11"], "value": [84.95]})
+    with pytest.raises(run.VeriKisaldiHatasi, match="1 satır döndürdü, mevcut CSV 40 satır"):
+        run.seriyi_yaz(seri, tek)
+    assert yol.read_text() == once
+
+
+def test_veri_kisaldi_hatasi_kosuyu_kirmizi_yapmaz():
+    from ingest import run
+
+    assert run.erisilemez_mi(run.VeriKisaldiHatasi("kısa")) is True
+
+
+def test_seriyi_yaz_kayan_pencere_kadar_kisalmayi_yazar(monkeypatch, tmp_path):
+    """Bugüne göre kayan pencere koşu başına birkaç satır düşürür; bu olağan."""
+    run, yol, seri = _kisalma_duzeni(monkeypatch, tmp_path)
+    yeni = pd.DataFrame(
+        {"date": [f"2026-01-{g:02d}" for g in range(4, 41)], "value": [float(g) for g in range(4, 41)]}
+    )
+    assert run.seriyi_yaz(seri, yeni) == 37
+
+
+def test_seriyi_yaz_kisa_csvde_koruma_devreye_girmez(monkeypatch, tmp_path):
+    run, yol, seri = _kisalma_duzeni(monkeypatch, tmp_path, satir=10)
+    tek = pd.DataFrame({"date": ["2026-11-11"], "value": [84.95]})
+    assert run.seriyi_yaz(seri, tek) == 1
+
+
+def test_seriyi_yaz_izin_verilince_kisa_veriyi_yazar(monkeypatch, tmp_path):
+    run, yol, seri = _kisalma_duzeni(monkeypatch, tmp_path)
+    monkeypatch.setattr(run, "KISALMAYA_IZIN", True)
+    tek = pd.DataFrame({"date": ["2026-11-11"], "value": [84.95]})
+    assert run.seriyi_yaz(seri, tek) == 1

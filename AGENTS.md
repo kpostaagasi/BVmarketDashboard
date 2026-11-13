@@ -65,7 +65,7 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 | `ingest/` | `run.py` orchestrator + 57 adapter modülü (66 `kaynak_tipi` değerini karşılar) |
 | `catalog/` | `series.yaml` (4.226 seri), `categories.yaml` (51 kategori / 6 grup), `hisseler.yaml` (8 hisse) |
 | `data/<kategori>/<seri>.csv` | committed CSV artifact (~43 MB), one per series |
-| `tests/` | 87 flat pytest files (1.416 test), no `conftest.py`, no fixture data files |
+| `tests/` | 87 flat pytest files (1.421 test), no `conftest.py`, no fixture data files |
 | `docs/superpowers/{specs,plans}/` | Per-phase design specs ve execution planları (Turkish) — **koddan geride kalıyor**, aşağıdaki "Docs Drift" gotchasına bak |
 
 ## Project Scale (2026-11-13 itibarıyla)
@@ -75,7 +75,7 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 | Kategori | 51 (6 `grup` altında) |
 | Hisse sayfası | 8 (`catalog/hisseler.yaml`) |
 | `kaynak_tipi` değeri | 66 |
-| Test | 1.416 passed + 10 network (deselect) |
+| Test | 1.421 passed + 10 network (deselect) |
 | `core/` + `ingest/` + `app.py` | ~21.600 satır Python |
 
 `marketvisuals.net` referansının **kendi arama indeksi**
@@ -220,8 +220,9 @@ Optional `olcek` scales values (e.g. `0.001` for MWh→GWh).
 - Env vars, ingest-time only: `EVDS_API_KEY`, `EPIAS_USERNAME`,
   `EPIAS_PASSWORD` (GitHub secrets; local gitignored `.env`).
 - Deploy: Streamlit Community Cloud, viewer allowlist. The GitHub repo is
-  **public** (measured 2026-11-13 with `gh repo view`), not private — Actions
-  minutes are free for that reason.
+  **public** on purpose (owner's decision, confirmed 2026-11-13) — Actions
+  minutes are free for that reason. Code and all data are world-readable;
+  never commit anything that should not be.
 
 ## Testing & QA
 
@@ -245,7 +246,7 @@ markers = [
 ```
 
 - **No coverage config** (`--cov`, `.coveragerc`, `[tool.coverage]` all absent).
-  Don't claim coverage numbers. Suite is currently 1.416 test (87 dosya,
+  Don't claim coverage numbers. Suite is currently 1.421 test (87 dosya,
   ~5 dk); network testleri `-m 'not network'` ile elenir.
 - Assertions target observable behavior. Plotly internals
   (`fig.data[0].line.color`) are asserted only because they *are* the contract
@@ -276,6 +277,13 @@ markers = [
   2026-10-22 the UAB site was redesigned, the adapter silently returned nothing
   and ten CSVs lost 32 months each. An adapter whose scrape matches nothing
   must raise, not return an empty or shorter frame.
+- **`seriyi_yaz` refuses a frame shorter than half the existing CSV** (when
+  the CSV has ≥ `KISALMA_ASGARI_SATIR` = 20 rows): raises `VeriKisaldiHatasi`,
+  the CSV is kept, and `erisilemez_mi` counts it as a source problem so the run
+  stays green. Yahoo returned only the last day for TTF gas on 2, 6 and 11
+  November 2026 and a ~2.270-row CSV became one row. For a deliberate
+  shortening (catalog cleanup, a new `start_date`, a source swap) run
+  `python -m ingest.run --only <id> --kisalmaya-izin-ver`.
 - **Catalog fields common to every `kaynak_tipi`** (`ORTAK_ALANLAR`): `olcek`
   and `gecikme_gunu` (added to the freshness threshold in `core/takvim.py`).
   `yayin_notu` marks a series whose upstream is stalled, sparse or blocked; it
