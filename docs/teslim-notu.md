@@ -69,7 +69,25 @@ kırmızı yapmaz.
 
 Geliştirici rehberi: `AGENTS.md`. Kullanıcıya dönük özet: `README.md`.
 
+## Teslim sonrası ilk bakım işi
+
+Sessiz eksik dönem: 11 adaptör, tek bir ayı ya da çeyreği okuyamadığında
+hata vermeden atlıyor (13 Kasım 2026 taraması). Teslimden önce
+dokunulmadı; her adaptörde "henüz yayımlanmadı" ile "okunamadı" ayrımı ayrı
+kurulmalı.
+
+| Öncelik | Adaptör |
+|---|---|
+| Yüksek | TİM pazar monitörü (47 seri), TAB Gıda |
+| Orta | OSD (kısmi bağlantı eşleşmesi), ebebek, Migros, BigChefs, Orge, EİB, BDDK BDMK |
+| Düşük | AYD, TÇÜD |
+
 ## Verilen kararlar
+
+- Kapsam 4.226 seride donduruldu; teslimden önce yeni seri ya da kaynak
+  eklenmez.
+- Teslim iki koşulla tamamlanır: Pazartesi tam koşusunun yeşil dönmesi ve
+  proje sahibinin tarayıcıda gözle kontrolü.
 
 - GitHub deposu bilinçli olarak herkese açık (public): kod ve tüm veri
   dışarıdan okunabilir, Actions dakikaları ücretsizdir. Depoya gizli kalması
