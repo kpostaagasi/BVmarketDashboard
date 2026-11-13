@@ -319,6 +319,15 @@ def haftalik_noktalar_cek(id_: str, sutun: int, taraf: str, cari_tarih: str,
         etiketler = govde.get("XEkseni") or []
         degerler = govde.get("YEkseni") or []
         if not etiketler:
+            # İlk sayfa boşsa çağıran "hiç nokta yok" hatasını verir. Geriye
+            # sayfalarken ARADA boş yanıt gelirse (geçici sunucu hatası)
+            # durmak geçmişi sessizce kısaltırdı: CSV baştan yazıldığı için
+            # eski yıllar o koşuda silinir.
+            if noktalar and en_erken is not None and en_erken > HAFTALIK_ILK_TARIH:
+                raise RuntimeError(
+                    f"BDDK Haftalık Bülten geriye sayfalarken boş yanıt döndü "
+                    f"(id {id_}, {en_erken} öncesi alınamadı)"
+                )
             break
         for etiket, deger in zip(etiketler, degerler):
             if deger is None:

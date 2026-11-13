@@ -841,3 +841,23 @@ def test_seriyi_yaz_thy_sunum_serisinde_onceki_ceyrekleri_korur(monkeypatch, tmp
         "date,value\n2025-04-01,7.27000\n2025-07-01,7.92000\n"
         "2026-04-01,8.26000\n2026-07-01,8.86000\n"
     )
+
+
+def test_seriyi_yaz_iso_pmi_serisinde_kaynaktan_dusen_ayi_korur(monkeypatch, tmp_path):
+    """İSO manşet PMI ZIP'i yalnızca son 3 ayı taşır; üzerine yazmak her ay
+    en eski noktayı siliyordu (ölçüldü 2026-11-13). `pgsus_ir` ve `tmsd`
+    aynı sınıftadır."""
+    from types import SimpleNamespace
+
+    from ingest import run
+
+    assert {"pgsus_ir", "iso_pmi", "tmsd"} <= run.BIRIKEN_KAYNAK_TIPLERI
+    yol = tmp_path / "pmi.csv"
+    yol.write_text("date,value\n2026-07-01,47.90000\n2026-08-01,48.30000\n")
+    monkeypatch.setattr(run, "seri_yolu", lambda _id: yol)
+    seri = SimpleNamespace(id="sanayi/iso-imalat-pmi", kaynak_tipi="iso_pmi", epias_ucu=None)
+    yeni = pd.DataFrame({"date": ["2026-08-01", "2026-09-01"], "value": [48.4, 49.1]})
+    assert run.seriyi_yaz(seri, yeni) == 3
+    assert yol.read_text() == (
+        "date,value\n2026-07-01,47.90000\n2026-08-01,48.40000\n2026-09-01,49.10000\n"
+    )

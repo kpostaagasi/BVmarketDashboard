@@ -290,3 +290,18 @@ def test_seri_cek_bdmk_bulunamayan_kalemde_hata():
     with pytest.raises(RuntimeError, match="kalemi bulunamadı"):
         seri_cek_bdmk(seri, session=oturum, bugun=date(2026, 9, 18))
 
+
+
+def test_haftalik_noktalar_cek_arada_bos_yanit_gelirse_hata():
+    """Geriye sayfalarken boş yanıt = geçici sunucu hatası. Sessizce durmak,
+    baştan yazılan CSV'de eski yılları silerdi."""
+    pencereler = {
+        "11.09.2026": {
+            "XEkseni": ["4.09.2026", "11.09.2026"],
+            "YEkseni": [862191.39, 867231.58],
+        },
+        "3.09.2026": {"XEkseni": [], "YEkseni": []},
+    }
+    oturum = SahteHaftalikOturum(pencereler)
+    with pytest.raises(RuntimeError, match="geriye sayfalarken boş yanıt"):
+        haftalik_noktalar_cek("2.0.1", 3, "10001", "11.09.2026", session=oturum)

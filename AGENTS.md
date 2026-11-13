@@ -65,7 +65,7 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 | `ingest/` | `run.py` orchestrator + 57 adapter modülü (66 `kaynak_tipi` değerini karşılar) |
 | `catalog/` | `series.yaml` (4.226 seri), `categories.yaml` (51 kategori / 6 grup), `hisseler.yaml` (8 hisse) |
 | `data/<kategori>/<seri>.csv` | committed CSV artifact (~43 MB), one per series |
-| `tests/` | 87 flat pytest files (1.414 test), no `conftest.py`, no fixture data files |
+| `tests/` | 87 flat pytest files (1.416 test), no `conftest.py`, no fixture data files |
 | `docs/superpowers/{specs,plans}/` | Per-phase design specs ve execution planları (Turkish) — **koddan geride kalıyor**, aşağıdaki "Docs Drift" gotchasına bak |
 
 ## Project Scale (2026-11-13 itibarıyla)
@@ -75,7 +75,7 @@ computation; rendering lives in `core/page.py`). Keep that separation.
 | Kategori | 51 (6 `grup` altında) |
 | Hisse sayfası | 8 (`catalog/hisseler.yaml`) |
 | `kaynak_tipi` değeri | 66 |
-| Test | 1.414 passed + 10 network (deselect) |
+| Test | 1.416 passed + 10 network (deselect) |
 | `core/` + `ingest/` + `app.py` | ~21.600 satır Python |
 
 `marketvisuals.net` referansının **kendi arama indeksi**
@@ -245,7 +245,7 @@ markers = [
 ```
 
 - **No coverage config** (`--cov`, `.coveragerc`, `[tool.coverage]` all absent).
-  Don't claim coverage numbers. Suite is currently 1.414 test (87 dosya,
+  Don't claim coverage numbers. Suite is currently 1.416 test (87 dosya,
   ~5 dk); network testleri `-m 'not network'` ile elenir.
 - Assertions target observable behavior. Plotly internals
   (`fig.data[0].line.color`) are asserted only because they *are* the contract
@@ -259,13 +259,19 @@ markers = [
 - **CSVs are fully rewritten every run, never appended** — "tam pencereyi
   yeniden çeker (artımlı değil — revizyonlar yakalanmalı)". A careless change to
   an adapter's date-window logic silently truncates history on the next run.
-  Four exceptions accumulate instead, all in `ingest/run.py`: EPİAŞ
-  `baraj-doluluk` (endpoint returns only today's snapshot), `tefas` sector
-  totals (only the last `TEFAS_SEKTOR_SON_AY` month-ends are refetched; merged
-  after scaling), `thy_ir` (the newest investor presentation carries only two
-  periods; earlier quarters would vanish), and `tefas_fon` (incremental from
-  `TEFAS_GERI_GUN` days back, merged in `tefas_fon_cek`, written without
-  `float_format`).
+  Exceptions that accumulate instead (existing rows kept, same-date values
+  replaced), all in `ingest/run.py`: EPİAŞ `baraj-doluluk` (endpoint returns
+  only today's snapshot); `tefas_fon` (incremental from `TEFAS_GERI_GUN` days
+  back, merged in `tefas_fon_cek`, written without `float_format`); and every
+  type in `BIRIKEN_KAYNAK_TIPLERI` — `tefas`, `thy_ir`, `pgsus_ir`, `iso_pmi`,
+  `tmsd` — whose source publishes only the latest periods and never brings the
+  old ones back. Add a type there when its upstream is a rolling document.
+- **Windows relative to today slide on purpose.** EVDS and Yahoo fetch the last
+  15 years, EPİAŞ 5, OSD/ODMD/TÜRKBESD 5, UAB 3, İSTİB 104 weeks, Trabzon TB 400
+  days (unless the series sets `start_date`). The oldest rows leaving the CSV
+  each run is expected: the source still serves them, so nothing is lost.
+  BDDK weekly pages back to `HAFTALIK_ILK_TARIH`; its first few rows jitter
+  with the 13-week page alignment.
 - **`seriyi_yaz` refuses an empty frame** (raises, existing CSV untouched). On
   2026-10-22 the UAB site was redesigned, the adapter silently returned nothing
   and ten CSVs lost 32 months each. An adapter whose scrape matches nothing

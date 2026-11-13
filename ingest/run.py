@@ -332,6 +332,19 @@ _SERTIFIKA_METNI = re.compile(
 )
 
 
+# Kaynağı yalnızca SON dönemleri veren, eskisini geri getirmeyen tipler:
+# CSV baştan yazılırsa her yeni yayın en eski noktayı siler. Bunlarda mevcut
+# satırlar korunur, aynı tarihin değeri yenisiyle güncellenir (`seriyi_yaz`).
+#   tefas     — sektör toplamlarında yalnızca son ay sonları yeniden çekilir
+#   thy_ir    — en yeni sunum iki nokta taşır (3Ç'26 gelince 2Ç silindi)
+#   pgsus_ir  — en yeni sunumun 10 çeyreklik tablosu; net borç 3 sütun
+#   iso_pmi   — manşet ZIP'i son 3 ay, sektörel ZIP ~12 ay (ölçüldü
+#               2026-11-13: iso-imalat-pmi.csv 3 satırdı, ayda bir satır
+#               kaybediyordu)
+#   tmsd      — yalnızca en yeni PDF okunur, ~3 yıllık kayan pencere
+BIRIKEN_KAYNAK_TIPLERI = frozenset({"tefas", "thy_ir", "pgsus_ir", "iso_pmi", "tmsd"})
+
+
 def erisilemez_mi(hata: BaseException) -> bool:
     """Hata bir kaynağa ulaşamamaktan mı geliyor, yoksa bizim kodumuzdan mı?
 
@@ -425,7 +438,7 @@ def seriyi_yaz(seri: Seri, df) -> int:
     yol.parent.mkdir(parents=True, exist_ok=True)
     biriken = (
         seri.epias_ucu == "baraj-doluluk"
-        or seri.kaynak_tipi in ("tefas", "thy_ir")
+        or seri.kaynak_tipi in BIRIKEN_KAYNAK_TIPLERI
     )
     if biriken and yol.exists():
         df = (
